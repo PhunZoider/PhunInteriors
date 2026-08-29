@@ -1,0 +1,14 @@
+{
+    "emeraldwalk.runonsave": {
+        "autoClearConsole": true,
+        "commands": [
+            {
+                "match": ".*",
+                "cmd": "${workspaceFolder}\\deploy.cmd"
+            }
+        ]
+    },
+    "editor.formatOnSave": true,
+    "github.gitAuthentication": true,
+    "github.gitProtocol": "ssh"
+}

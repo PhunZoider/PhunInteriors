@@ -1,0 +1,8 @@
+name=PhunInteriors
+id=phuninteriors
+author=UburGeek
+description=Instanced vehicle interiors that recycle their space, contain the player, and cost something to use
+poster=poster.png
+icon=icon.png
+versionMin=42.0.0
+category=map,vehicle,features

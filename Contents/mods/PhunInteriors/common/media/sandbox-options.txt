@@ -1,0 +1,118 @@
+VERSION = 1,
+
+option PhunInteriors.Debug
+{
+    type = boolean,
+    default = false,
+    page = PhunInteriors,
+    translation = PhunInteriors_Debug,
+}
+
+option PhunInteriors.WeightFactor
+{
+    type = integer,
+    default = 50,
+    min = 0,
+    max = 100,
+    page = PhunInteriors,
+    translation = PhunInteriors_WeightFactor,
+}
+
+option PhunInteriors.ExitTax
+{
+    type = boolean,
+    default = true,
+    page = PhunInteriors,
+    translation = PhunInteriors_ExitTax,
+}
+
+option PhunInteriors.ExitTaxGrowth
+{
+    type = integer,
+    default = 2,
+    min = 0,
+    max = 50,
+    page = PhunInteriors,
+    translation = PhunInteriors_ExitTaxGrowth,
+}
+
+option PhunInteriors.EntryDelay
+{
+    type = integer,
+    default = 15,
+    min = 0,
+    max = 120,
+    page = PhunInteriors,
+    translation = PhunInteriors_EntryDelay,
+}
+
+option PhunInteriors.EntryBlockedByZombies
+{
+    type = boolean,
+    default = true,
+    page = PhunInteriors,
+    translation = PhunInteriors_EntryBlockedByZombies,
+}
+
+option PhunInteriors.EntryZombieRadius
+{
+    type = integer,
+    default = 4,
+    min = 1,
+    max = 30,
+    page = PhunInteriors,
+    translation = PhunInteriors_EntryZombieRadius,
+}
+
+option PhunInteriors.LeaseDays
+{
+    type = integer,
+    default = 14,
+    min = 0,
+    max = 365,
+    page = PhunInteriors,
+    translation = PhunInteriors_LeaseDays,
+}
+
+option PhunInteriors.LeaseWarningDays
+{
+    type = integer,
+    default = 2,
+    min = 0,
+    max = 60,
+    page = PhunInteriors,
+    translation = PhunInteriors_LeaseWarningDays,
+}
+
+option PhunInteriors.ScrubKeepsLoot
+{
+    type = boolean,
+    default = false,
+    page = PhunInteriors,
+    translation = PhunInteriors_ScrubKeepsLoot,
+}
+
+option PhunInteriors.HardenShell
+{
+    type = boolean,
+    default = true,
+    page = PhunInteriors,
+    translation = PhunInteriors_HardenShell,
+}
+
+option PhunInteriors.BreachEjects
+{
+    type = boolean,
+    default = true,
+    page = PhunInteriors,
+    translation = PhunInteriors_BreachEjects,
+}
+
+option PhunInteriors.Scripts_phun_van
+{
+    type = string,
+    default = ,
+    page = PhunInteriors,
+    translation = PhunInteriors_Scripts_phun_van,
+}
+

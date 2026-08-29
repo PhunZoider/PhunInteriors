@@ -1,0 +1,7 @@
+version=1
+id=
+title=PhunInteriors [DEV]
+description=⚠️ DEV BRANCH — Preview build for testing and feedback of PhunInteriors. This version may change frequently and could break between updates.
+description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
+tags=Build 42;Vehicles;Multiplayer
+visibility=unlisted

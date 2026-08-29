@@ -1,0 +1,4 @@
+ContextMenu_EN = {
+    ContextMenu_PhunInteriors_Enter = "Go inside",
+    ContextMenu_PhunInteriors_Leave = "Step outside",
+}

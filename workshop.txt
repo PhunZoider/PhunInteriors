@@ -1,0 +1,20 @@
+version=1
+id=
+title=PhunInteriors
+description=Instanced vehicle interiors that recycle their space, contain the player, and cost something to use.
+description=
+description=[H2]How it is different[/H2]
+description=[list]
+description=[*]Rooms are leased, not permanently assigned. Destroy the vehicle and the room comes back into the pool instead of leaking a slot forever
+description=[*]You come out where your vehicle actually is, resolved live, not where it was up to a minute ago
+description=[*]Loot stored inside adds weight to the vehicle, so the interior is not a bottomless boot
+description=[*]Zombies near the vehicle accumulate while you are inside, so waiting out the night costs you something
+description=[*]Every constraint is a sandbox option. Turn any of them off if it is taking away the phun
+description=[/list]
+description=
+description=[H2]For mod authors[/H2]
+description=Room sets and vehicle classes are registered, not hard coded. Hook PhunInteriorsOnReady and call registerRoomSet and registerVehicleClass to add your own interiors for your own vehicles. Ids are namespaced so nothing collides.
+description=
+description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
+tags=Build 42;Vehicles;Multiplayer
+visibility=public
