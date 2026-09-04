@@ -332,7 +332,7 @@ end
 -- This is the single client side caller. Type it into the debug console:
 --
 --     PhunInteriors.admin("list")
---     PhunInteriors.admin("remanifest", {roomSet = "phun.van"})
+--     PhunInteriors.admin("remanifest", {roomSet = "phun.van", index = 4})
 --     PhunInteriors.admin("scrub", {roomSet = "phun.van", index = 3})
 --     PhunInteriors.admin("free", {vehicleId = "..."})
 --     PhunInteriors.admin("evict", {username = "..."})

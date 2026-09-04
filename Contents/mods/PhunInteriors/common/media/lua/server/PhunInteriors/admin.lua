@@ -74,17 +74,24 @@ actions.manifests = function()
     return Manifest.report()
 end
 
+-- Rescan one slot you are standing in. Targets a slot rather than a room set
+-- because there is no golden slot any more, and a blueprint is only ever as
+-- good as the room it was read from.
 actions.remanifest = function(args)
     local roomSet = args.roomSet
-    if not roomSet then
-        return {"remanifest needs a roomSet"}
+    local index = tonumber(args.index)
+    if not roomSet or not index then
+        return {"remanifest needs a roomSet and an index"}
     end
-    Manifest.forget(roomSet)
-    local captured = Manifest.capture(roomSet, true)
+    if Core.shippedBlueprint(roomSet, index) then
+        return {roomSet .. "#" .. index .. " ships a blueprint; rescanning would be ignored"}
+    end
+    Manifest.forgetSlot(roomSet, index)
+    local captured, reason = Manifest.captureSlot(roomSet, index, true)
     if captured then
-        return {"recaptured " .. roomSet .. ": " .. captured.objectCount .. " objects"}
+        return {"recaptured " .. roomSet .. "#" .. index .. ": " .. captured.objectCount .. " objects"}
     end
-    return {"could not capture " .. roomSet .. ", is the golden slot loaded?"}
+    return {"could not capture " .. roomSet .. "#" .. index .. ": " .. tostring(reason)}
 end
 
 function Admin.run(action, args)

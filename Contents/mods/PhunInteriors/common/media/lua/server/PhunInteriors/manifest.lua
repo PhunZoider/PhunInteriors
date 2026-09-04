@@ -45,12 +45,6 @@ local MANIFEST_VERSION = 2
 -- and falling back to the golden slot. Four a second, so this is ten seconds.
 Manifest.CAPTURE_ATTEMPTS = 40
 
-local function store()
-    Core.data = Core.data or ModData.getOrCreate(Core.consts.modDataKey)
-    Core.data.manifests = Core.data.manifests or {}
-    return Core.data.manifests
-end
-
 local function slotStore(roomSetId)
     Core.data = Core.data or ModData.getOrCreate(Core.consts.modDataKey)
     Core.data.slotManifests = Core.data.slotManifests or {}
@@ -222,39 +216,31 @@ local function describe(roomSetId, label, captured, size)
         label, roomSetId, captured.objectCount, size.distinct, size.withPalette, size.withoutPalette)
 end
 
---- Capture the golden slot for a room set.
+--- Any blueprint we already hold for this room set.
 --
--- Still the fallback for any slot whose own capture never landed, and still
--- worth having, but no longer the primary source. Its chunk is only loaded
--- when somebody happens to be standing near slot 0, which is why this spent so
--- long logging "scanned empty" and never capturing anything.
-function Manifest.capture(roomSetId, force)
-    local set = Core.roomSets[roomSetId]
-    if not set then
-        return nil
+-- The last resort when a slot has neither a shipped blueprint nor one of its
+-- own. This replaces the golden slot, which was a room reserved per set that
+-- was never leased: it cost a room of map, only loaded when somebody happened
+-- to stand near it, and failed nearly every capture it ever attempted. A
+-- sibling is strictly better -- it is a real room from the same set, and it
+-- exists precisely when we are able to do anything at all.
+--
+-- Still homogenising, so still a last resort, and callers report when they
+-- have had to reach for it.
+function Manifest.anySibling(roomSetId)
+    local shipped = Core.blueprints[roomSetId]
+    if shipped then
+        for index in pairs(shipped.slots) do
+            local view = Core.shippedBlueprint(roomSetId, index)
+            if view then
+                return view
+            end
+        end
     end
-
-    local cache = store()
-    if cache[roomSetId] and not force then
-        return cache[roomSetId]
+    for _, manifest in pairs(slotStore(roomSetId)) do
+        return manifest
     end
-
-    local captured, present, missing = scan(set, Core.consts.goldenSlot)
-    if missing > 0 then
-        Core.debugLn(string.format(
-            "golden slot for %s is not loaded (%d of %d squares missing), not caching",
-            roomSetId, missing, present + missing))
-        return nil
-    end
-    if captured.objectCount == 0 then
-        Core.debugLn("golden slot for " .. roomSetId ..
-            " is loaded but holds nothing to capture, not caching")
-        return nil
-    end
-
-    cache[roomSetId] = captured
-    Core.logLn(describe(roomSetId, "golden slot", captured, Manifest.measure(captured)))
-    return captured
+    return nil
 end
 
 --- Capture one slot's own blueprint.
@@ -296,8 +282,8 @@ end
 --   slot      scanned at runtime on first lease. The fallback for room sets
 --             that ship nothing, which is any third party set whose author
 --             has not run the tool.
---   golden    slot 0 of the set. Homogenising, and only reachable when its
---             chunk happens to be loaded, so genuinely a last resort.
+--   sibling   another room from the same set. Homogenising, so genuinely a
+--             last resort, but better than refusing to reset the room.
 --
 -- Which one was used is returned, because a scrub that quietly reaches for
 -- the golden slot is a scrub that quietly makes every room identical.
@@ -311,19 +297,11 @@ function Manifest.forSlot(roomSetId, index)
     if own then
         return own, "slot"
     end
-    local golden = Manifest.get(roomSetId) or Manifest.capture(roomSetId)
-    if golden then
-        return golden, "golden"
+    local sibling = Manifest.anySibling(roomSetId)
+    if sibling then
+        return sibling, "sibling"
     end
     return nil, nil
-end
-
-function Manifest.get(roomSetId)
-    return store()[roomSetId]
-end
-
-function Manifest.forget(roomSetId)
-    store()[roomSetId] = nil
 end
 
 function Manifest.forgetSlot(roomSetId, index)
@@ -345,14 +323,17 @@ function Manifest.report()
             label, manifest.version or 1, size.placements, size.distinct, size.withPalette))
     end
 
-    for roomSetId, manifest in pairs(store()) do
-        add(roomSetId .. " [golden]", manifest)
+    for roomSetId in pairs(Core.blueprints or {}) do
+        local shipped = Core.blueprints[roomSetId]
+        for index in pairs(shipped.slots) do
+            add(roomSetId .. "#" .. index .. " [shipped]", Core.shippedBlueprint(roomSetId, index))
+        end
     end
 
     Core.data = Core.data or ModData.getOrCreate(Core.consts.modDataKey)
     for roomSetId, slots in pairs(Core.data.slotManifests or {}) do
         for index, manifest in pairs(slots) do
-            add(roomSetId .. "#" .. index, manifest)
+            add(roomSetId .. "#" .. index .. " [captured]", manifest)
         end
     end
 

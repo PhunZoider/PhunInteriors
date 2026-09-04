@@ -85,8 +85,11 @@ function Slots.acquire(vehicleId, roomSetId)
 
     local occupied = occupiedFor(roomSetId)
 
-    -- slot 0 is the golden slot the manifest is scanned from, never leased
-    for index = Core.consts.goldenSlot + 1, set.count do
+    -- Every slot is leasable. Slot 0 used to be reserved as a pristine copy
+    -- to scan blueprints from, which cost a room of map per set and only ever
+    -- worked when somebody happened to be standing near it. Blueprints are
+    -- authored now, and a slot that is leased captures its own.
+    for index = 0, set.count do
         if not occupied[tostring(index)] and not isQuarantined(roomSetId, index) then
             local assignment = {
                 roomSet = roomSetId,

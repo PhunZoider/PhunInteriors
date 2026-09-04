@@ -3,9 +3,6 @@ PhunInteriors = {
     consts = {
         -- key we hang our own state off, on both vehicles and the global ModData
         modDataKey = "PhunInteriors",
-        -- slot index reserved as the pristine copy the manifest is scanned from.
-        -- it is never handed out to a vehicle.
-        goldenSlot = 0,
         vehicleIdKey = "PhunInteriors_id",
         massDeltaKey = "PhunInteriors_massDelta"
     },

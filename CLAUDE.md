@@ -112,10 +112,13 @@ modData UUID instead, which is written into the save. `Client.teleport`'s
 rejoin phase sweeps squares around the destination with
 `square:getVehicleContainer()` and compares `Core.vehicleId`.
 
-**The manifest is scanned, not authored.** Slot 0 of every room set is a
-golden slot, never leased. `manifest.lua` scans it once and caches it. An empty
-scan means the chunk was not loaded, not that the room is empty — caching that
-would poison every future scrub, which is why it refuses to.
+**There is no golden slot.** Slot 0 is leasable like any other. It used to be
+reserved as a pristine copy to scan blueprints from, which cost a room of map
+per set and only worked when somebody happened to be standing near it; it failed
+nearly every capture it attempted. `Manifest.anySibling` replaces it.
+
+An empty scan means the chunk was not loaded, not that the room is
+empty, and caching that would poison every future scrub, which is why it refuses to.
 
 Stored as `version = 2`: a `palette` of distinct sprite names plus per square
 lists of indices into it. Measured on the borrowed van room: 29 objects, 11
@@ -135,7 +138,7 @@ pristine by definition. `Slots.markUsed` is what makes that trustworthy: a
 slot only ever gets one capture attempt window, because after a tenant it is
 no longer evidence of anything. The leash drives it -- "the leash can see this
 player inside this room" is exactly the condition a capture needs -- and gives
-up after `Manifest.CAPTURE_ATTEMPTS` ticks, falling back to the golden slot.
+up after `Manifest.CAPTURE_ATTEMPTS` ticks, falling back to a sibling room.
 The capture sits **above** every early return in `Leash.checkOne`, including
 the noclip exemption and the arrival grace. Capture is not containment: it
 only cares that the player is standing in the room. Placed under the exemption
@@ -150,8 +153,8 @@ that calls `registerRoomSet`, `registerVehicleClass` and `registerBlueprints`.
 That file goes in `server/PhunInteriors/blueprints/` and loads itself. There is
 no file reading at runtime anywhere in this design, and no json.
 
-`Manifest.forSlot` resolves shipped, then runtime capture, then the golden
-slot, and returns which it used. Runtime capture is now only the fallback for
+`Manifest.forSlot` resolves shipped, then runtime capture, then any sibling in
+the same set, and returns which it used. Runtime capture is only the fallback for
 third party sets whose author has not run the tool.
 
 The emitter pools one palette across every slot in a set, because rooms in a

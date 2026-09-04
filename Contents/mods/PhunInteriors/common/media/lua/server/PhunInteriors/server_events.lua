@@ -55,14 +55,11 @@ Events.OnTick.Add(function()
     Leash.tick()
 end)
 
--- Capture any manifest we still owe, then work the quarantine queue. Both need
--- loaded chunks, so they retry rather than assuming.
+-- Work the quarantine queue. Needs loaded chunks, so it retries rather than
+-- assuming. There is no manifest retry here any more: blueprints are either
+-- shipped with the room set or captured on first lease, and neither is
+-- something a timer can help with.
 Events.EveryTenMinutes.Add(function()
-    for roomSetId in pairs(Core.roomSets) do
-        if not Manifest.get(roomSetId) then
-            Manifest.capture(roomSetId)
-        end
-    end
     Scrub.processQueue(2)
 end)
 
