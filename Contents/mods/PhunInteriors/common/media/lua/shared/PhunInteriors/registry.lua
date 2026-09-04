@@ -95,6 +95,56 @@ function Core.registerVehicleClass(id, def)
     return Core.vehicleClasses[id]
 end
 
+--- Register the shipped blueprints for a room set.
+--
+-- Called by a file that PhunInteriors.author generated. This is the third of
+-- the three calls a map author needs and the only one they could not
+-- plausibly hand write, which is what makes generating all three the right
+-- shape rather than shipping a blueprint exporter on its own.
+--
+-- One palette is shared across every slot in the set: rooms in a strip are
+-- variations on a theme and share nearly all their sprites.
+function Core.registerBlueprints(id, def)
+    if type(id) ~= "string" or not def or not def.slots then
+        warn("registerBlueprints needs an id and a slots table")
+        return
+    end
+
+    local count = 0
+    for _ in pairs(def.slots) do
+        count = count + 1
+    end
+
+    Core.blueprints[id] = {
+        version = def.version or 2,
+        palette = def.palette or {},
+        slots = def.slots
+    }
+
+    Core.debugLn("registered " .. count .. " shipped blueprint(s) for " .. id)
+    return Core.blueprints[id]
+end
+
+--- One slot's shipped blueprint, in the shape Manifest.spritesAt expects.
+--
+-- The stored form shares a palette across the set, so this hands back a view
+-- that borrows it rather than copying: spritesAt only ever reads.
+function Core.shippedBlueprint(id, index)
+    local shipped = Core.blueprints[id]
+    if not shipped then
+        return nil
+    end
+    local squares = shipped.slots[index] or shipped.slots[tostring(index)]
+    if not squares then
+        return nil
+    end
+    return {
+        version = shipped.version,
+        palette = shipped.palette,
+        squares = squares
+    }
+end
+
 --- Let admins bind extra scripts to an existing class without any code.
 -- Sandbox option is a comma separated list of script names.
 function Core.applySandboxScriptOverrides()

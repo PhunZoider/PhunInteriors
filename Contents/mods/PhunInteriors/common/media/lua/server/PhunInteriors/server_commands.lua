@@ -55,6 +55,21 @@ Commands[Core.commands.leave] = function(player, args)
     Transit.leave(player, (args and args.reason) or "exit")
 end
 
+Commands[Core.commands.author] = function(player, args)
+    if not Core.tools.isAdmin(player) then
+        Core.logLn("rejected an author command from " .. tostring(Core.playerKey(player)))
+        return
+    end
+
+    local author = require "PhunInteriors/author"
+    local result = author.run(args and args.action, args or {})
+
+    Core.respond(player, Core.commands.adminResult, {
+        action = args and args.action,
+        result = result
+    })
+end
+
 Commands[Core.commands.admin] = function(player, args)
     if not Core.tools.isAdmin(player) then
         Core.logLn("rejected an admin command from " .. tostring(Core.playerKey(player)))

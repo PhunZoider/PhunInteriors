@@ -8,9 +8,13 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 ## Status
 
-**v1 code complete, never run in-game.** Everything parses and the internal
-wiring cross-checks, but nothing has been exercised against a live world.
-Treat runtime behaviour as unverified.
+**Playable in single player.** Enter, exit, containment, seat and door restore,
+translations and per slot blueprint capture are all confirmed working in game.
+
+Not yet exercised against a live world: **scrub**, lease expiry, the weight
+mechanic, the destroy guards, and the leash breach path (every exit so far has
+been the exit tile or the context menu, never an out of bounds walk). Nothing
+has been run in multiplayer at all.
 
 ## Verify before you claim anything works
 
@@ -43,7 +47,9 @@ Contents/mods/PhunInteriors/common/
   media/sandbox-options.txt
   media/lua/shared/PhunInteriors/    core, tools, registry, bounds, defaults
   media/lua/server/PhunInteriors/    slots, transit, leash, manifest, scrub,
-                                    weight, harden, admin, server_{commands,events}
+                                    weight, harden, admin, author,
+                                    server_{commands,events}
+  .../server/PhunInteriors/blueprints/  generated room set files, shipped
   media/lua/client/PhunInteriors/    client_{main,enter,context,guards,commands,events}
   media/lua/shared/Translate/EN/     ContextMenu.json, IG_UI.json, Sandbox.json
 
@@ -136,6 +142,23 @@ only cares that the player is standing in the room. Placed under the exemption
 it captured nothing at all, because an admin testing with noclip on is the
 normal case.
 
+
+**Blueprints are authored, not discovered.** `PhunInteriors.author(action,
+args)` builds a room set from where an admin is standing -- corners, spawn,
+exits and power are all read from the player position -- and emits a lua file
+that calls `registerRoomSet`, `registerVehicleClass` and `registerBlueprints`.
+That file goes in `server/PhunInteriors/blueprints/` and loads itself. There is
+no file reading at runtime anywhere in this design, and no json.
+
+`Manifest.forSlot` resolves shipped, then runtime capture, then the golden
+slot, and returns which it used. Runtime capture is now only the fallback for
+third party sets whose author has not run the tool.
+
+The emitter pools one palette across every slot in a set, because rooms in a
+strip share nearly all their sprites. Squares are written in sorted key order
+so re-exporting an unchanged map produces an identical file -- otherwise every
+export is a full diff and the file stops being reviewable, which is half the
+reason for emitting lua rather than a blob.
 
 **Scrub is an idempotent rebuild, not a diff.** Clear every non-floor object,
 re-place the manifest. Added furniture, smashed walls, damaged walls and moved

@@ -345,6 +345,35 @@ end
 -- action: it is the same shape PhunServer2's chat command drives, and the same
 -- shape an admin UI would drive later, so none of this gets rewritten.
 -- ---------------------------------------------------------------------------
+--- Build a room set from where you are standing and emit the lua for it.
+--
+--     PhunInteriors.author("begin", {id = "yourmod.van"})
+--     PhunInteriors.author("corner")   -- twice, opposite corners of room 1
+--     PhunInteriors.author("spawn")    -- standing on the spawn tile
+--     PhunInteriors.author("exit")     -- standing on each exit tile
+--     PhunInteriors.author("power")    -- standing on the generator square
+--     PhunInteriors.author("strip", {count = 38, pitchX = 60})
+--     PhunInteriors.author("scripts", {scripts = "Base.Van, Base.VanSeats", match = "Van"})
+--     PhunInteriors.author("sweep")    -- repeat as you walk the strip
+--     PhunInteriors.author("emit")
+--
+-- Same dispatcher shape as admin, for the same reason: a panel later is a
+-- view over these calls rather than a rewrite.
+function Core.author(action, args)
+    Core.dispatch(Core.commands.author, {
+        action = action or "status",
+        id = args and args.id,
+        label = args and args.label,
+        count = args and args.count,
+        pitchX = args and args.pitchX,
+        pitchY = args and args.pitchY,
+        scripts = args and args.scripts,
+        match = args and args.match,
+        partial = args and args.partial
+    })
+    return "sent; results are printed to the log"
+end
+
 function Core.admin(action, args)
     Core.dispatch(Core.commands.admin, {
         action = action or "list",

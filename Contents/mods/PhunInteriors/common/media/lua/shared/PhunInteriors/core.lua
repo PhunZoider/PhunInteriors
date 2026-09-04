@@ -17,7 +17,8 @@ PhunInteriors = {
         teleport = "teleport",
         notify = "notify",
         admin = "admin",
-        adminResult = "adminResult"
+        adminResult = "adminResult",
+        author = "author"
     },
     events = {
         OnReady = "PhunInteriorsOnReady",
@@ -27,6 +28,8 @@ PhunInteriors = {
     -- registry, populated by registry.lua and by other mods on OnReady
     roomSets = {},
     vehicleClasses = {},
+    -- shipped blueprints, keyed by room set id, registered by generated files
+    blueprints = {},
     scriptLookup = {},
     -- server side only: username -> occupancy record
     occupants = {},

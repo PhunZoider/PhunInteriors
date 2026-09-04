@@ -74,6 +74,11 @@ end
 -- nothing has been touched. There is no cheaper moment, and waiting for a
 -- timer would capture whatever the tenant had built by then.
 local function attemptCapture(occupancy)
+    -- Nothing to learn if the set ships this slot already.
+    if Core.shippedBlueprint(occupancy.roomSet, occupancy.index) then
+        occupancy.captureSlot = nil
+        return
+    end
     local captured, reason = Manifest.captureSlot(occupancy.roomSet, occupancy.index)
     occupancy.captureTries = (occupancy.captureTries or 0) + 1
     if captured then

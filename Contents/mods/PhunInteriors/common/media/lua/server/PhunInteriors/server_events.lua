@@ -13,6 +13,7 @@ local Manifest = require "PhunInteriors/manifest"
 local Leash = require "PhunInteriors/leash"
 local Admin = require "PhunInteriors/admin"
 local Harden = require "PhunInteriors/harden"
+local Author = require "PhunInteriors/author"
 
 local started = false
 
