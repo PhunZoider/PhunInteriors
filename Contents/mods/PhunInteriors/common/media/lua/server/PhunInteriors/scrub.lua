@@ -22,10 +22,15 @@ Core.modules.scrub = Scrub
 -- ---------------------------------------------------------------------------
 
 local function clearSquare(square, keepLoot, salvage)
+    -- Identity against square:getFloor(), matching Manifest.isStructural.
+    -- These two lists have to agree object for object or a scrub either loses
+    -- the floor or stacks a second one. instanceof(o, "IsoFloor") was used
+    -- here and it filters nothing -- it has no vanilla precedent either.
+    local floor = square:getFloor()
     local objects = square:getObjects()
     for i = objects:size() - 1, 0, -1 do
         local object = objects:get(i)
-        if object and not instanceof(object, "IsoFloor") then
+        if object and object ~= floor then
             if keepLoot and salvage and instanceof(object, "IsoWorldInventoryObject") then
                 local item = object:getItem()
                 if item then
@@ -77,9 +82,13 @@ function Scrub.slot(roomSetId, index)
         return false, "unknown room set"
     end
 
-    local manifest = Manifest.get(roomSetId) or Manifest.capture(roomSetId)
+    -- The slot's own blueprint if we caught it while pristine, otherwise the
+    -- room set's golden slot. Which one gets used is logged, because falling
+    -- back is the homogenising behaviour and it should be visible when it
+    -- happens rather than silently making every room identical.
+    local manifest, source = Manifest.forSlot(roomSetId, index)
     if not manifest then
-        return false, "no manifest yet"
+        return false, "no blueprint for this slot yet"
     end
 
     local bounds = Core.slotBounds(set, index)
@@ -106,7 +115,9 @@ function Scrub.slot(roomSetId, index)
                 local square = getCell():getGridSquare(x, y, z)
                 clearSquare(square, keepLoot, salvage)
                 local key = (x - origin.x) .. "," .. (y - origin.y) .. "," .. (z - origin.z)
-                local sprites = manifest.squares[key]
+                -- through the resolver, because a manifest may be either
+                -- format: v2 stores palette indices, v1 stored names.
+                local sprites = Manifest.spritesAt(manifest, key)
                 if sprites then
                     restoreSquare(square, sprites)
                 end
@@ -115,7 +126,8 @@ function Scrub.slot(roomSetId, index)
         end
     end
 
-    Core.logLn("scrubbed " .. roomSetId .. "#" .. index .. " (" .. touched .. " squares)")
+    Core.logLn("scrubbed " .. roomSetId .. "#" .. index .. " (" .. touched ..
+        " squares, from its " .. tostring(source) .. " blueprint)")
     return true, salvage
 end
 

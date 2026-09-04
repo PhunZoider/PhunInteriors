@@ -43,12 +43,18 @@ for %%M in (%MODS%) do (
 )
 
 rem --- Workshop staging, live ------------------------------------------------
+rem media\maps is deleted from both staging trees on the way out. The
+rem placeholder lotpacks are the reference mod's map (map.info still says
+rem map_distanciado) and must not be redistributed. The playable and Test mod
+rem folders above keep them, so nothing about local testing changes; only the
+rem upload staging loses them. Drop these two rmdirs when our own map lands.
 rmdir /S /Q "%WS%" 2>nul
 xcopy "%SRC%" "%WS%" /Y /I /E /F /Q /EXCLUDE:%SRC%xclude >nul
 rmdir /S /Q "%WS%\Tests" 2>nul
 rmdir /S /Q "%WS%\Contents" 2>nul
 for %%M in (%MODS%) do (
     xcopy "%MODDIR%\%%M" "%WS%\Contents\mods\%%M" /Y /I /E /F /Q >nul
+    rmdir /S /Q "%WS%\Contents\mods\%%M\common\media\maps" 2>nul
 )
 
 rem --- Workshop staging, test ------------------------------------------------
@@ -60,6 +66,7 @@ rmdir /S /Q "%WSTEST%\Tests" 2>nul
 rmdir /S /Q "%WSTEST%\Contents" 2>nul
 for %%M in (%MODS%) do (
     xcopy "%MODDIR%\%%MTest" "%WSTEST%\Contents\mods\%%M" /Y /I /E /F /Q >nul
+    rmdir /S /Q "%WSTEST%\Contents\mods\%%M\common\media\maps" 2>nul
 )
 copy /Y "%SRC%Tests\workshop.txt" "%WSTEST%\workshop.txt" >nul
 if exist "%SRC%Tests\preview.png" copy /Y "%SRC%Tests\preview.png" "%WSTEST%\preview.png" >nul

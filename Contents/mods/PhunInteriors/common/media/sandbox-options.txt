@@ -108,6 +108,14 @@ option PhunInteriors.BreachEjects
     translation = PhunInteriors_BreachEjects,
 }
 
+option PhunInteriors.AdminNoClipExempt
+{
+    type = boolean,
+    default = true,
+    page = PhunInteriors,
+    translation = PhunInteriors_AdminNoClipExempt,
+}
+
 option PhunInteriors.Scripts_phun_van
 {
     type = string,

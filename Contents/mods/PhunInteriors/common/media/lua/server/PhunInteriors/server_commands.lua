@@ -48,7 +48,7 @@ Commands[Core.commands.enter] = function(player, args)
         })
         return
     end
-    Transit.enter(player, vehicle)
+    Transit.enter(player, vehicle, args and args.seat, args and args.standSeat)
 end
 
 Commands[Core.commands.leave] = function(player, args)

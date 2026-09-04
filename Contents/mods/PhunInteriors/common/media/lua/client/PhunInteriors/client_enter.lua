@@ -35,14 +35,20 @@ function PhunInteriorsEnterAction:stop()
 end
 
 function PhunInteriorsEnterAction:perform()
-    Client.requestEnter(self.vehicle)
+    -- Which door we are stood at. Captured here rather than in beginEnter:
+    -- by now any ISExitVehicle has run and the character is standing where
+    -- they will actually be, so this is the door to put them back at. Works
+    -- out the same for a seated player, who is stood at their own door.
+    local standSeat = Client.nearestDoor(self.vehicle, self.character)
+    Client.requestEnter(self.vehicle, self.seat, standSeat)
     ISBaseTimedAction.perform(self)
 end
 
-function PhunInteriorsEnterAction:new(character, vehicle)
+function PhunInteriorsEnterAction:new(character, vehicle, seat)
     local o = ISBaseTimedAction.new(self, character)
     o.character = character
     o.vehicle = vehicle
+    o.seat = seat or -1
     o.stopOnWalk = true
     o.stopOnRun = true
     o.stopOnAim = true
@@ -64,8 +70,21 @@ function Client.beginEnter(vehicle)
     if not player or not vehicle then
         return
     end
-    if player:getVehicle() then
-        player:getVehicle():exit(player)
+    -- Capture the seat *here*, before anything leaves it. Our own isValid
+    -- refuses to run until the character is out of the vehicle, so by the
+    -- time the request reaches the server getSeat already returns -1 and the
+    -- seat is lost. This is the only moment it can be read.
+    local seat = -1
+    local current = player:getVehicle()
+    if current then
+        if current == vehicle then
+            seat = vehicle:getSeat(player)
+        end
+        -- Vanilla only ever leaves a seat through ISExitVehicle. Calling
+        -- exit() straight from a menu skips the animation and the seat
+        -- bookkeeping, so queue the vanilla action ahead of ours and let the
+        -- queue sequence them.
+        ISTimedActionQueue.add(ISExitVehicle:new(player))
     end
-    ISTimedActionQueue.add(PhunInteriorsEnterAction:new(player, vehicle))
+    ISTimedActionQueue.add(PhunInteriorsEnterAction:new(player, vehicle, seat))
 end

@@ -20,6 +20,7 @@ local function store()
     Core.data.assignments = Core.data.assignments or {}   -- vehicleId -> {roomSet, index, lastSeen}
     Core.data.occupied = Core.data.occupied or {}         -- roomSet -> {index -> vehicleId}
     Core.data.quarantine = Core.data.quarantine or {}     -- list of {roomSet, index}
+    Core.data.used = Core.data.used or {}                 -- roomSet -> {index -> true}
     Core.data.adopted = Core.data.adopted or false
     return Core.data
 end
@@ -38,6 +39,25 @@ local function isQuarantined(roomSetId, index)
         end
     end
     return false
+end
+
+--- Has this slot ever been handed out? Marks it if not, and says which.
+--
+-- This is what makes a first lease capture trustworthy. A slot nobody has
+-- ever been given has never been modified, so scanning it then is the only
+-- moment we can be certain the blueprint describes a pristine room. Once the
+-- flag is set it stays set, and a capture that fails is not retried on a
+-- later lease -- by then the room has had a tenant and is no longer evidence
+-- of anything.
+function Slots.markUsed(roomSetId, index)
+    local d = store()
+    d.used[roomSetId] = d.used[roomSetId] or {}
+    local key = tostring(index)
+    if d.used[roomSetId][key] then
+        return false
+    end
+    d.used[roomSetId][key] = true
+    return true
 end
 
 --- The slot currently leased to this vehicle, or nil.

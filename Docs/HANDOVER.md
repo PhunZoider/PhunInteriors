@@ -91,9 +91,14 @@ The riskiest areas, in order:
 
 ## Suggested first session back
 
-1. Get it loading. Deploy via VS Code save, start a SP world with the reference
-   mod enabled (needed for the borrowed coordinates), check the log for the
-   `ready. 14 day leases, weight factor 50%` line.
+1. Get it loading. Deploy via VS Code save, start a SP world, check the log for
+   the `ready. 14 day leases, weight factor 50%` line.
+
+   The reference mod must be **disabled**. This step used to say the opposite:
+   the borrowed coordinates needed its map. They no longer do — the placeholder
+   lotpacks now ship inside this mod at `common/media/maps/phuninteriors/` and
+   cover cells 87-97 x 46-49, which is exactly what the room set spans. Both
+   mods declaring those cells is a collision, not a prerequisite.
 2. Drive a van somewhere, use the radial menu, see whether you end up in a room.
    Everything downstream depends on this working.
 3. Walk onto the exit tile. Then deliberately walk out of bounds and confirm

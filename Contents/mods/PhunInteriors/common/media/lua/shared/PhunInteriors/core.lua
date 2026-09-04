@@ -60,6 +60,7 @@ Core.defaults = {
     ScrubKeepsLoot = false,
     HardenShell = true,
     BreachEjects = true,
+    AdminNoClipExempt = true,
 }
 
 function Core.getOption(name, default)

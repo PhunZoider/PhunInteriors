@@ -9,11 +9,14 @@ require "PhunInteriors/client_enter"
 require "PhunInteriors/client_context"
 require "PhunInteriors/client_guards"
 local Core = PhunInteriors
+local Client = Core.client
 local Commands = require "PhunInteriors/client_commands"
 
 local function setup()
     Events.OnTick.Remove(setup)
     Core.refreshSettings()
+    -- Deferred so the vanilla classes we wrap are certain to be loaded.
+    Client.installGuards()
     -- On a dedicated server the registry lives server side, but the client
     -- needs it too for menu decisions, so fire our ready event here as well.
     triggerEvent(Core.events.OnReady, Core)

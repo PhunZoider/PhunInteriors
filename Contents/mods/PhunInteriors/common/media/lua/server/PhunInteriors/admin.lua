@@ -67,6 +67,13 @@ actions.evict = function(args)
     return {username .. " is not inside a room"}
 end
 
+-- What every captured blueprint weighs. This is the measurement the design
+-- note asks for: the estimates there were derived from room dimensions, and
+-- nothing had ever been captured to check them against.
+actions.manifests = function()
+    return Manifest.report()
+end
+
 actions.remanifest = function(args)
     local roomSet = args.roomSet
     if not roomSet then

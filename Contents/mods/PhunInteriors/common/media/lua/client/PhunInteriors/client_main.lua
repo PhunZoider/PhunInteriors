@@ -32,14 +32,177 @@ Client.inside = false
 -- ---------------------------------------------------------------------------
 
 local HOLD_TICKS = 180
+local SEAT_TICKS = 120
 
 local pending = nil
+local holdTeleport
 
-local function holdTeleport()
+local function stopHolding()
+    pending = nil
+    Events.OnTick.Remove(holdTeleport)
+end
+
+--- The seat we came from if it is still free, otherwise the best one going.
+local function resolveSeat(vehicle, wanted, player)
+    if wanted and wanted >= 0 and not vehicle:isSeatOccupied(wanted) then
+        return wanted
+    end
+    local best = vehicle:getBestSeat(player)
+    if best and best >= 0 and not vehicle:isSeatOccupied(best) then
+        return best
+    end
+    for seat = 0, vehicle:getMaxPassengers() - 1 do
+        if not vehicle:isSeatOccupied(seat) then
+            return seat
+        end
+    end
+    return nil
+end
+
+-- Second phase, once the position has landed.
+--
+-- The server cannot do either of these things. While the player is inside, the
+-- vehicle's chunk is unloaded, so from the server an unloaded vehicle and a
+-- destroyed one look identical -- which is why it used to warn "your vehicle
+-- is gone" on every single normal exit. And vanilla only ever puts a character
+-- into a seat from a client timed action.
+-- Find the vehicle by the identity that actually survives.
+--
+-- Not getVehicleById. BaseVehicle:getId() is assigned when a vehicle enters
+-- the world, and the vehicle unloads while its owner is off in a room, so it
+-- comes back carrying a *different* id and the handle we captured on the way
+-- in is dead. Confirmed from the logs: the van was plainly there and the
+-- lookup returned nil on every single exit.
+--
+-- Our own UUID lives in the vehicle modData and is written into the save, so
+-- it does survive. Sweep the squares around where we landed and match on it.
+local SEARCH_RADIUS = 3
+
+local function findVehicle()
+    local cell = getCell()
+    if not cell or not pending.vehicleId then
+        return nil
+    end
+    for dx = -SEARCH_RADIUS, SEARCH_RADIUS do
+        for dy = -SEARCH_RADIUS, SEARCH_RADIUS do
+            local square = cell:getGridSquare(pending.x + dx, pending.y + dy, pending.z)
+            local vehicle = square and square:getVehicleContainer()
+            if vehicle and Core.vehicleId(vehicle, false) == pending.vehicleId then
+                return vehicle
+            end
+        end
+    end
+    return nil
+end
+
+-- Where a character stands to use a seat, in world coordinates. Vanilla
+-- computes it exactly this way in ISEnterVehicle and ISVehicleMenu, and
+-- reuses one Vector3f rather than allocating per call.
+local WORLD_POS = Vector3f.new()
+
+local function outsidePosition(vehicle, seat)
+    local position = vehicle:getPassengerPosition(seat, "outside")
+    if not position then
+        return nil
+    end
+    local worldPos = vehicle:getWorldPos(position:getOffset(), WORLD_POS)
+    if not worldPos then
+        return nil
+    end
+    return worldPos:x(), worldPos:y()
+end
+
+--- The seat whose door this character is standing nearest, or nil.
+--
+-- Deliberately not getBestSeat. That returns -1 here, confirmed from the
+-- logs: every single capture recorded "door -1", seated entries included, so
+-- the door was never actually remembered. Vanilla picks a seat the same way
+-- this does, by measuring to each seat's outside position (ISVehicleMenu's
+-- distanceToPassengerPosition), which is the same call our own landing code
+-- already relies on.
+function Client.nearestDoor(vehicle, character)
+    local best, bestDistance = nil, nil
+    for seat = 0, vehicle:getMaxPassengers() - 1 do
+        local x, y = outsidePosition(vehicle, seat)
+        if x then
+            local dx, dy = x - character:getX(), y - character:getY()
+            local distance = dx * dx + dy * dy
+            if not bestDistance or distance < bestDistance then
+                best, bestDistance = seat, distance
+            end
+        end
+    end
+    return best
+end
+
+local function rejoinVehicle(player)
+    local vehicle = findVehicle()
+
+    if not vehicle then
+        pending.seatTicks = pending.seatTicks + 1
+        if pending.seatTicks >= SEAT_TICKS then
+            -- Chunk is loaded and the vehicle is not in it. Now the warning is
+            -- true, which it was not when the server sent it.
+            Core.debugLn("rejoin: no vehicle matching " .. tostring(pending.vehicleId) ..
+                " within " .. SEARCH_RADIUS .. " squares of " .. pending.x .. "," .. pending.y ..
+                " after " .. pending.seatTicks .. " ticks")
+            Client.notify({text = "IGUI_PhunInteriors_VehicleGone", warning = true})
+            stopHolding()
+        end
+        return
+    end
+
+    -- Only re-seat someone who was seated on the way in. A player who walked
+    -- up to the van on foot should come back out on foot.
+    local seat = nil
+    if pending.seat and pending.seat >= 0 then
+        seat = resolveSeat(vehicle, pending.seat, player)
+        if not seat then
+            Core.debugLn("rejoin: every seat is occupied, staying outside")
+        end
+    end
+
+    -- Land beside the vehicle rather than in the middle of its model. The
+    -- server can only ever send us the vehicle position, which is its centre.
+    --
+    -- This is also what makes re-seating work at all: ISEnterVehicle:start()
+    -- silently returns without entering when the character is more than two
+    -- tiles from this exact position, and the centre of a van is further than
+    -- that. isValid then drops the action, so it failed by leaving the player
+    -- standing there. Confirmed from the logs, which recorded "seat 0
+    -- requested, taking 0" on an exit that put the player outside.
+    -- The seat we are retaking, else the door we came in by, else whatever is
+    -- nearest. Without the middle one every on-foot exit uses the same door,
+    -- because getBestSeat is measured from the vehicle centre we land on.
+    local standAt = seat or pending.standSeat
+    if not standAt or standAt < 0 then
+        standAt = Client.nearestDoor(vehicle, player)
+    end
+    if not standAt or standAt < 0 then
+        standAt = 0
+    end
+    local x, y = outsidePosition(vehicle, standAt)
+    if x then
+        player:teleportTo(x, y, player:getZ())
+    end
+
+    if seat then
+        Core.debugLn("rejoin: seat " .. tostring(pending.seat) .. " requested, taking " .. tostring(seat))
+        ISTimedActionQueue.add(ISEnterVehicle:new(player, vehicle, seat))
+    end
+
+    stopHolding()
+end
+
+function holdTeleport()
     local player = getPlayer()
     if not pending or not player then
-        pending = nil
-        Events.OnTick.Remove(holdTeleport)
+        stopHolding()
+        return
+    end
+
+    if pending.arrived then
+        rejoinVehicle(player)
         return
     end
 
@@ -53,8 +216,14 @@ local function holdTeleport()
     if arrived then
         Core.debugLn(string.format("teleport: arrived at %s,%s,%s after %d tick(s)",
             tostring(pending.x), tostring(pending.y), tostring(pending.z), pending.ticks))
-        pending = nil
-        Events.OnTick.Remove(holdTeleport)
+        -- Coming back out there is a second phase: wait for the vehicle to
+        -- appear in the freshly streamed chunk, then get back in it.
+        if pending.vehicleHandle then
+            pending.arrived = true
+            pending.seatTicks = 0
+            return
+        end
+        stopHolding()
         return
     end
 
@@ -64,8 +233,7 @@ local function holdTeleport()
             pending.ticks, tostring(pending.x), tostring(pending.y), tostring(pending.z),
             square and "there" or "still nil",
             tostring(player:getX()), tostring(player:getY())))
-        pending = nil
-        Events.OnTick.Remove(holdTeleport)
+        stopHolding()
         return
     end
 
@@ -99,7 +267,13 @@ function Client.teleport(data)
         x = math.floor(data.x),
         y = math.floor(data.y),
         z = math.floor(data.z),
-        ticks = 0
+        ticks = 0,
+        arrived = false,
+        -- Only set on the way out; nil going in, which skips the second phase.
+        vehicleHandle = data.vehicleHandle,
+        vehicleId = data.vehicleId,
+        seat = data.seat,
+        standSeat = data.standSeat
     }
     if not wasPending then
         Events.OnTick.Add(holdTeleport)
@@ -125,14 +299,18 @@ function Client.notify(data)
 end
 
 --- Ask to go in. The server decides.
-function Client.requestEnter(vehicle)
+function Client.requestEnter(vehicle, seat, standSeat)
     if not vehicle then
         return
     end
     Core.dispatch(Core.commands.enter, {
         x = vehicle:getX(),
         y = vehicle:getY(),
-        z = vehicle:getZ()
+        z = vehicle:getZ(),
+        -- Read before the character left the seat; see client_enter.
+        seat = seat,
+        -- The door they are stood at, so they come back out at the same one.
+        standSeat = standSeat
     })
 end
 
@@ -140,6 +318,42 @@ end
 --- the context menu is a discoverable affordance and a safety net.
 function Client.requestLeave()
     Core.dispatch(Core.commands.leave, {reason = "exit"})
+end
+
+
+-- ---------------------------------------------------------------------------
+-- Admin entry point.
+--
+-- admin.lua's handler and the adminResult printer both existed, but nothing
+-- ever dispatched between them, so with PhunServer2 absent -- which is the
+-- normal case, since it is a soft hook and never a dependency -- the whole
+-- admin surface was unreachable.
+--
+-- This is the single client side caller. Type it into the debug console:
+--
+--     PhunInteriors.admin("list")
+--     PhunInteriors.admin("remanifest", {roomSet = "phun.van"})
+--     PhunInteriors.admin("scrub", {roomSet = "phun.van", index = 3})
+--     PhunInteriors.admin("free", {vehicleId = "..."})
+--     PhunInteriors.admin("evict", {username = "..."})
+--
+-- Results come back through Core.commands.adminResult and print to the log,
+-- which is also where they land in multiplayer. The server re-checks admin
+-- rights in server_commands, so this is an entry point, not a bypass.
+--
+-- Deliberately one function taking an action name rather than a function per
+-- action: it is the same shape PhunServer2's chat command drives, and the same
+-- shape an admin UI would drive later, so none of this gets rewritten.
+-- ---------------------------------------------------------------------------
+function Core.admin(action, args)
+    Core.dispatch(Core.commands.admin, {
+        action = action or "list",
+        vehicleId = args and args.vehicleId,
+        roomSet = args and args.roomSet,
+        index = args and args.index,
+        username = args and args.username
+    })
+    return "sent; results are printed to the log"
 end
 
 return Client

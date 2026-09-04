@@ -75,7 +75,7 @@ function Transit.canEnter(player, vehicle)
 end
 
 --- Put a player inside. Server authoritative; the client only does the move.
-function Transit.enter(player, vehicle)
+function Transit.enter(player, vehicle, seat, standSeat)
     local ok, classOrReason = Transit.canEnter(player, vehicle)
     if not ok then
         notify(player, classOrReason, true)
@@ -105,6 +105,31 @@ function Transit.enter(player, vehicle)
     local set = Core.roomSets[assignment.roomSet]
     local spawn = Core.slotSpawn(set, assignment.index)
     local key = Core.playerKey(player)
+
+    -- If nobody has ever had this room, it is pristine, and the leash will
+    -- capture its blueprint as soon as it sees the player actually inside it.
+    -- That is the only moment the room is both loaded and untouched: the
+    -- chunk is not loaded here, and it stops being pristine the moment the
+    -- tenant moves a chair.
+    local pristine = Slots.markUsed(assignment.roomSet, assignment.index)
+
+    -- The client reads this before the character leaves the seat, because by
+    -- the time the request lands here getSeat would already return -1. Bound
+    -- it rather than trusting it: the worst a bad value could do is drop the
+    -- player into a different seat of their own vehicle, but there is no
+    -- reason to accept one.
+    local requestedSeat = tonumber(seat) or -1
+    if requestedSeat < 0 or requestedSeat >= vehicle:getMaxPassengers() then
+        requestedSeat = -1
+    end
+
+    -- Which door to put them back at. Separate from the seat: someone who
+    -- walked up on foot has no seat to retake but still got in somewhere, and
+    -- coming back out at the same door beats always using the same one.
+    local requestedDoor = tonumber(standSeat) or -1
+    if requestedDoor < 0 or requestedDoor >= vehicle:getMaxPassengers() then
+        requestedDoor = -1
+    end
 
     -- A room set points at coordinates that only exist if the map providing
     -- them was present when the world was created. PZ writes the meta grid at
@@ -146,7 +171,10 @@ function Transit.enter(player, vehicle)
         graceUntil = getTimestampMs() + 6000,
         roomSet = assignment.roomSet,
         index = assignment.index,
-        seat = vehicle:getSeat(player),
+        seat = requestedSeat,
+        standSeat = requestedDoor,
+        captureSlot = pristine or nil,
+        captureTries = 0,
         enteredAt = Core.now(),
         zombieSnapshot = snapshot,
         returnTo = {
@@ -168,7 +196,8 @@ function Transit.enter(player, vehicle)
     })
 
     triggerEvent(Core.events.OnEnter, player, vehicle, assignment)
-    Core.debugLn(tostring(key) .. " entered " .. assignment.roomSet .. "#" .. assignment.index)
+    Core.debugLn(tostring(key) .. " entered " .. assignment.roomSet .. "#" .. assignment.index ..
+        " from seat " .. tostring(requestedSeat) .. ", door " .. tostring(requestedDoor))
     return true
 end
 
@@ -245,16 +274,29 @@ function Transit.leave(player, reason)
         Slots.touch(occupancy.vehicleId)
     end
 
+    -- Rejoining the seat is a client timed action, and the vehicle is very
+    -- likely still unloaded at this point, so hand the client what it needs
+    -- to do it once the destination chunk has streamed in.
     Core.respond(player, Core.commands.teleport, {
         x = destination.x,
         y = destination.y,
         z = destination.z,
         inside = false,
-        reason = reason
+        reason = reason,
+        vehicleHandle = occupancy.vehicleHandle,
+        vehicleId = occupancy.vehicleId,
+        seat = occupancy.seat,
+        standSeat = occupancy.standSeat
     })
 
+    -- Deliberately no "your vehicle is gone" warning here. While the player
+    -- was inside, the vehicle almost always unloaded, so from this side an
+    -- unloaded vehicle and a destroyed one are indistinguishable and this
+    -- fired on every ordinary exit. The client raises it after the teleport
+    -- lands and the chunk is loaded, where the question can actually be
+    -- answered.
     if not vehicle then
-        notify(player, "IGUI_PhunInteriors_VehicleGone", true)
+        Core.debugLn("leave: vehicle not loaded here; client will confirm on arrival")
     end
 
     triggerEvent(Core.events.OnExit, player, reason, owed)
