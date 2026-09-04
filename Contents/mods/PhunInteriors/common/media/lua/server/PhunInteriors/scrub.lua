@@ -21,57 +21,143 @@ Core.modules.scrub = Scrub
 -- every room, rebuilding from a manifest is equivalent in practice.
 -- ---------------------------------------------------------------------------
 
-local function clearSquare(square, keepLoot, salvage)
-    -- Identity against square:getFloor(), matching Manifest.isStructural.
-    -- These two lists have to agree object for object or a scrub either loses
-    -- the floor or stacks a second one. instanceof(o, "IsoFloor") was used
-    -- here and it filters nothing -- it has no vanilla precedent either.
+--- Empty an object's container, salvaging first if asked.
+local function drain(object, keepLoot, salvage)
+    -- Containers hang off the object, never off the square.
+    -- square:getContainer() does not exist and threw on the first scrub that
+    -- ever ran; vanilla only ever calls getContainer() on an IsoObject.
+    local container = object:getContainer()
+    if not container then
+        return
+    end
+    local items = container:getItems()
+    if keepLoot and salvage and items then
+        for i = 0, items:size() - 1 do
+            table.insert(salvage, items:get(i))
+        end
+    end
+    container:removeAllItems()
+end
+
+--- Recreate an object the way the engine would have, not as a bare IsoObject.
+--
+-- An object's behaviour lives in its class, and the class is chosen from the
+-- sprite. IsoObject.new always returns a plain IsoObject, so a restored light
+-- switch was a picture of a switch with nothing behind it, and a room whose
+-- switch had been destroyed could never have light again.
+--
+-- Vanilla makes exactly this decision in ISMoveableSpriteProps when it places
+-- a fixture the player picked up: read the sprite's type, construct the
+-- matching class. This mirrors its light switch branch, including the room id
+-- and the addLightSourceFromSprite call that actually creates the light.
+--
+-- Deliberately only light switches for now. The same file also branches on
+-- door, window and wall flags, but those need their own verification and a
+-- room without a working light is the failure that was actually reported.
+local function createFromSprite(square, name)
+    local sprite = getSprite(name)
+    if not sprite then
+        Core.logLn("no sprite named '" .. tostring(name) .. "', skipping it")
+        return nil
+    end
+
+    if sprite:getType() == IsoObjectType.lightswitch then
+        local switch = IsoLightSwitch.new(getCell(), square, sprite, square:getRoomID())
+        switch:addLightSourceFromSprite()
+        return switch
+    end
+
+    return IsoObject.new(getCell(), square, name)
+end
+
+--- Bring one square back to what the blueprint says it should hold.
+--
+-- This reconciles rather than rebuilds, and that is a reversal of the
+-- original design. Rebuilding meant deleting every object and re-placing the
+-- blueprint, which is uniform and appealing right up until you notice the
+-- re-placed objects are dead.
+--
+-- The engine picks an object's class from its sprite when the map loads: the
+-- same call produces an IsoLightSwitch, an IsoDoor, an IsoThumpable. Lua
+-- cannot ask for that. IsoObject.new gives a plain IsoObject, so a rebuilt
+-- light switch is a picture of a light switch. Confirmed in game -- the
+-- switches stopped working after the first scrub. Vanilla lua never
+-- constructs one of these; it only ever tests with instanceof.
+--
+-- So anything the blueprint expects and the square already has is left where
+-- it is, keeping whatever the engine made it. Only extras are removed, and
+-- only genuinely missing objects are created, through createFromSprite so
+-- they come back as the right class rather than as scenery.
+--
+-- It is also more idempotent than the rebuild was, not less: a second pass
+-- over a restored room touches nothing at all.
+local function reconcileSquare(square, wanted, keepLoot, salvage)
     local floor = square:getFloor()
+
+    -- Sprites can legitimately repeat on one square, so count them rather
+    -- than treating the blueprint as a set.
+    local needed = {}
+    for _, name in ipairs(wanted or {}) do
+        needed[name] = (needed[name] or 0) + 1
+    end
+
     local objects = square:getObjects()
     for i = objects:size() - 1, 0, -1 do
         local object = objects:get(i)
         if object and object ~= floor then
-            if keepLoot and salvage and instanceof(object, "IsoWorldInventoryObject") then
-                local item = object:getItem()
-                if item then
-                    table.insert(salvage, item)
+            local sprite = object:getSprite()
+            local name = sprite and sprite:getName()
+
+            if name and (needed[name] or 0) > 0 then
+                -- Part of the room. Keep the object, empty anything the
+                -- tenant stashed in it.
+                needed[name] = needed[name] - 1
+                drain(object, keepLoot, salvage)
+            else
+                if keepLoot and salvage and instanceof(object, "IsoWorldInventoryObject") then
+                    local item = object:getItem()
+                    if item then
+                        table.insert(salvage, item)
+                    end
                 end
+                drain(object, keepLoot, salvage)
+                square:transmitRemoveItemFromSquare(object)
+                square:RemoveTileObject(object)
             end
-            square:transmitRemoveItemFromSquare(object)
-            square:RemoveTileObject(object)
         end
     end
 
-    -- Things a sprite scan cannot capture, handled explicitly
-    local container = square:getContainer()
-    if container then
-        if keepLoot and salvage then
-            local items = container:getItems()
-            for i = 0, items:size() - 1 do
-                table.insert(salvage, items:get(i))
+    -- Whatever is still owed was destroyed. This is the only path that mints a
+    -- new object, and the only one that can produce an inert fixture.
+    for name, count in pairs(needed) do
+        for _ = 1, count do
+            local object = createFromSprite(square, name)
+            if object then
+                square:AddTileObject(object)
+                object:transmitCompleteItemToClients()
             end
         end
-        container:removeAllItems()
     end
 
-    -- corpses and blood do not belong to the next tenant
-    local body = square:getDeadBody()
-    if body then
-        body:removeFromSquare()
-        body:removeFromWorld()
+    -- Corpses and blood do not belong to the next tenant. The square method is
+    -- getDeadBodys, plural, returning a list -- getDeadBody(index) belongs to
+    -- a hutch, not a square.
+    local bodies = square:getDeadBodys()
+    if bodies then
+        for i = bodies:size() - 1, 0, -1 do
+            local body = bodies:get(i)
+            if body then
+                -- vanilla removes from world first, then from the square
+                body:removeFromWorld()
+                body:removeFromSquare()
+            end
+        end
     end
+
     -- IsoGridSquare has no setBloodSplatLifetime. This pair is what vanilla
     -- ISCleanBlood:complete() uses.
     square:removeBlood(false, false)
     square:removeGrime()
-end
-
-local function restoreSquare(square, sprites)
-    for _, name in ipairs(sprites) do
-        local object = IsoObject.new(getCell(), square, name)
-        square:AddTileObject(object)
-        object:transmitCompleteItemToClients()
-    end
 end
 
 --- Rebuild one slot from the manifest of its room set.
@@ -113,14 +199,11 @@ function Scrub.slot(roomSetId, index)
         for x = bounds.x1, bounds.x2 do
             for y = bounds.y1, bounds.y2 do
                 local square = getCell():getGridSquare(x, y, z)
-                clearSquare(square, keepLoot, salvage)
                 local key = (x - origin.x) .. "," .. (y - origin.y) .. "," .. (z - origin.z)
                 -- through the resolver, because a manifest may be either
-                -- format: v2 stores palette indices, v1 stored names.
-                local sprites = Manifest.spritesAt(manifest, key)
-                if sprites then
-                    restoreSquare(square, sprites)
-                end
+                -- format: v2 stores palette indices, v1 stored names. nil is
+                -- meaningful: the blueprint says this square holds nothing.
+                reconcileSquare(square, Manifest.spritesAt(manifest, key), keepLoot, salvage)
                 touched = touched + 1
             end
         end

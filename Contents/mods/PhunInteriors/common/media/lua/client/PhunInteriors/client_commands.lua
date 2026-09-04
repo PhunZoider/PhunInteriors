@@ -10,6 +10,15 @@ Commands[Core.commands.teleport] = function(arguments)
     Client.teleport(arguments)
 end
 
+-- Client.inside is otherwise only ever set by a teleport, and a player who
+-- reconnects inside a room never receives one: the server rebuilds their
+-- occupancy from the lease, but the client came up believing it is outside.
+-- The exit tile still worked, so this only ever cost the context menu
+-- option, which is the affordance people actually look for.
+Commands[Core.commands.state] = function(arguments)
+    Client.inside = arguments and arguments.inside and true or false
+end
+
 Commands[Core.commands.notify] = function(arguments)
     Client.notify(arguments)
 end

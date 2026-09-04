@@ -15,7 +15,9 @@ PhunInteriors = {
         notify = "notify",
         admin = "admin",
         adminResult = "adminResult",
-        author = "author"
+        author = "author",
+        -- server -> client, so a reconnecting player learns they are inside
+        state = "state"
     },
     events = {
         OnReady = "PhunInteriorsOnReady",

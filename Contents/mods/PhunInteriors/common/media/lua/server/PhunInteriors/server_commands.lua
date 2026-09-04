@@ -37,6 +37,13 @@ Commands[Core.commands.playerSetup] = function(player, args)
     if not Core.occupants[Core.playerKey(player)] then
         Transit.recover(player)
     end
+
+    -- Then tell them, because the client has no other way to find out. It
+    -- only learns it is inside from a teleport, and reconnecting is the one
+    -- path into a room that does not involve one.
+    Core.respond(player, Core.commands.state, {
+        inside = Core.occupants[Core.playerKey(player)] ~= nil
+    })
 end
 
 Commands[Core.commands.enter] = function(player, args)

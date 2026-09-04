@@ -163,9 +163,25 @@ so re-exporting an unchanged map produces an identical file -- otherwise every
 export is a full diff and the file stops being reviewable, which is half the
 reason for emitting lua rather than a blob.
 
-**Scrub is an idempotent rebuild, not a diff.** Clear every non-floor object,
-re-place the manifest. Added furniture, smashed walls, damaged walls and moved
-furniture then all become the same operation.
+**Scrub reconciles, it does not rebuild.** Keep every object the blueprint
+expects and the square already has, remove the extras, create only what is
+genuinely missing.
+
+This reverses the original design, and not for style. The engine picks an
+object's class from its sprite when the map loads -- the same sprite becomes an
+`IsoLightSwitch`, an `IsoDoor`, an `IsoThumpable` -- and Lua cannot ask for
+that. `IsoObject.new` returns a plain `IsoObject`, so a rebuilt light switch is
+a picture of a light switch. Confirmed in game: switches stopped working after
+the first scrub. Vanilla lua never constructs one of these, it only ever tests
+with `instanceof`.
+
+Reconciling is also *more* idempotent than the rebuild was: a second pass over
+a restored room touches nothing at all.
+
+What does get recreated goes through `Scrub.createFromSprite`, which reads
+`sprite:getType()` and constructs the matching class. Only `lightswitch` is
+handled so far, because a room with no working light was the reported failure;
+doors, windows and walls have branches in vanilla worth copying when needed.
 
 **Weight composes additively.** `weight.lua` tracks only our own delta and does
 `setMass(getMass() - ourLastDelta + ourNewDelta)`. Do NOT cache an absolute
@@ -187,6 +203,8 @@ B41 tutorial applies.
 | `getVehicleById(id)`, `getCell():getVehicles()`, `getRandomUUID()`, `getGameTime():getWorldAgeHours()` all exist. | Safe to use. |
 | **`next()` is not exposed** by PZ's Lua sandbox. Confirmed in-game, and PhunMart2's `restockTypes` hit the same wall. `pairs`, `ipairs`, `table.*`, `string.*`, `math.*` are all fine. | Use `Core.tools.isEmpty(t)` to test a table for emptiness. LuaJIT will **not** catch this — `next` exists there. |
 | `BaseVehicle` has **no `isInVehicle`**. The occupancy test is `player:getVehicle()`, compared against the vehicle. `vehicle:exit(chr)` and `vehicle:getSeat(chr)` are real. | Confirmed absent from the jar constant pool. |
+| An object's behaviour lives in its class, and `IsoObject.new` always returns a plain `IsoObject` — a restored light switch is a picture of a switch. The class comes from `getSprite(name):getType()`, and vanilla constructs the right one in `ISMoveableSpriteProps.lua:2175-2196`: `IsoLightSwitch.new(getCell(), square, sprite, square:getRoomID())` then `addLightSourceFromSprite()`, with sibling branches on `IsoFlagType.doorN/windowN/WallN` for doors, windows and walls. | `Scrub.createFromSprite` mirrors the light switch branch. Two separate lessons: recreating an object from a sprite name alone loses its behaviour, **and** "vanilla never does X" was wrong here — a `grep` for `IsoLightSwitch` found only `instanceof` tests because the constructor call is 2000 lines into a Moveables file. Search for the *constructor*, not just the class name. |
+| `IsoGridSquare` has **no `getContainer()`** and no `getDeadBody()`. Containers hang off the object (`isoObject:getContainer()`); bodies come from `square:getDeadBodys()`, plural, returning a list. `getDeadBody(index)` is a *hutch* method. Vanilla removes a body with `removeFromWorld()` then `removeFromSquare()`, in that order. | Both were wrong in `Scrub.clearSquare` and threw `Object tried to call nil` the first time a scrub ever ran. Note the jar check passes for both: a class's constant pool contains method names it **calls** as well as ones it owns, so "present" proves nothing on its own — cross-check against vanilla usage. |
 | `IsoGridSquare` has **no `setBloodSplatLifetime`**. Vanilla `ISCleanBlood:complete()` uses `square:removeBlood(false, false)` then `square:removeGrime()`. | Confirmed absent from the jar. |
 | Vanilla only ever exits a vehicle from a **client** timed action (`ISExitVehicle`). | `vehicle:exit()` lives in `Client.teleport`, not in server-side `Transit.enter`. |
 | `getCell():getVehicles()` returns a **`java.util.Set`** — `size()` but no `get(i)`, so it cannot be indexed from Lua. Vanilla's own `ISVehicleBloodUI.lua:81` does `vehicles:get(i-1)` and is therefore broken. | `resolveReturn` uses `getVehicleById(handle)`. Vanilla Lua shows intent, **not** correctness — check the jar. |
@@ -215,7 +233,19 @@ perl -e 'local $/; open($f,"<:raw",shift); $d=<$f>; %s=();
      zombie/vehicles/BaseVehicle.class isInVehicle exit getSeat
 ```
 
-A name being present proves the string is in that class; absent is conclusive.
+For a conclusive answer, parse the method table rather than the constant
+pool. `Docs/methods.pl` prints what a class actually declares, with real
+signatures:
+
+```bash
+perl Docs/methods.pl /tmp/pzchk/zombie/iso/objects/IsoLightSwitch.class "<init>"
+#   public <init> (IsoCell, IsoGridSquare, IsoSprite, long) -> void
+```
+
+Absent is conclusive. **Present is not**: a constant pool holds the names a
+class calls on other classes as well as its own, so `getContainer` shows up in
+`IsoGridSquare` purely because it calls it on an object. Present means "worth
+checking", never "exists here".
 Cross-check intent against how vanilla's own Lua in `media/lua/` uses it — zero
 vanilla uses of a plausible-sounding method is the tell that it was invented.
 
