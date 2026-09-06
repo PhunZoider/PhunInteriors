@@ -260,11 +260,28 @@ actions.power = function(args)
                     table.insert(lines, "  power square is not loaded")
                 elseif generator then
                     table.insert(lines, string.format(
-                        "  generator: activated %s, fuel %.1f/%.1f, condition %d",
+                        "  generator: activated %s, fuel %.1f/%.1f, condition %d, drawing %.2f",
                         tostring(generator:isActivated()), generator:getFuel(),
-                        generator:getMaxFuel(), generator:getCondition()))
+                        generator:getMaxFuel(), generator:getCondition(),
+                        generator:getTotalPowerUsing()))
                 else
                     table.insert(lines, "  no generator on the power square")
+                end
+
+                -- The ledger. Nothing else shows it, and it is the whole
+                -- mechanism: the room and the vehicle are never loaded at the
+                -- same time, so the debt between them lives here.
+                local Power = require "PhunInteriors/power"
+                for vehicleId, assignment in pairs(Slots.store().assignments) do
+                    if assignment.roomSet == target.roomSet
+                        and assignment.index == target.index then
+                        table.insert(lines, string.format(
+                            "  ledger: battery last read %.0f%%, %.1f fuel owed, "
+                            .. "projected %.0f%%",
+                            (tonumber(assignment.batteryKnown) or 0) * 100,
+                            tonumber(assignment.fuelOwed) or 0,
+                            Power.projectedCharge(assignment) * 100))
+                    end
                 end
             end
         end

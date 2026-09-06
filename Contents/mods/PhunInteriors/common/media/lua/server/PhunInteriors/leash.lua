@@ -120,6 +120,28 @@ local function attemptScrub(occupancy)
     end
 end
 
+-- How often to look at the room's generator while somebody is in there.
+local POWER_INTERVAL_MS = 30000
+
+--- Keep the room's generator fed while the tenant is in it.
+--
+-- Deliberately not one-shot. A tenant who stays long enough to burn a full
+-- tank would otherwise watch the lights die while their van sits outside with
+-- a charged battery, and the room cannot read that battery to know better --
+-- Power.syncRoom works it out from the ledger instead.
+--
+-- Every 30s rather than every tick: this reads a square and scans its objects,
+-- and the leash runs four times a second.
+local function attemptPower(occupancy)
+    local now = getTimestampMs()
+    if occupancy.powerNext and now < occupancy.powerNext then
+        return
+    end
+    occupancy.powerNext = now + POWER_INTERVAL_MS
+    require("PhunInteriors/power").syncRoom(
+        occupancy.roomSet, occupancy.index, occupancy.vehicleId)
+end
+
 local function checkOne(player, occupancy)
     local where = Leash.classify(occupancy, player:getX(), player:getY(), player:getZ())
 
@@ -133,14 +155,8 @@ local function checkOne(player, occupancy)
             attemptCapture(occupancy)
         elseif occupancy.scrubOnArrival then
             attemptScrub(occupancy)
-        elseif occupancy.powerPending then
-            -- Same reasoning as the two above, and deliberately after them:
-            -- the generator is filled once the room is settled, so a slot that
-            -- is about to be scrubbed is not lit and then wiped. One shot --
-            -- if there is no generator to find, that is a map problem and a
-            -- retry will not conjure one.
-            occupancy.powerPending = nil
-            require("PhunInteriors/power").engage(occupancy)
+        else
+            attemptPower(occupancy)
         end
     end
 

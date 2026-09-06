@@ -161,6 +161,11 @@ function Transit.enter(player, vehicle, seat, standSeat)
     -- tracker refreshes it whenever somebody drives this thing again.
     assignment.lastKnownHandle = vehicle:getId()
 
+    -- The vehicle is loaded and in hand right here, and will not be again
+    -- until the tenant comes back out. Settle whatever the room owes and take
+    -- a true battery reading for it to spend.
+    Power.syncVehicle(vehicleId, vehicle)
+
     local set = Core.roomSets[assignment.roomSet]
     local spawn = Core.slotSpawn(set, assignment.index)
     local key = Core.playerKey(player)
@@ -234,11 +239,6 @@ function Transit.enter(player, vehicle, seat, standSeat)
         standSeat = requestedDoor,
         captureSlot = pristine or nil,
         captureTries = 0,
-        -- Read here because the vehicle is loaded here and will not be again
-        -- until the tenant comes back out. The room's generator is filled from
-        -- this the moment the leash confirms they are standing in it.
-        batteryAtEntry = Power.charge(vehicle),
-        powerPending = true,
         scrubOnArrival = scrubOnArrival or nil,
         scrubTries = 0,
         enteredAt = Core.now(),
@@ -302,6 +302,12 @@ function Transit.notePosition(handle)
         z = vehicle:getZ()
     }
     assignment.lastKnownHandle = handle
+
+    -- A push only ever happens because somebody is driving this thing, which
+    -- means it is loaded and its battery is readable. That makes this the
+    -- cheapest settlement point we have, and it costs nothing to take: no
+    -- sweep, no timer, no separate hook.
+    Power.syncVehicle(vehicleId, vehicle)
 
     Core.debugLn(string.format("tracked %s to %d,%d,%d (handle %s)",
         tostring(vehicleId), vehicle:getX(), vehicle:getY(), vehicle:getZ(),
@@ -450,14 +456,11 @@ function Transit.leave(player, reason)
         Weight.apply(vehicle, interiorWeight)
     end
 
-    -- Shut the generator down and find out what it burned. Measured here for
-    -- the same reason as the weight: the room is loaded because the player is
-    -- standing in it, and it will not be a moment from now.
-    local powerUsed = Power.disengage(occupancy)
-    if vehicle and powerUsed > 0 then
-        Power.applyToBattery(vehicle, powerUsed)
-        powerUsed = 0
-    end
+    -- One last read of the generator while the room is still loaded, for the
+    -- same reason as the weight: the player is standing in it now and will not
+    -- be a moment from now. The debt this banks is settled against the battery
+    -- on the arrival report, or by the tracker if somebody drives it first.
+    Power.syncRoom(occupancy.roomSet, occupancy.index, occupancy.vehicleId)
 
     -- What is still owed once the player confirms they landed. Applying the
     -- mass needs the vehicle loaded, and it is not loaded here -- it will be
@@ -468,7 +471,6 @@ function Transit.leave(player, reason)
         -- both nil when they were applied above, because the vehicle happened
         -- to be loaded already
         weight = (not vehicle) and interiorWeight or nil,
-        powerUsed = powerUsed > 0 and powerUsed or nil,
         expires = getTimestampMs() + ARRIVAL_TIMEOUT_MS
     }
 
@@ -564,9 +566,9 @@ function Transit.arrived(player, handle)
     if record.weight then
         Weight.apply(vehicle, record.weight)
     end
-    if record.powerUsed then
-        Power.applyToBattery(vehicle, record.powerUsed)
-    end
+    -- The vehicle is loaded again, so whatever the room banked on the way out
+    -- can be taken off the battery now.
+    Power.syncVehicle(record.vehicleId, vehicle)
     return true
 end
 

@@ -379,10 +379,39 @@ generator and should not have one conjured for it.
 `setActivated(true)` does everything else itself: registers the position with
 the chunk, calls `setSurroundingElectricity`, syncs to clients.
 
-Weight and power are measured at the same two moments and for the same reason.
-The room is loaded on the way out because the player is standing in it; the
-vehicle is not, and will not be until they land on top of it — so both ride the
-arrival report.
+**Almost none of the arithmetic is ours.** `IsoGenerator.update()` burns
+`totalPowerUsing * generatorFuelConsumption` for every world hour since its
+`lastHour`, and `totalPowerUsing` is accumulated by `setSurroundingElectricity`
+from the objects actually in range. An empty room draws nothing and burns
+nothing; put a fridge in and it burns. `lastHour` is compared against world age
+rather than ticked, so the burn **catches up for time the chunk spent
+unloaded** — two days away costs two days of fuel the moment the room reloads.
+
+**Which is why the tank is a buffer, not a fuel gauge.** Sizing it to the
+battery does not survive that catch-up: half a battery buys half a tank, and
+returning after a couple of days empties it while the van outside is perfectly
+healthy, losing the tenant a fridge of food for a reason they cannot see. So it
+is topped to *full* whenever there is any charge to draw on, and the **battery**
+is the limiting resource. Battery alive, generator golden; battery flat, dark
+room. Running dry with charge left needs an absence long enough to burn a whole
+tank, which reads honestly as having been away too long.
+
+**The two halves are never loaded together**, so a ledger on the lease carries
+the debt between them: `fuelOwed`, `fuelLast`, `batteryKnown`. The room banks
+what burned and tops the tank up if `projectedCharge` — known charge minus
+outstanding debt — is still positive, which is how it decides without being
+able to read the battery. The vehicle settles the debt when it can.
+
+Nothing is periodic. The room half rides the leash, already the hook meaning
+"chunk loaded, tenant standing in it". The vehicle half rides entry, the
+arrival report, **and every position push from the tracker** — free, because a
+push only ever happens when somebody is driving a leased vehicle, which is
+exactly when it is loaded. RV Interior sweeps `getCell():getVehicles()` hourly
+for the same job, and that sweep is dead on B42 for the usual reason.
+
+Weight is measured at the same two moments and for the same reason: the room is
+loaded on the way out because the player is standing in it, the vehicle is not,
+so it rides the arrival report.
 
 **Weight composes additively.** `weight.lua` tracks only our own delta and does
 `setMass(getMass() - ourLastDelta + ourNewDelta)`. Do NOT cache an absolute
