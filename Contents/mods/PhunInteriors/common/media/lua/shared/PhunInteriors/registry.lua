@@ -200,12 +200,22 @@ end
 
 --- Does this vehicle satisfy its class's entry requirements?
 --- Returns false plus a translation key when it does not.
---- Is this vehicle moving fast enough to matter?
+--- Is this vehicle moving?
+--
+-- isStopped() rather than a speed threshold of our own. A stationary vehicle
+-- under tow reports a non-zero getCurrentSpeedKmHour -- confirmed in game: a
+-- parked towed van refused entry from outside while telling the player it was
+-- moving. The coupling never quite settles, so any epsilon we pick is a guess
+-- about physics jitter.
+--
+-- isStopped is the engine's own answer and it is what vanilla gates vehicle
+-- interaction on, in ISExitVehicle:isValid and ISVehicleMenu.lua:185. If it is
+-- good enough to decide whether you may climb out, it is good enough here.
 function Core.vehicleIsMoving(vehicle)
     if not vehicle then
         return false
     end
-    return math.abs(vehicle:getCurrentSpeedKmHour()) >= Core.consts.movingKmh
+    return not vehicle:isStopped()
 end
 
 --- Is this player actually the one driving this vehicle?
@@ -239,7 +249,13 @@ function Core.vehicleMotionAllows(vehicle, player)
         return true
     end
     if player:getVehicle() ~= vehicle then
-        return false, "IGUI_PhunInteriors_VehicleMoving"
+        -- The speed is logged because this is the refusal that went wrong
+        -- once already: a parked towed van reported enough movement to trip a
+        -- fixed threshold, and the only symptom was a refusal that made no
+        -- sense to the player standing next to a stationary vehicle.
+        Core.debugLn(string.format("refused boarding: %s is not stopped (%.2f km/h)",
+            tostring(vehicle:getScriptName()), vehicle:getCurrentSpeedKmHour()))
+        return false, "IGUI_PhunInteriors_VehicleMovingBoard"
     end
     if Core.isAtTheWheel(vehicle, player) then
         return false, "IGUI_PhunInteriors_DrivingCannotEnter"
