@@ -5,7 +5,7 @@
     "Sandbox_PhunInteriors_Debug_tooltip": "Verbose logging for room leases, scrubs and containment",
 
     "Sandbox_PhunInteriors_WeightFactor": "Interior Weight Factor",
-    "Sandbox_PhunInteriors_WeightFactor_tooltip": "Percentage of the interior contents weight added to the vehicle. Affects handling, acceleration and braking. Set to 0 to make interior loot weightless",
+    "Sandbox_PhunInteriors_WeightFactor_tooltip": "Percentage of the interior contents weight added to the vehicle. Affects handling, acceleration and braking. Set to 0 to make interior loot weightless. Above 100 exaggerates the effect, which is mostly useful for feeling it at all: a van weighs around two tonnes, so realistic loot barely registers",
 
     "Sandbox_PhunInteriors_ExitTax": "Zombies Accumulate",
     "Sandbox_PhunInteriors_ExitTax_tooltip": "If yes, zombies near the vehicle build up while you are inside, so you come out to a bigger crowd than you left. Turn off to wait out the night for free",

@@ -272,8 +272,15 @@ function Transit.leave(player, reason)
     -- Weight is only recomputed here. It matters when driving, and the player
     -- cannot drive from inside, so detecting every item move would cost a lot
     -- for no gameplay difference.
+    --
+    -- Measured now, because the room is loaded now: the player is standing in
+    -- it. Applying it is a different question -- the vehicle is almost never
+    -- loaded at this point -- so that is deferred until it can be found.
+    local interiorWeight = Weight.ofSlot(occupancy.roomSet, occupancy.index)
     if vehicle then
-        Weight.refresh(vehicle)
+        Weight.apply(vehicle, interiorWeight)
+    else
+        Weight.queue(occupancy.vehicleId, destination, interiorWeight)
     end
 
     -- The exit tax. Zombies accumulate rather than despawning, so you come out

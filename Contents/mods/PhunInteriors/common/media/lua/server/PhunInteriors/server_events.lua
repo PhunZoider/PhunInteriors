@@ -11,6 +11,7 @@ local Slots = require "PhunInteriors/slots"
 local Scrub = require "PhunInteriors/scrub"
 local Manifest = require "PhunInteriors/manifest"
 local Leash = require "PhunInteriors/leash"
+local Weight = require "PhunInteriors/weight"
 local Admin = require "PhunInteriors/admin"
 local Harden = require "PhunInteriors/harden"
 local Author = require "PhunInteriors/author"
@@ -53,6 +54,7 @@ end)
 -- Containment and the exit tile share this one handler.
 Events.OnTick.Add(function()
     Leash.tick()
+    Weight.tick()
 end)
 
 -- Work the quarantine queue. Needs loaded chunks, so it retries rather than

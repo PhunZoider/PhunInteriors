@@ -156,6 +156,13 @@ function Slots.release(vehicleId, reason)
         return false
     end
 
+    -- Hand back whatever mass we added. Deferred for the same reason it was
+    -- deferred going on: an expiring lease belongs to a vehicle nobody is near.
+    -- Required lazily because weight.lua requires this file.
+    if assignment.lastKnownVehiclePos then
+        require("PhunInteriors/weight").queue(vehicleId, assignment.lastKnownVehiclePos, 0)
+    end
+
     local occupied = occupiedFor(assignment.roomSet)
     occupied[tostring(assignment.index)] = nil
     d.assignments[vehicleId] = nil

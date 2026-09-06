@@ -74,6 +74,31 @@ actions.age = function(args)
         assignment.roomSet, assignment.index, tostring(days))}
 end
 
+-- Re-read the sandbox options now.
+--
+-- Settings are cached and refreshed on EveryTenMinutes, so changing one mid
+-- session appears to do nothing for up to ten minutes. That is fine in play
+-- and awful while testing: a WeightFactor change looks like a broken
+-- recalculation rather than a stale cache.
+actions.reload = function()
+    Core.refreshSettings()
+    local shown = {}
+    for name in pairs(Core.defaults) do
+        table.insert(shown, name)
+    end
+    table.sort(shown)
+    local lines = {"settings re-read from sandbox options:"}
+    for _, name in ipairs(shown) do
+        table.insert(lines, string.format("  %s = %s", name, tostring(Core.settings[name])))
+    end
+    return lines
+end
+
+-- What each leased vehicle is being charged for its interior.
+actions.weight = function()
+    return require("PhunInteriors/weight").report()
+end
+
 actions.free = function(args)
     local vehicleId = args.vehicleId
     if not vehicleId then

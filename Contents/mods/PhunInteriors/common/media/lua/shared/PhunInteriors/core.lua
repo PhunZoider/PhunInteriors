@@ -140,6 +140,32 @@ function Core.vehicleId(vehicle, create)
     return vmd[Core.consts.vehicleIdKey]
 end
 
+--- Find a loaded vehicle by our own durable id, near a position.
+--
+-- getVehicleById cannot do this: BaseVehicle:getId() is assigned when a
+-- vehicle enters the world, and one that unloads and reloads comes back with
+-- a different id. The modData UUID is written into the save, so it is the
+-- only handle that survives, and a vehicle whose chunk just streamed in is
+-- exactly the case both sides care about -- the client re-seating a player,
+-- the server charging a vehicle for what its interior holds.
+function Core.vehicleNear(x, y, z, vehicleId, radius)
+    local cell = getCell()
+    if not cell or not vehicleId then
+        return nil
+    end
+    radius = radius or 3
+    for dx = -radius, radius do
+        for dy = -radius, radius do
+            local square = cell:getGridSquare(x + dx, y + dy, z)
+            local vehicle = square and square:getVehicleContainer()
+            if vehicle and Core.vehicleId(vehicle, false) == vehicleId then
+                return vehicle
+            end
+        end
+    end
+    return nil
+end
+
 function Core.now()
     return getGameTime():getWorldAgeHours()
 end

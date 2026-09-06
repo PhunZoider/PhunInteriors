@@ -55,6 +55,12 @@ function Core.registerRoomSet(id, def)
         -- where the generator lives. z is relative, and deliberately outside
         -- the leash, so it is reached through a panel and never on foot.
         power = def.power or {x = 0, y = 0, z = 1},
+        -- What the fitted-out room weighs before anybody puts anything in it.
+        -- The blueprint's own fixtures are deliberately not charged for -- they
+        -- are always there, so billing them per item would just be a flat tax
+        -- with a confusing derivation. This says the same thing once, as a
+        -- number the author picked.
+        baseWeight = tonumber(def.baseWeight) or 0,
         source = def.source or "unknown"
     }
 

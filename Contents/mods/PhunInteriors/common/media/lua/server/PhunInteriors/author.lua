@@ -202,6 +202,14 @@ function Author.strip(args)
         pitchX ~= 0 and pitchX or pitchY, pitchX ~= 0 and "x" or "y")}
 end
 
+--- What the fitted-out room weighs empty.
+function Author.baseweight(args)
+    local s, err = need()
+    if not s then return {err} end
+    s.baseWeight = tonumber(args and args.base) or 0
+    return {string.format("an empty room of this set weighs %.1f", s.baseWeight)}
+end
+
 --- Which vehicles get this interior.
 function Author.scripts(args)
     local s, err = need()
@@ -311,6 +319,7 @@ function Author.status()
         "strip: " .. (s.count and string.format("%d rooms, pitch %d,%d", s.count, s.pitch.x, s.pitch.y) or "not set"),
         "spawn: " .. (s.spawn and (s.spawn.x .. "," .. s.spawn.y) or "not set"),
         "exits: " .. #s.exits,
+        "base weight: " .. tostring(s.baseWeight or 0),
         "power: " .. (s.power and string.format("%d,%d,%d", s.power.x, s.power.y, s.power.z) or "default"),
         "scripts: " .. #s.scripts,
         "blueprints: " .. have .. " of " .. ((s.count or 0) + 1)
@@ -447,6 +456,9 @@ function Author.emit(args)
     line(string.format("        count = %d,", s.count))
     line(string.format("        size = {w = %d, h = %d},", s.size.w, s.size.h))
     line(string.format("        spawn = {x = %d, y = %d},", s.spawn.x, s.spawn.y))
+    if s.baseWeight and s.baseWeight > 0 then
+        line(string.format("        baseWeight = %.1f,", s.baseWeight))
+    end
 
     local exits = {}
     for _, exit in ipairs(s.exits) do
@@ -527,6 +539,7 @@ local actions = {
     power = Author.power,
     strip = Author.strip,
     scripts = Author.scripts,
+    baseweight = Author.baseweight,
     sweep = Author.sweep,
     status = Author.status,
     emit = Author.emit

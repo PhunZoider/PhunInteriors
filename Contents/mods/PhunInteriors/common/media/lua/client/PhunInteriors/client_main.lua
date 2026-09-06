@@ -79,20 +79,7 @@ end
 local SEARCH_RADIUS = 3
 
 local function findVehicle()
-    local cell = getCell()
-    if not cell or not pending.vehicleId then
-        return nil
-    end
-    for dx = -SEARCH_RADIUS, SEARCH_RADIUS do
-        for dy = -SEARCH_RADIUS, SEARCH_RADIUS do
-            local square = cell:getGridSquare(pending.x + dx, pending.y + dy, pending.z)
-            local vehicle = square and square:getVehicleContainer()
-            if vehicle and Core.vehicleId(vehicle, false) == pending.vehicleId then
-                return vehicle
-            end
-        end
-    end
-    return nil
+    return Core.vehicleNear(pending.x, pending.y, pending.z, pending.vehicleId, SEARCH_RADIUS)
 end
 
 -- Where a character stands to use a seat, in world coordinates. Vanilla
@@ -246,6 +233,28 @@ function Client.teleport(data)
         return
     end
 
+    -- Put away anything that watches where the player is standing.
+    --
+    -- A teleport leaves the player with no square at all until the
+    -- destination chunk streams in, and vanilla UI does not expect that.
+    -- ISBuildWindow:update calls originalSquare:DistToProper(player:getSquare())
+    -- to decide whether to auto-close, which throws a NullPointerException on
+    -- the nil square and then a cascade of __le failures every frame after.
+    -- Vanilla has the same instinct in ISEnterVehicle:start, which clears the
+    -- drag cursor and hides the context menu before moving anybody.
+    local playerNum = player:getPlayerNum()
+    if getCell() then
+        getCell():setDrag(nil, playerNum)
+    end
+    local contextMenu = getPlayerContextMenu(playerNum)
+    if contextMenu and contextMenu:isAnyVisible() then
+        contextMenu:hideAndChildren()
+    end
+    if ISBuildWindow and ISBuildWindow.instance then
+        -- pcall because this reaches into vanilla UI state we do not own
+        pcall(function() ISBuildWindow.instance:close() end)
+    end
+
     -- Out of the seat first. player:getVehicle() is the test; BaseVehicle has
     -- no isInVehicle. Nil on the way back out of a room, so this no-ops there.
     local vehicle = player:getVehicle()
@@ -337,6 +346,8 @@ end
 --     PhunInteriors.admin("free", {vehicleId = "..."})
 --     PhunInteriors.admin("age", {vehicleId = "...", days = 99})
 --     PhunInteriors.admin("sweepleases")
+--     PhunInteriors.admin("reload")   -- after changing a sandbox option
+--     PhunInteriors.admin("weight")
 --     PhunInteriors.admin("evict", {username = "..."})
 --
 -- Results come back through Core.commands.adminResult and print to the log,
