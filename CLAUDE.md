@@ -435,6 +435,7 @@ B41 tutorial applies.
 | `BaseVehicle` has **no `isInVehicle`**. The occupancy test is `player:getVehicle()`, compared against the vehicle. `vehicle:exit(chr)` and `vehicle:getSeat(chr)` are real. | Confirmed absent from the jar constant pool. |
 | An object's behaviour lives in its class, and `IsoObject.new` always returns a plain `IsoObject` — a restored light switch is a picture of a switch. The class comes from `getSprite(name):getType()`, and vanilla constructs the right one in `ISMoveableSpriteProps.lua:2175-2196`: `IsoLightSwitch.new(getCell(), square, sprite, square:getRoomID())` then `addLightSourceFromSprite()`, with sibling branches on `IsoFlagType.doorN/windowN/WallN` for doors, windows and walls. | `Scrub.createFromSprite` mirrors the light switch branch. Two separate lessons: recreating an object from a sprite name alone loses its behaviour, **and** "vanilla never does X" was wrong here — a `grep` for `IsoLightSwitch` found only `instanceof` tests because the constructor call is 2000 lines into a Moveables file. Search for the *constructor*, not just the class name. |
 | `IsoGridSquare` has **no `getContainer()`** and no `getDeadBody()`. Containers hang off the object (`isoObject:getContainer()`); bodies come from `square:getDeadBodys()`, plural, returning a list. `getDeadBody(index)` is a *hutch* method. Vanilla removes a body with `removeFromWorld()` then `removeFromSquare()`, in that order. | Both were wrong in `Scrub.clearSquare` and threw `Object tried to call nil` the first time a scrub ever ran. Note the jar check passes for both: a class's constant pool contains method names it **calls** as well as ones it owns, so "present" proves nothing on its own — cross-check against vanilla usage. |
+| **Vehicle battery charge.** The part is `vehicle:getBattery()` (declared on `VehiclePartOwner`, not `BaseVehicle`); the charge is `getCurrentUsesFloat()` / `setCurrentUsesFloat()` on its inventory item, both on `InventoryItem` itself. **`getUsedDelta()` does not exist** in B42 outside `Clothing` — a car battery is a `DrainableComboItem`, which declares `setUsedDelta` and **no getter at all**. `setUsedDelta` is a one-line alias for `setCurrentUsesFloat`. A server-side write must be followed by **`vehicle:transmitPartUsedDelta(part)`** or it never reaches clients. The whole pattern is `VehicleUtils.chargeBattery` in `Vehicles.lua`. | Ported from RV Interior and it threw on the first entry: the write worked, the read did not. Vanilla's own asymmetry hides it — `Vehicles.lua` writes with `setUsedDelta` and reads with `getCurrentUsesFloat`, so grepping for either alone tells you the wrong half. A working B41 mod is not evidence about B42, and a setter existing says nothing about its getter. Copy the whole vanilla function, not the one line you were looking for. |
 | **Electricity, settled from the bytecode.** `haveElectricity()` reads no field at all: it is `chunk:isGeneratorPoweringSquare(x, y, z)`, with an early `false` for an exterior square when `AllowExteriorGenerator` is off. **`setHaveElectricity(boolean)` does not set anything** — it ignores its argument entirely and calls `update()` on any `IsoLightSwitch` on the square. It is a refresh with a setter's name. `hasGridPower()` is `not isNoPower() and doesPowerGridExist()`; `isNoPower()` is `isDerelict() or isUserDefinedRoom()` or the square sitting in a map zone of type `"NoPower"` or `"NoPowerOrWater"`. | Generator power is only ever a **real, active `IsoGenerator` in the chunk** — it cannot be faked with a flag, which is why RV Interior places one. The mains cannot be switched off from Lua, but it *can* on the map: a **`NoPower` zone painted over the interior block** makes `hasGridPower` false there permanently, leaving the generator as the only source. That is a map authoring job, and `admin("power")` reports whether it has been done. Note this row replaced an earlier, wrong one that reasoned from method names — hence `Docs/body.pl`. |
 | **"Is this vehicle moving" is `vehicle:isStopped()`, not a speed threshold.** A stationary vehicle *under tow* reports a non-zero `getCurrentSpeedKmHour()` — the coupling never quite settles — so any epsilon is a guess about physics jitter. `isStopped()` is what vanilla gates vehicle interaction on (`ISExitVehicle:isValid`, `ISVehicleMenu.lua:185`). | Confirmed in game: a parked towed van refused boarding while telling the player it was moving. Seated players were unaffected, because `isAtTheWheel` short-circuits before the speed test — which is exactly the asymmetry that identified the cause. |
 | Putting out a fire is `square:stopFire()` **then** `square:transmitStopFire()`, which is what vanilla's fire brush does (`FireBrushUI.lua:265`). `IsoFire.extinctFire()` and `IsoFireManager.RemoveAllOn(square)` are both declared and both read exactly right — and both have **zero** uses in vanilla lua. | `Harden.sweepFire` used `fire:removeFromWorld()` on the object from `square:getFire()`. That is `IsoObject`'s generic removal: the engine answered every call with `IsoFireManager.Remove unknown fire, ignoring`, so the same fires were re-found and "doused" on every sweep, forever, while still burning. The log said it worked. A plausible-looking declared method with no vanilla uses is the tell, and here there were *two* of them next to the right answer. |
@@ -493,10 +494,28 @@ assumed to be a setter for two rounds of reasoning; one dump showed it ignores
 its argument. A name is a claim, a signature is a contract, and only the body
 is evidence.
 
-Absent is conclusive. **Present is not**: a constant pool holds the names a
-class calls on other classes as well as its own, so `getContainer` shows up in
-`IsoGridSquare` purely because it calls it on an object. Present means "worth
-checking", never "exists here".
+**Present in the constant pool is not conclusive**: a constant pool holds the
+names a class calls on other classes as well as its own, so `getContainer`
+shows up in `IsoGridSquare` purely because it calls it on an object. Present
+means "worth checking", never "exists here".
+
+**Absent from `methods.pl` is not conclusive either**, and this cost real time.
+It reads one class's method table, so it cannot see anything inherited — and
+in particular it cannot see **default methods on an implemented interface**.
+`BaseVehicle` reports no `getBattery` and no `getPartById`, while vanilla calls
+the latter 138 times; both are declared on `VehiclePartOwner`, which
+`BaseVehicle` implements. So absent means "not declared *here*". Before
+concluding a method does not exist, check the superclass chain (the `super`
+entry in the class file) and the interfaces, or grep the whole package:
+
+```bash
+for f in zombie/vehicles/*.class; do
+  perl Docs/methods.pl "$f" 2>/dev/null | grep -q " getBattery " && echo "$f"
+done
+```
+
+The one thing that *is* conclusive is heavy use in vanilla's own Lua. If
+`methods.pl` and 138 vanilla call sites disagree, the tool is wrong.
 Cross-check intent against how vanilla's own Lua in `media/lua/` uses it — zero
 vanilla uses of a plausible-sounding method is the tell that it was invented.
 

@@ -74,23 +74,57 @@ Core.modules.power = Power
 -- because the Set it walks has no get(i).
 -- ---------------------------------------------------------------------------
 
---- The battery item feeding this vehicle, or nil.
+--- The battery part feeding this vehicle, and the vehicle that owns it.
 --
--- A trailer has no battery of its own and runs off whatever is towing it,
--- which is worth handling because a towed interior is supported everywhere
--- else in this mod.
-function Power.battery(vehicle)
+-- Both are needed: the charge lives on the part's inventory item, and the
+-- transmit that tells clients about a change is a method on the *vehicle*,
+-- taking the part. They are not always the same vehicle -- a trailer has no
+-- battery of its own and runs off whatever is towing it, which is worth
+-- handling because a towed interior is supported everywhere else here.
+--
+-- getBattery rather than getPartById("Battery"): it is the purpose-built
+-- accessor and the one vanilla's own VehicleUtils.chargeBattery uses.
+function Power.batteryPart(vehicle)
     if not vehicle then
-        return nil
+        return nil, nil
     end
-    local part = vehicle:getPartById("Battery")
-    local item = part and part:getInventoryItem()
-    if item then
-        return item
+    local part = vehicle:getBattery()
+    if part and part:getInventoryItem() then
+        return part, vehicle
     end
     local tower = vehicle:getVehicleTowedBy()
-    part = tower and tower:getPartById("Battery")
+    part = tower and tower:getBattery()
+    if part and part:getInventoryItem() then
+        return part, tower
+    end
+    return nil, nil
+end
+
+--- The battery item feeding this vehicle, or nil.
+function Power.battery(vehicle)
+    local part = Power.batteryPart(vehicle)
     return part and part:getInventoryItem() or nil
+end
+
+-- Reading and writing a battery's charge.
+--
+-- getCurrentUsesFloat / setCurrentUsesFloat, both declared on InventoryItem
+-- itself, so they are safe whatever a mod has installed in the battery slot.
+--
+-- Not getUsedDelta, which is what RV Interior uses and what this called first:
+-- it does not exist in B42 outside Clothing, and a car battery is a
+-- DrainableComboItem. That class declares setUsedDelta and no getter at all,
+-- so the write worked and the read threw. Vanilla's own asymmetry hides this:
+-- Vehicles.lua:1317 writes with setUsedDelta while ISVehicleRoadtripDebug
+-- reads with getCurrentUsesFloat. setUsedDelta turns out to be a one-line
+-- alias for setCurrentUsesFloat, and getCurrentUsesFloat is uses/getMaxUses,
+-- so this pair is the same value from both ends.
+local function readCharge(battery)
+    return math.max(0, math.min(1, tonumber(battery:getCurrentUsesFloat()) or 0))
+end
+
+local function writeCharge(battery, charge)
+    battery:setCurrentUsesFloat(math.max(0, math.min(1, charge)))
 end
 
 --- Charge as 0..1. A vehicle with no battery reads flat, which is the truth.
@@ -99,7 +133,7 @@ function Power.charge(vehicle)
     if not battery then
         return 0
     end
-    return math.max(0, math.min(1, tonumber(battery:getUsedDelta()) or 0))
+    return readCharge(battery)
 end
 
 --- The real IsoGenerator on a square, if there is one.
@@ -294,15 +328,16 @@ function Power.syncVehicle(vehicleId, vehicle)
         return
     end
 
-    local battery = Power.battery(vehicle)
-    if not battery then
+    local part, owner = Power.batteryPart(vehicle)
+    if not part then
         -- No battery at all. Record it as flat so the room goes dark, and keep
         -- the debt: a battery installed later inherits it, which is right.
         assignment.batteryKnown = 0
         return
     end
+    local battery = part:getInventoryItem()
 
-    local charge = math.max(0, math.min(1, tonumber(battery:getUsedDelta()) or 0))
+    local charge = readCharge(battery)
     local owed = tonumber(assignment.fuelOwed) or 0
     local maxFuel = tonumber(assignment.generatorMaxFuel) or 0
 
@@ -310,7 +345,12 @@ function Power.syncVehicle(vehicleId, vehicle)
         local factor = tonumber(Core.settings.PowerDrainFactor) or 100
         local used = (owed / maxFuel) * (factor / 100)
         local after = math.max(0, charge - used)
-        battery:setUsedDelta(after)
+        writeCharge(battery, after)
+        -- Without this the change never leaves the server. Same lesson as
+        -- vehicle modData, except that here the per-part transmit exists and
+        -- vanilla's own VehicleUtils.chargeBattery calls it. Sent on the
+        -- vehicle that owns the part, which for a trailer is the one towing.
+        owner:transmitPartUsedDelta(part)
         Core.debugLn(string.format("interior drew %.1f%% off the battery: %.0f%% -> %.0f%%",
             used * 100, charge * 100, after * 100))
         charge = after
