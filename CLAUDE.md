@@ -33,11 +33,13 @@ The **destroy guards** are confirmed both ways -- walls and light switches
 refuse to break with `HardenShell` on and break normally with it off -- and the
 **leash breach path** behaves as designed.
 
-That leaves one thing unexercised in the whole of v1: the fire dousing half of
-`HardenShell`. `Harden.sweepFire` has been running on its minute timer
-throughout testing without error, so `square:getFire()` is proven; what has
-never happened is a fire actually starting inside a room, so
-`fire:removeFromWorld()` is the only line still on trust.
+The fire dousing half of `HardenShell` has now been exercised too, and was
+broken: it reported success on every sweep while the fire kept burning. Fixed
+to vanilla's `stopFire()` + `transmitStopFire()` pair, but **the fix itself is
+unretested** -- that is the one thing in v1 still on trust.
+
+Note that dousing is gated on the `HardenShell` sandbox option, so with it
+unticked fires burn rooms normally. That is intended.
 
 Lease expiry is reachable without waiting out the sandbox:
 `PhunInteriors.admin("age", {vehicleId = ..., days = 99})` then
@@ -369,6 +371,7 @@ B41 tutorial applies.
 | `BaseVehicle` has **no `isInVehicle`**. The occupancy test is `player:getVehicle()`, compared against the vehicle. `vehicle:exit(chr)` and `vehicle:getSeat(chr)` are real. | Confirmed absent from the jar constant pool. |
 | An object's behaviour lives in its class, and `IsoObject.new` always returns a plain `IsoObject` — a restored light switch is a picture of a switch. The class comes from `getSprite(name):getType()`, and vanilla constructs the right one in `ISMoveableSpriteProps.lua:2175-2196`: `IsoLightSwitch.new(getCell(), square, sprite, square:getRoomID())` then `addLightSourceFromSprite()`, with sibling branches on `IsoFlagType.doorN/windowN/WallN` for doors, windows and walls. | `Scrub.createFromSprite` mirrors the light switch branch. Two separate lessons: recreating an object from a sprite name alone loses its behaviour, **and** "vanilla never does X" was wrong here — a `grep` for `IsoLightSwitch` found only `instanceof` tests because the constructor call is 2000 lines into a Moveables file. Search for the *constructor*, not just the class name. |
 | `IsoGridSquare` has **no `getContainer()`** and no `getDeadBody()`. Containers hang off the object (`isoObject:getContainer()`); bodies come from `square:getDeadBodys()`, plural, returning a list. `getDeadBody(index)` is a *hutch* method. Vanilla removes a body with `removeFromWorld()` then `removeFromSquare()`, in that order. | Both were wrong in `Scrub.clearSquare` and threw `Object tried to call nil` the first time a scrub ever ran. Note the jar check passes for both: a class's constant pool contains method names it **calls** as well as ones it owns, so "present" proves nothing on its own — cross-check against vanilla usage. |
+| Putting out a fire is `square:stopFire()` **then** `square:transmitStopFire()`, which is what vanilla's fire brush does (`FireBrushUI.lua:265`). `IsoFire.extinctFire()` and `IsoFireManager.RemoveAllOn(square)` are both declared and both read exactly right — and both have **zero** uses in vanilla lua. | `Harden.sweepFire` used `fire:removeFromWorld()` on the object from `square:getFire()`. That is `IsoObject`'s generic removal: the engine answered every call with `IsoFireManager.Remove unknown fire, ignoring`, so the same fires were re-found and "doused" on every sweep, forever, while still burning. The log said it worked. A plausible-looking declared method with no vanilla uses is the tell, and here there were *two* of them next to the right answer. |
 | `IsoGridSquare` has **no `setBloodSplatLifetime`**. Vanilla `ISCleanBlood:complete()` uses `square:removeBlood(false, false)` then `square:removeGrime()`. | Confirmed absent from the jar. |
 | Vanilla only ever exits a vehicle from a **client** timed action (`ISExitVehicle`). | `vehicle:exit()` lives in `Client.teleport`, not in server-side `Transit.enter`. |
 | `getCell():getVehicles()` returns a **`java.util.Set`** — `size()` but no `get(i)`, so it cannot be indexed from Lua, and **loaded vehicles cannot be enumerated from Lua at all**. Vanilla's own `ISVehicleBloodUI.lua:81` does `vehicles:get(i-1)` and is therefore broken; so does RV Interior's entire exit path. | `resolveReturn` uses `getVehicleById(handle)`, and position tracking is pushed by the driver's client rather than swept for. Vanilla Lua shows intent, **not** correctness — and neither does a shipped mod that works on B41. |

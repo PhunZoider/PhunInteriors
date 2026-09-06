@@ -39,13 +39,32 @@ function Harden.sweepFire()
             local set = Core.roomSets[occupancy.roomSet]
             if set then
                 local bounds = Core.slotBounds(set, occupancy.index)
-                for x = bounds.x1, bounds.x2 do
-                    for y = bounds.y1, bounds.y2 do
-                        local square = getCell():getGridSquare(x, y, bounds.z)
-                        if square then
-                            local fire = square:getFire()
-                            if fire then
-                                fire:removeFromWorld()
+                -- Both levels, like every other sweep over a slot. Fire
+                -- spreads upward, and the power square lives at z+1.
+                for z = bounds.z, bounds.z + 1 do
+                    for x = bounds.x1, bounds.x2 do
+                        for y = bounds.y1, bounds.y2 do
+                            local square = getCell():getGridSquare(x, y, z)
+                            if square and square:haveFire() then
+                                -- Vanilla's own pair, from the fire brush tool
+                                -- (FireBrushUI.lua:265). Both halves matter:
+                                -- stopFire deregisters it properly and
+                                -- transmitStopFire is what tells clients, which
+                                -- a server side douse otherwise never does.
+                                --
+                                -- This used to be fire:removeFromWorld() on the
+                                -- object from square:getFire(). That is
+                                -- IsoObject's generic removal, and the engine
+                                -- answered every call with "IsoFireManager.
+                                -- Remove unknown fire, ignoring" -- so the same
+                                -- fires were found and "doused" on every sweep,
+                                -- forever, while continuing to burn.
+                                --
+                                -- extinctFire() and IsoFireManager.RemoveAllOn()
+                                -- both exist and look right. Neither has a
+                                -- single use in vanilla lua, which is the tell.
+                                square:stopFire()
+                                square:transmitStopFire()
                                 doused = doused + 1
                             end
                         end
