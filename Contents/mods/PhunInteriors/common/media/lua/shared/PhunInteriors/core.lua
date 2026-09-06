@@ -69,6 +69,8 @@ Core.defaults = {
     HardenShell = true,
     BreachEjects = true,
     AdminNoClipExempt = true,
+    PowerBinding = true,
+    PowerDrainFactor = 100,
 }
 
 function Core.getOption(name, default)

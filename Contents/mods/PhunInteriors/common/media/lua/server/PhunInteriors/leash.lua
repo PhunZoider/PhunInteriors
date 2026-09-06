@@ -133,6 +133,14 @@ local function checkOne(player, occupancy)
             attemptCapture(occupancy)
         elseif occupancy.scrubOnArrival then
             attemptScrub(occupancy)
+        elseif occupancy.powerPending then
+            -- Same reasoning as the two above, and deliberately after them:
+            -- the generator is filled once the room is settled, so a slot that
+            -- is about to be scrubbed is not lit and then wiped. One shot --
+            -- if there is no generator to find, that is a map problem and a
+            -- retry will not conjure one.
+            occupancy.powerPending = nil
+            require("PhunInteriors/power").engage(occupancy)
         end
     end
 

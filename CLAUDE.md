@@ -33,13 +33,14 @@ The **destroy guards** are confirmed both ways -- walls and light switches
 refuse to break with `HardenShell` on and break normally with it off -- and the
 **leash breach path** behaves as designed.
 
-The fire dousing half of `HardenShell` has now been exercised too, and was
-broken: it reported success on every sweep while the fire kept burning. Fixed
-to vanilla's `stopFire()` + `transmitStopFire()` pair, but **the fix itself is
-unretested** -- that is the one thing in v1 still on trust.
+The fire dousing half of `HardenShell` was exercised and was broken -- it
+reported success on every sweep while the fire kept burning. Fixed to vanilla's
+`stopFire()` + `transmitStopFire()` pair and retested working. Dousing is gated
+on the `HardenShell` sandbox option, so with it unticked fires burn rooms
+normally; that is intended.
 
-Note that dousing is gated on the `HardenShell` sandbox option, so with it
-unticked fires burn rooms normally. That is intended.
+**So every mechanic in v1 is now proven in game except power binding**, which
+is new and has never run. It needs a map with a generator sprite in the room.
 
 Lease expiry is reachable without waiting out the sandbox:
 `PhunInteriors.admin("age", {vehicleId = ..., days = 99})` then
@@ -136,7 +137,7 @@ Contents/mods/PhunInteriors/common/
   media/sandbox-options.txt
   media/lua/shared/PhunInteriors/    core, tools, registry, bounds, defaults
   media/lua/server/PhunInteriors/    slots, transit, leash, manifest, scrub,
-                                    weight, harden, admin, author,
+                                    weight, power, harden, admin, author,
                                     server_{commands,events}
   .../server/PhunInteriors/blueprints/  generated room set files, shipped
   media/lua/client/PhunInteriors/    client_{main,enter,context,guards,tracker,
@@ -349,6 +350,31 @@ What does get recreated goes through `Scrub.createFromSprite`, which reads
 handled so far, because a room with no working light was the reported failure;
 doors, windows and walls have branches in vanilla worth copying when needed.
 
+**The room runs off the vehicle battery, through a real generator.** There is
+no alternative: `square:haveElectricity()` reads no field, it is
+`chunk:isGeneratorPoweringSquare(x, y, z)`, so generator power is only ever an
+actual activated `IsoGenerator` registered in the chunk.
+
+The **mapper** places it. Vanilla's `MOGenerator.lua` turns sprites
+`appliances_misc_01_0` through `_15` into real `IsoGenerator` objects on map
+load, with fuel 0 — which is exactly right, because the fuel is our projection
+of the battery. `power.lua` searches the whole slot for one on every entry
+rather than caching a location: `set.power` is a hint from the authoring tool,
+not an address, and a mapper may well put the thing on the floor in a corner.
+
+`setActivated(true)` does everything else itself — registers the position with
+the chunk, calls `setSurroundingElectricity`, syncs to clients. It **also**
+marks the building toxic, because a generator running in an enclosed space
+poisons it. We clear that: this generator is a fiction standing in for the
+vehicle's electrical system, and a sealed room three tiles wide would kill the
+tenant it exists to shelter. `setActivated` passes its argument through to
+`setToxic`, so shutting down clears it again on the way out.
+
+Weight and power are measured at the same two moments and for the same reason.
+The room is loaded on the way out because the player is standing in it; the
+vehicle is not, and will not be until they land on top of it — so both ride the
+arrival report.
+
 **Weight composes additively.** `weight.lua` tracks only our own delta and does
 `setMass(getMass() - ourLastDelta + ourNewDelta)`. Do NOT cache an absolute
 baseline and restore it — that is what More Traits does, and it stomps any
@@ -477,9 +503,12 @@ vanilla uses of a plausible-sounding method is the tell that it was invented.
 
 ## v2, deliberately not in v1
 
-Power binding (generator state driven by vehicle battery + fuel, and actually
-drained), the water barrel, the siege/breach system, a fuel penalty for load,
-and the purpose-built map.
+The water barrel, the siege/breach system, a fuel penalty for load, and the
+purpose-built map.
+
+Power binding was on this list and has been pulled forward -- see Architecture.
+It moved because the hooks it needed already existed for weight and blueprint
+capture, so it cost far less than the v2 label implied.
 
 ## Open questions
 

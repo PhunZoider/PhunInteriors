@@ -27,6 +27,10 @@
 
     "Sandbox_PhunInteriors_LeaseWarningDays": "Lease Warning Days",
     "Sandbox_PhunInteriors_LeaseWarningDays_tooltip": "How long before a lease expires that the owner is warned",
+    "Sandbox_PhunInteriors_PowerBinding": "Interior runs off the vehicle battery",
+    "Sandbox_PhunInteriors_PowerBinding_tooltip": "The room is lit by a generator fuelled from the vehicle battery. A flat battery means a dark room, and time spent inside costs charge. Turn off to leave interior power alone.",
+    "Sandbox_PhunInteriors_PowerDrainFactor": "Interior power drain (%)",
+    "Sandbox_PhunInteriors_PowerDrainFactor_tooltip": "How much battery charge the room costs, as a percentage of what the generator burns. 100 is one full battery per full tank. 0 means the lights are free.",
 
     "Sandbox_PhunInteriors_ScrubKeepsLoot": "Keep Loot On Reset",
     "Sandbox_PhunInteriors_ScrubKeepsLoot_tooltip": "If yes, loot in an expired room is salvaged rather than destroyed when the room is reset",

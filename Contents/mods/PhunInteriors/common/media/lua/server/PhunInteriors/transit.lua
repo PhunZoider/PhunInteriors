@@ -5,6 +5,7 @@ require "PhunInteriors/registry"
 local Core = PhunInteriors
 local Slots = require "PhunInteriors/slots"
 local Weight = require "PhunInteriors/weight"
+local Power = require "PhunInteriors/power"
 local Transit = {}
 Core.modules.transit = Transit
 
@@ -233,6 +234,11 @@ function Transit.enter(player, vehicle, seat, standSeat)
         standSeat = requestedDoor,
         captureSlot = pristine or nil,
         captureTries = 0,
+        -- Read here because the vehicle is loaded here and will not be again
+        -- until the tenant comes back out. The room's generator is filled from
+        -- this the moment the leash confirms they are standing in it.
+        batteryAtEntry = Power.charge(vehicle),
+        powerPending = true,
         scrubOnArrival = scrubOnArrival or nil,
         scrubTries = 0,
         enteredAt = Core.now(),
@@ -444,14 +450,25 @@ function Transit.leave(player, reason)
         Weight.apply(vehicle, interiorWeight)
     end
 
+    -- Shut the generator down and find out what it burned. Measured here for
+    -- the same reason as the weight: the room is loaded because the player is
+    -- standing in it, and it will not be a moment from now.
+    local powerUsed = Power.disengage(occupancy)
+    if vehicle and powerUsed > 0 then
+        Power.applyToBattery(vehicle, powerUsed)
+        powerUsed = 0
+    end
+
     -- What is still owed once the player confirms they landed. Applying the
     -- mass needs the vehicle loaded, and it is not loaded here -- it will be
     -- the moment the player arrives on top of it, so this waits for their
     -- report rather than for a timer to notice.
     pendingArrivals[key] = {
         vehicleId = occupancy.vehicleId,
-        -- nil when it was applied above, because the vehicle was already loaded
+        -- both nil when they were applied above, because the vehicle happened
+        -- to be loaded already
         weight = (not vehicle) and interiorWeight or nil,
+        powerUsed = powerUsed > 0 and powerUsed or nil,
         expires = getTimestampMs() + ARRIVAL_TIMEOUT_MS
     }
 
@@ -546,6 +563,9 @@ function Transit.arrived(player, handle)
 
     if record.weight then
         Weight.apply(vehicle, record.weight)
+    end
+    if record.powerUsed then
+        Power.applyToBattery(vehicle, record.powerUsed)
     end
     return true
 end

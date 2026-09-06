@@ -124,3 +124,21 @@ option PhunInteriors.Scripts_phun_van
     translation = PhunInteriors_Scripts_phun_van,
 }
 
+
+option PhunInteriors.PowerBinding
+{
+    type = boolean,
+    default = true,
+    page = PhunInteriors,
+    translation = PhunInteriors_PowerBinding,
+}
+
+option PhunInteriors.PowerDrainFactor
+{
+    type = integer,
+    default = 100,
+    min = 0,
+    max = 1000,
+    page = PhunInteriors,
+    translation = PhunInteriors_PowerDrainFactor,
+}
