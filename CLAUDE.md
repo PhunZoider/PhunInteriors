@@ -24,6 +24,30 @@ Lease expiry is reachable without waiting out the sandbox:
 `admin("sweepleases")`. Do not enter the room in between -- entering renews the
 lease, which is the mechanic working, and it silently invalidates the test.
 
+## Going into multiplayer
+
+Everything above was proven in single player, where `Core.isLocal` short
+circuits `dispatch`/`respond` into direct calls. Multiplayer is the first time
+any of it makes a round trip. Things to distrust, in order:
+
+- **`vehicle:transmitModData()`** in `weight.lua`. It is inherited from
+  `IsoObject`, but vanilla only ever calls it on doors, players and plain
+  objects, never a vehicle -- vehicles have their own sync path. If the mass
+  delta does not survive a server restart, this is why.
+- **The rejoin phase** in `Client.teleport`. It sweeps for the vehicle by
+  modData UUID after arriving. On a dedicated server the vehicle's modData has
+  to have reached the client for `Core.vehicleId` to match, and it may not have
+  when the chunk has only just streamed in.
+- **Seat and door capture.** Read client side in `Client.beginEnter` and sent
+  with the enter request. The values are right when they leave; whether they
+  survive the trip is unproven.
+- **`Core.tools.onlinePlayers()`** returns only local players on a client and
+  everyone on a server. `author.lua` reads `players:get(0)` for "where am I
+  standing", which is correct on a listen server and wrong on a dedicated one
+  with more than one admin.
+- **The leash** runs server side at 4Hz against positions that now arrive over
+  the network. `graceUntil` is 6s and was tuned against single player timings.
+
 ## Verify before you claim anything works
 
 ```bash
@@ -318,6 +342,14 @@ and the purpose-built map.
   It is the most complaint-generating behaviour in the design.
 - Is `WeightFactor=50` right? It is a guess and needs an overloaded van to
   calibrate against.
+- **Should entering from the driver's seat make you climb out?** It does today:
+  `Client.beginEnter` queues `ISExitVehicle` before the entry action, because
+  that action refuses to run while the character is in a vehicle and the seat
+  has to be read before it is vacated. Getting out to walk round the back is
+  defensible for a van and strange for anything with a walkway. The cheap
+  alternative is to skip the timed action entirely when already seated and just
+  go, which reads as "moving to the back" rather than "getting out and getting
+  in again". Same design area as the question below.
 - **Where should you have to stand to get in?** Entry is currently allowed from
   anywhere the radial menu resolves the vehicle, which in practice is anywhere
   around it. Confirmed in game. Sketched, not decided: the back of a van, the
