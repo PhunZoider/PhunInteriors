@@ -79,15 +79,21 @@ Events.EveryDays.Add(function()
     Slots.sweepLeases()
 end)
 
--- A player who disconnects inside a room keeps their lease but loses their
--- occupancy; playerSetup rebuilds it when they come back.
-Events.OnDisconnect.Add(function(player)
-    local key = Core.playerKey(player)
-    if key and Core.occupants[key] then
-        Core.debugLn(tostring(key) .. " disconnected while inside, keeping the lease")
-        Core.occupants[key] = nil
-    end
-end)
+-- There is deliberately no disconnect handler.
+--
+-- This used to hook Events.OnDisconnect to drop the occupancy of a player who
+-- logged out inside a room. That never once fired: OnDisconnect is a *client*
+-- event meaning "you were disconnected", it takes no player argument, and
+-- vanilla uses it only in ConnectToServer.lua and ISMPEditAccount.lua to
+-- report a failed connection. B42 has no server side "a player left" event at
+-- all -- LuaEventManager declares none.
+--
+-- Nothing is lost by that. Core.occupants is in memory, so a player who
+-- disconnects inside keeps their record, and playerSetup finds it still there
+-- when they return and skips the rebuild. The leash only looks at players who
+-- are online, so a record for somebody absent costs nothing. A server restart
+-- clears the lot, and Transit.recover puts back whoever is still standing
+-- inside a leased room.
 
 -- Keep the mass delta honest when a vehicle is destroyed: release the lease so
 -- the slot recycles rather than leaking the way the reference mod does.

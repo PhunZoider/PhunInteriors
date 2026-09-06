@@ -155,8 +155,20 @@ function Weight.apply(vehicle, interiorWeight)
         return applied
     end
 
+    -- No transmitModData here, and there is no substitute for it.
+    --
+    -- It used to be called and it never did anything. transmitModData is
+    -- IsoObject's, and it addresses an object by its square plus its index in
+    -- that square's object list; a vehicle is not in square:getObjects() at
+    -- all. BaseVehicle carries none of IsoObject's sync machinery -- no
+    -- ObjectModData, no sendObjectModData, no IsoObjectChange -- only
+    -- transmitPartModData, which syncs a *part*. Vanilla never calls it on a
+    -- vehicle, and vanilla's own client side reads are all part:getModData().
+    --
+    -- Which is fine: nothing but this file reads the delta, and this file only
+    -- ever runs server side, where the vehicle's modData persists into the
+    -- save. A client seeing our delta would have no use for it.
     vmd[Core.consts.massDeltaKey] = want
-    vehicle:transmitModData()
 
     Core.debugLn(string.format("mass delta %.1f -> %.1f (%.0f%% of %.1f)", applied, want, factor,
         tonumber(interiorWeight) or 0))

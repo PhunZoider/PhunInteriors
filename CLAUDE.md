@@ -14,10 +14,18 @@ scrub (including restoring a working light switch), and the whole lease
 lifecycle -- expiry, release to quarantine, reissue from quarantine, and the
 scrub that follows it.
 
-Not yet exercised against a live world: the **weight** mechanic (`Weight.refresh`
-has never been called), the **destroy guards** / `HardenShell`, and the **leash
-breach path** -- every exit so far has been the exit tile or the context menu,
-never an out of bounds walk. Nothing has been run in multiplayer at all.
+Not yet exercised against a live world: the **destroy guards** / `HardenShell`,
+and the **leash breach path** -- every exit so far has been the exit tile or the
+context menu, never an out of bounds walk.
+
+**The whole exit path was rewritten for multiplayer and none of it has been
+run**, in either mode. Position tracking, the three step handshake, the
+moving-vehicle rule and the arrival-driven weight application are all new. The
+old exit worked in single player and could not have worked on a dedicated
+server; the new one should do both, but "should" is doing the work here.
+Re-test single player first -- it is the cheaper way to find a broken handshake.
+
+Nothing has been run in multiplayer at all.
 
 Lease expiry is reachable without waiting out the sandbox:
 `PhunInteriors.admin("age", {vehicleId = ..., days = 99})` then
@@ -28,16 +36,30 @@ lease, which is the mechanic working, and it silently invalidates the test.
 
 Everything above was proven in single player, where `Core.isLocal` short
 circuits `dispatch`/`respond` into direct calls. Multiplayer is the first time
-any of it makes a round trip. Things to distrust, in order:
+any of it makes a round trip.
 
-- **`vehicle:transmitModData()`** in `weight.lua`. It is inherited from
-  `IsoObject`, but vanilla only ever calls it on doors, players and plain
-  objects, never a vehicle -- vehicles have their own sync path. If the mass
-  delta does not survive a server restart, this is why.
-- **The rejoin phase** in `Client.teleport`. It sweeps for the vehicle by
-  modData UUID after arriving. On a dedicated server the vehicle's modData has
-  to have reached the client for `Core.vehicleId` to match, and it may not have
-  when the chunk has only just streamed in.
+Two of the original suspects turned out to be real and are fixed. Both came
+from the same fact, now in the API table: **vehicle level modData is never
+transmitted to a client.**
+
+- `vehicle:transmitModData()` in `weight.lua` was a no-op at best -- removed,
+  and nothing replaces it, because only the server reads the delta.
+- The rejoin phase in `Client.teleport` matched on the modData UUID, which is
+  always nil client side, so on a dedicated server every exit ended in a false
+  "your vehicle is gone" with no re-seat. Replaced by the handshake above.
+
+Still unproven, in order:
+
+- **The moving-vehicle exit.** Rule 5 lets you leave into a free seat while the
+  vehicle is moving, and entering a moving vehicle is something vanilla never
+  does. `ISEnterVehicle:start()` silently declines if the character is more than
+  two tiles from the seat's outside position, and the vehicle drives away from
+  where the client just put them. At 50 km/h that is ~0.23 tiles/tick against
+  two tiles of slack, so it should hold, but this is the most likely thing to
+  misbehave.
+- **The wire id.** `getId()` is a short; numbers cross the wire as doubles.
+  `tonumber` is applied on the way in and RV Interior passes it raw on B41, but
+  it is unproven here.
 - **Seat and door capture.** Read client side in `Client.beginEnter` and sent
   with the enter request. The values are right when they leave; whether they
   survive the trip is unproven.
@@ -47,6 +69,25 @@ any of it makes a round trip. Things to distrust, in order:
   with more than one admin.
 - **The leash** runs server side at 4Hz against positions that now arrive over
   the network. `graceUntil` is 6s and was tuned against single player timings.
+
+### Prior art
+
+`RV Interior` (workshop 2822286426, B41) solved the position problem first and
+the tracker's shape is taken from it: driver-only, throttled, refreshed every
+70 tiles and once more on stopping, pushing the towed vehicle alongside. Its
+one genuinely better idea is that the client sends **only the vehicle id** --
+the server reads the position off the vehicle itself, so there is nothing in
+the message to take on trust.
+
+Do not copy its exit path. It finds the vehicle client side with
+`getCell():getVehicles()` then `allVehicles:get(vehicleIndex)`, one per
+`OnPlayerUpdate` for 500 retries. That is `Set:get(i)`, which does not work in
+B42 (see the API table), so the whole mechanism is dead here -- likely the
+actual B41 to B42 break in that mod. It also seats with
+`vehicle:enter(seat, player, offset)` rather than `ISEnterVehicle`, which is
+why it needs the "inside" passenger position and a comment about doors, and it
+has no equivalent of rule 5 -- with no free seat it clips the player into the
+bodywork and prints a warning.
 
 ## Verify before you claim anything works
 
@@ -82,7 +123,8 @@ Contents/mods/PhunInteriors/common/
                                     weight, harden, admin, author,
                                     server_{commands,events}
   .../server/PhunInteriors/blueprints/  generated room set files, shipped
-  media/lua/client/PhunInteriors/    client_{main,enter,context,guards,commands,events}
+  media/lua/client/PhunInteriors/    client_{main,enter,context,guards,tracker,
+                                    commands,events}
   media/lua/shared/Translate/EN/     ContextMenu.json, IG_UI.json, Sandbox.json
 
 Tests/root/PhunInteriors/common/   overlay carrying the test ids, applied by
@@ -143,11 +185,47 @@ first moment the chunk is guaranteed to exist. The invariant is now "never
 for slots that happen to be loaded. It is no longer the thing the pool depends
 on.
 
-**Exit position is resolved live.** `resolveReturn` in `transit.lua` looks the
-vehicle up with `getVehicleById(occupancy.vehicleHandle)` and reads its current
-position. Only loaded vehicles come back, which is the wanted semantics: an
-unloaded vehicle falls through to the cached position. Do not reintroduce a
-position cache as the primary source.
+**Exit position is live when it can be, and frozen when it cannot.**
+`resolveReturn` in `transit.lua` tries `getVehicleById` first and reads the
+vehicle's real position. Only loaded vehicles come back, so an unloaded one
+falls through to the position stored on its lease.
+
+That stored position is not a stale cache in any way that can hurt, and the
+reason is the load rule: **an unloaded vehicle cannot move**, because unloaded
+means no player is within the load radius, which means nobody is driving it.
+So the stored position is frozen truth, not old data — *provided it was
+accurate at the instant the vehicle unloaded*. Keeping it accurate is what
+`client/PhunInteriors/client_tracker.lua` is for.
+
+The earlier rule here was "never cache a position", written against the
+reference mod's one-minute timer, which dropped you up to sixty seconds in the
+past or inside geometry. That failure needs the vehicle to have *moved since
+the sample*, which needs it to be loaded. The rule that actually holds is:
+**never trust a stored position while the vehicle is loaded.** Sweep for it
+instead — `liveVehicle` does exactly one 7x7 sweep at exit, which also covers
+the case where the vehicle reloaded and every handle we hold is dead.
+
+**Nothing about a vehicle's identity is ever sent to a client.** Vehicle level
+modData is never transmitted (see the API table), so the UUID cannot be matched
+client side and the attempt to do so broke every exit in multiplayer. Instead
+the server names a *position*, the client takes whatever vehicle is there, and
+reports its `getId()` back up for the server to check against the lease. That
+is the direction vanilla proves: clients send `getId()` and servers resolve it
+with `getVehicleById`, about thirty times in `VehicleCommands.lua`.
+
+**Leaving is a three step handshake**, because no one side can answer the whole
+question. The server decides where the player goes and which seat they are
+owed; the client moves them, because vanilla only ever seats a character from a
+client timed action; then the client reports what it found, which is the first
+moment anybody can tell an unloaded vehicle from a destroyed one. Weight is
+applied on that report rather than by a poll — same moment, one less timer.
+
+**You cannot step out of a moving vehicle** unless there is a seat free.
+`Transit.leave` refuses before it teleports anybody, so there is no port-and-
+bounce. The test is `getCurrentSpeedKmHour()`, never `getDriver()`: a towed
+vehicle moves with nobody at its wheel, which is what vanilla's
+`getDriverRegardlessOfTow` exists for. Refusing is self-resolving — the driver
+parks, logs off or crashes.
 
 `vehicleHandle` is `BaseVehicle:getId()`. It is unique within a session but
 **does not survive the vehicle unloading** — the id is assigned when a vehicle
@@ -257,7 +335,10 @@ B41 tutorial applies.
 | `IsoGridSquare` has **no `getContainer()`** and no `getDeadBody()`. Containers hang off the object (`isoObject:getContainer()`); bodies come from `square:getDeadBodys()`, plural, returning a list. `getDeadBody(index)` is a *hutch* method. Vanilla removes a body with `removeFromWorld()` then `removeFromSquare()`, in that order. | Both were wrong in `Scrub.clearSquare` and threw `Object tried to call nil` the first time a scrub ever ran. Note the jar check passes for both: a class's constant pool contains method names it **calls** as well as ones it owns, so "present" proves nothing on its own — cross-check against vanilla usage. |
 | `IsoGridSquare` has **no `setBloodSplatLifetime`**. Vanilla `ISCleanBlood:complete()` uses `square:removeBlood(false, false)` then `square:removeGrime()`. | Confirmed absent from the jar. |
 | Vanilla only ever exits a vehicle from a **client** timed action (`ISExitVehicle`). | `vehicle:exit()` lives in `Client.teleport`, not in server-side `Transit.enter`. |
-| `getCell():getVehicles()` returns a **`java.util.Set`** — `size()` but no `get(i)`, so it cannot be indexed from Lua. Vanilla's own `ISVehicleBloodUI.lua:81` does `vehicles:get(i-1)` and is therefore broken. | `resolveReturn` uses `getVehicleById(handle)`. Vanilla Lua shows intent, **not** correctness — check the jar. |
+| `getCell():getVehicles()` returns a **`java.util.Set`** — `size()` but no `get(i)`, so it cannot be indexed from Lua, and **loaded vehicles cannot be enumerated from Lua at all**. Vanilla's own `ISVehicleBloodUI.lua:81` does `vehicles:get(i-1)` and is therefore broken; so does RV Interior's entire exit path. | `resolveReturn` uses `getVehicleById(handle)`, and position tracking is pushed by the driver's client rather than swept for. Vanilla Lua shows intent, **not** correctness — and neither does a shipped mod that works on B41. |
+| **Vehicle level modData is never transmitted to a client.** `IsoObject` declares the whole sync path — `transmitModData`, `sendObjectModData`, `ObjectModData`, `IsoObjectChange`. `BaseVehicle` declares `getModData`/`setModData`/`hasModData` and `transmitPartModData(VehiclePart)` and **none** of it. Vanilla never calls `transmitModData()` on a vehicle (only doors, players, characters, carcasses, plain objects) and every vanilla client-side vehicle modData read is `part:getModData()`. | Anything a client must know about a vehicle has to be *sent* to it, or discovered client side and confirmed by the server. A client-side UUID match cannot work. `transmitModData()` on a vehicle is worse than a no-op: `IsoObject`'s version addresses an object by square plus index in that square's object list, and a vehicle is not in `square:getObjects()`. |
+| **B42 has no server side "a player left" event.** `OnDisconnect` is a *client* event meaning "you were disconnected"; it takes no player argument and vanilla uses it only in `ConnectToServer.lua` and `ISMPEditAccount.lua`. Dumping every name from `LuaEventManager` finds no `OnPlayerDisconnect` or equivalent. | `server_events.lua` deliberately has no disconnect handler. It had one, hooked to `OnDisconnect`, and it never fired once. Keeping the occupancy is the better behaviour anyway — `playerSetup` finds it on reconnect. |
+| `BaseVehicle` declares `getCurrentSpeedKmHour`, `getSpeed2D`, `getDriver`, `getDriverRegardlessOfTow`, `getVehicleTowing`, `getTowingPartner`, `isSeatInstalled`, `isDriver`. `OnSwitchVehicleSeat` is **not** an engine event — vanilla registers it from `ISVehicleDashboard.lua:716`. | Rule 5 gates on speed, not on `getDriver()`, because a towed vehicle moves with nobody at its wheel. The tracker installs in the deferred setup, like the destroy guards, or the seat hook silently does nothing. |
 | Moving a player is `IsoGameCharacter:teleportTo(x, y, z)` (overloads `(FFI)`, `(III)`, `(FF)`, `(II)`). `setX`/`setLastX` also works — PhunZones2 ports players that way. | `Client.teleport` uses `teleportTo`, `+ 0.5` to centre on the tile, as vanilla's `StreamMapWindow` does. |
 | **One teleport call is not enough across the map.** The player moves, but the destination chunk is not loaded, and the engine restores anyone on a square that does not exist. It reads as "the teleport silently did nothing" — the position log shows the move landing and then being undone. | `Client.teleport` re-asserts the position every tick until `getGridSquare` at the destination is non-nil (`HOLD_TICKS`). Applies leaving a room too: the vehicle's chunk unloads while the player is inside. The leash `graceUntil` **must** outlast that window. |
 | `ISEnterVehicle:new(character, vehicle, seat)` is the only sanctioned way into a seat, and its `start()` silently returns without entering if the character is more than 2 tiles from `getPassengerPosition(seat, "outside")`. `isValid` then fails and the queue drops it, so a failed re-seat degrades to standing there rather than hanging — **this happens by default**, because the only position the server can send is the vehicle centre, which is further than 2 tiles on anything van sized. Teleport to the outside position first (`getWorldPos(pos:getOffset(), Vector3f)`, as vanilla does). `getBestSeat`, `isSeatOccupied`, `getMaxPassengers`, `getCharacter` all exist on `BaseVehicle`. | Re-seating on exit is a client action in `Client.teleport`'s second phase, run only once the destination chunk has streamed in. |
