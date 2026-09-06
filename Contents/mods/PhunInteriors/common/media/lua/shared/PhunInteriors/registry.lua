@@ -200,6 +200,53 @@ end
 
 --- Does this vehicle satisfy its class's entry requirements?
 --- Returns false plus a translation key when it does not.
+--- Is this vehicle moving fast enough to matter?
+function Core.vehicleIsMoving(vehicle)
+    if not vehicle then
+        return false
+    end
+    return math.abs(vehicle:getCurrentSpeedKmHour()) >= Core.consts.movingKmh
+end
+
+--- Is this player actually the one driving this vehicle?
+--
+-- Not just isDriver. Sitting in seat 0 of something under tow is not driving
+-- it -- the vehicle in front is -- which is exactly why vanilla has a separate
+-- getDriverRegardlessOfTow. Being told you cannot leave the wheel of a van
+-- somebody else is towing is the kind of rule that reads as a bug.
+function Core.isAtTheWheel(vehicle, player)
+    if not vehicle or not player then
+        return false
+    end
+    return vehicle:isDriver(player) and vehicle:getVehicleTowedBy() == nil
+end
+
+--- Can this player move from where they are into the interior right now?
+-- Returns true, or false plus a translation key.
+--
+-- Shared, and there is exactly one copy on purpose. The server enforces this
+-- in Transit.canEnter; the client checks the same function in beginEnter so a
+-- refusal is instant rather than arriving after a fifteen second action. Two
+-- copies of a rule like this drift, which is the mistake the reference mod
+-- made with its whole SP path.
+--
+-- Moving between a seat and the interior is an internal move, and allowed --
+-- the mirror of leaving the interior into a free seat while under way. The two
+-- things that are not allowed are catching a vehicle you are not aboard, and
+-- walking away from the wheel of one you are driving.
+function Core.vehicleMotionAllows(vehicle, player)
+    if not Core.vehicleIsMoving(vehicle) then
+        return true
+    end
+    if player:getVehicle() ~= vehicle then
+        return false, "IGUI_PhunInteriors_VehicleMoving"
+    end
+    if Core.isAtTheWheel(vehicle, player) then
+        return false, "IGUI_PhunInteriors_DrivingCannotEnter"
+    end
+    return true
+end
+
 function Core.vehicleAllows(vehicle, class)
     if not class or not class.requires then
         return true

@@ -4,7 +4,12 @@ PhunInteriors = {
         -- key we hang our own state off, on both vehicles and the global ModData
         modDataKey = "PhunInteriors",
         vehicleIdKey = "PhunInteriors_id",
-        massDeltaKey = "PhunInteriors_massDelta"
+        massDeltaKey = "PhunInteriors_massDelta",
+        -- Below this a vehicle counts as parked. One definition, because three
+        -- separate places ask the same question -- the exit, the entry and the
+        -- position tracker -- and they must agree or a vehicle can be moving
+        -- for one of them and stopped for another.
+        movingKmh = 0.2
     },
     data = {},
     commands = {

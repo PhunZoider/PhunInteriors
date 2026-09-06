@@ -32,8 +32,6 @@ local Client = Core.client
 -- Shape borrowed from RV Interior, which solved this problem first.
 -- ---------------------------------------------------------------------------
 
--- Below this the vehicle counts as parked. RV Interior's figure.
-local STATIONARY_KMH = 0.2
 -- Ticks between checks. This runs on every player update while driving, so it
 -- wants to be cheap; a check every ~1.6s is plenty for a 70 tile threshold.
 local CHECK_TICKS = 100
@@ -98,8 +96,7 @@ local function watch(player)
         end
         delay = CHECK_TICKS
 
-        local speed = math.abs(vehicle:getCurrentSpeedKmHour())
-        local moving = speed >= STATIONARY_KMH
+        local moving = Core.vehicleIsMoving(vehicle)
         local far = not lastSent or lastSent:DistTo(player) > RESEND_TILES
 
         -- Refresh while it is moving, and once more when it stops.

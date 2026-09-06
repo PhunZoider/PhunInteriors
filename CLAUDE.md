@@ -29,9 +29,15 @@ tenant exits into a seat of the moving towed vehicle. That exercises the
 tracker's `getVehicleTowing()` push, the server resolving a towed vehicle, and
 the moving-vehicle rule against something nobody is driving.
 
-Not yet exercised: the **destroy guards** / `HardenShell`, and the **leash
-breach path** -- every exit so far has been the exit tile or the context menu,
-never an out of bounds walk.
+The **destroy guards** are confirmed both ways -- walls and light switches
+refuse to break with `HardenShell` on and break normally with it off -- and the
+**leash breach path** behaves as designed.
+
+That leaves one thing unexercised in the whole of v1: the fire dousing half of
+`HardenShell`. `Harden.sweepFire` has been running on its minute timer
+throughout testing without error, so `square:getFire()` is proven; what has
+never happened is a fire actually starting inside a room, so
+`fire:removeFromWorld()` is the only line still on trust.
 
 Lease expiry is reachable without waiting out the sandbox:
 `PhunInteriors.admin("age", {vehicleId = ..., days = 99})` then
@@ -228,7 +234,29 @@ client timed action; then the client reports what it found, which is the first
 moment anybody can tell an unloaded vehicle from a destroyed one. Weight is
 applied on that report rather than by a poll — same moment, one less timer.
 
-**You cannot step out of a moving vehicle** unless there is a seat free.
+**A seat and the interior are the same vehicle.** Moving between them is an
+internal move and is allowed at any speed. Only the boundary between the
+vehicle and the *ground* is gated on motion. So a passenger can step into the
+back of a van doing forty, and step back out into a free seat, but nobody
+boards or leaves a moving vehicle from outside it.
+
+`Core.vehicleMotionAllows` is the one implementation, shared, called by
+`Transit.canEnter` for authority and by `Client.beginEnter` so a refusal is
+instant rather than arriving after a fifteen second action. Two things it
+refuses: catching a vehicle you are not aboard, and leaving the wheel of one
+you are driving -- `Core.isAtTheWheel`, which is `isDriver` **and**
+`getVehicleTowedBy() == nil`, because sitting in seat 0 of something under tow
+is not driving it.
+
+This is why `Client.beginEnter` does not queue `ISExitVehicle` when the player
+is already in the target vehicle. That is not an optimisation: `ISExitVehicle`'s
+`isValid` is `vehicle:isStopped()`, so queueing it made entering a moving
+vehicle impossible, and the queue dropped both actions without a word. The seat
+is vacated by `vehicle:exit()` in `Client.teleport` instead, which is where it
+always was. A player in a *different* vehicle still climbs out properly.
+
+**You cannot step out of a moving vehicle onto the ground** unless there is a
+seat free.
 `Transit.leave` refuses before it teleports anybody, so there is no port-and-
 bounce. The test is `getCurrentSpeedKmHour()`, never `getDriver()`: a towed
 vehicle moves with nobody at its wheel, which is what vanilla's
@@ -431,29 +459,8 @@ and the purpose-built map.
   It is the most complaint-generating behaviour in the design.
 - Is `WeightFactor=50` right? It is a guess and needs an overloaded van to
   calibrate against.
-- **Should entering from the driver's seat make you climb out?** It does today:
-  `Client.beginEnter` queues `ISExitVehicle` before the entry action, because
-  that action refuses to run while the character is in a vehicle and the seat
-  has to be read before it is vacated. Getting out to walk round the back is
-  defensible for a van and strange for anything with a walkway. The cheap
-  alternative is to skip the timed action entirely when already seated and just
-  go, which reads as "moving to the back" rather than "getting out and getting
-  in again". Same design area as the question below.
-
-  **This is no longer only cosmetic.** `ISExitVehicle:isValid()` is
-  `vehicle:isStopped()`, so queueing it means a seated player cannot enter the
-  interior of a *moving* vehicle at all -- and the queue drops both actions
-  silently, so it reads as the menu doing nothing. Found while testing towing:
-  a passenger being towed is not driving anything, and being unable to step
-  into the back is hard to justify to them.
-
-  Skipping the exit when already seated fixes both, and mirrors rule 5 -- if
-  you may leave the interior into a free seat while moving, you may enter it
-  from one. It needs a gate, because the same change would otherwise let a
-  driver abandon the wheel at speed. The test is `vehicle:isDriver(player)` and
-  `vehicle:getVehicleTowedBy() == nil`, since sitting in seat 0 of something
-  under tow is not driving it. `Client.teleport` already calls `vehicle:exit()`
-  for a seated player, so the seat is vacated either way.
+- ~~Should entering from the driver's seat make you climb out?~~ **Answered:
+  no.** See "A seat and the interior are the same vehicle" in Architecture.
 - **Where should you have to stand to get in?** Entry is currently allowed from
   anywhere the radial menu resolves the vehicle, which in practice is anywhere
   around it. Confirmed in game. Sketched, not decided: the back of a van, the

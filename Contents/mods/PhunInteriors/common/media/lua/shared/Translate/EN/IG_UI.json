@@ -9,6 +9,7 @@
     "IGUI_PhunInteriors_ZombiesTooClose": "Too dangerous to climb in right now",
     "IGUI_PhunInteriors_VehicleGone": "Your vehicle is no longer where you left it",
     "IGUI_PhunInteriors_VehicleMoving": "You cannot climb out while it is moving",
+    "IGUI_PhunInteriors_DrivingCannotEnter": "Not while you are at the wheel",
     "IGUI_PhunInteriors_LeaseWarning": "Your interior will be cleared out soon",
     "IGUI_PhunInteriors_CannotDamage": "The shell of this room will not give",
     "IGUI_PhunInteriors_AdminUsage": "/interiors list | free <vehicleId> | scrub [roomSet index] | evict <username> | remanifest <roomSet>"

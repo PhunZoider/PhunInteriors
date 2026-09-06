@@ -13,21 +13,48 @@ local Client = Core.client
 
 PhunInteriorsEnterAction = ISBaseTimedAction:derive("PhunInteriorsEnterAction")
 
+--- Out of any vehicle, or already aboard the one we are climbing into.
+--
+-- It used to demand getVehicle() == nil, which meant a seated player could
+-- only ever get here after ISExitVehicle had run. That action's isValid is
+-- vehicle:isStopped(), so in a *moving* vehicle it never ran, this never
+-- became valid, and the queue dropped both -- silently. Entering the back of a
+-- van somebody else was towing was impossible, and looked like a broken menu.
 function PhunInteriorsEnterAction:isValid()
-    return self.vehicle ~= nil and self.character:getVehicle() == nil
+    if not self.vehicle then
+        return false
+    end
+    local current = self.character:getVehicle()
+    return current == nil or current == self.vehicle
+end
+
+--- Seated players skip all the facing work: they cannot turn, so waiting on
+--- shouldBeTurning would never finish.
+function PhunInteriorsEnterAction:isAboard()
+    return self.character:getVehicle() ~= nil
 end
 
 function PhunInteriorsEnterAction:waitToStart()
+    if self:isAboard() then
+        return false
+    end
     self.character:faceThisObject(self.vehicle)
     return self.character:shouldBeTurning()
 end
 
 function PhunInteriorsEnterAction:update()
+    if self:isAboard() then
+        return
+    end
     self.character:faceThisObject(self.vehicle)
 end
 
 function PhunInteriorsEnterAction:start()
-    self:setActionAnim("Loot")
+    -- Loot is a standing animation and there is no seated equivalent worth
+    -- borrowing, so somebody moving through from a seat just takes the time.
+    if not self:isAboard() then
+        self:setActionAnim("Loot")
+    end
 end
 
 function PhunInteriorsEnterAction:stop()
@@ -35,11 +62,14 @@ function PhunInteriorsEnterAction:stop()
 end
 
 function PhunInteriorsEnterAction:perform()
-    -- Which door we are stood at. Captured here rather than in beginEnter:
-    -- by now any ISExitVehicle has run and the character is standing where
-    -- they will actually be, so this is the door to put them back at. Works
-    -- out the same for a seated player, who is stood at their own door.
-    local standSeat = Client.nearestDoor(self.vehicle, self.character)
+    -- Which door to put them back at on the way out. Somebody still in a seat
+    -- comes back to that seat's door; for anyone on foot this is measured now
+    -- rather than in beginEnter, because by now any ISExitVehicle has run and
+    -- they are standing where they will actually be.
+    local standSeat = self.seat
+    if not standSeat or standSeat < 0 then
+        standSeat = Client.nearestDoor(self.vehicle, self.character)
+    end
     Client.requestEnter(self.vehicle, self.seat, standSeat)
     ISBaseTimedAction.perform(self)
 end
@@ -70,21 +100,37 @@ function Client.beginEnter(vehicle)
     if not player or not vehicle then
         return
     end
-    -- Capture the seat *here*, before anything leaves it. Our own isValid
-    -- refuses to run until the character is out of the vehicle, so by the
-    -- time the request reaches the server getSeat already returns -1 and the
-    -- seat is lost. This is the only moment it can be read.
+
+    -- Refuse here as well as server side, so a refusal costs nothing instead
+    -- of arriving after a fifteen second action. Same function on both sides;
+    -- the server is still the authority and re-checks it in Transit.canEnter.
+    local allowed, why = Core.vehicleMotionAllows(vehicle, player)
+    if not allowed then
+        Client.notify({text = why, warning = true})
+        return
+    end
+
+    -- Capture the seat *here*, before anything leaves it. By the time the
+    -- request reaches the server getSeat already returns -1, so this is the
+    -- only moment it can be read.
     local seat = -1
     local current = player:getVehicle()
-    if current then
-        if current == vehicle then
-            seat = vehicle:getSeat(player)
-        end
-        -- Vanilla only ever leaves a seat through ISExitVehicle. Calling
-        -- exit() straight from a menu skips the animation and the seat
-        -- bookkeeping, so queue the vanilla action ahead of ours and let the
-        -- queue sequence them.
+
+    if current == vehicle then
+        -- Already aboard, so there is nothing to climb out of: moving from a
+        -- seat into the interior is an internal move, the mirror of coming
+        -- back out into a free seat. Client.teleport calls vehicle:exit() when
+        -- the server says go, which is what actually vacates the seat.
+        --
+        -- Queueing ISExitVehicle here instead is what made entering a moving
+        -- vehicle impossible -- its isValid is vehicle:isStopped().
+        seat = vehicle:getSeat(player)
+    elseif current then
+        -- A different vehicle, which does have to be left properly. Vanilla
+        -- only ever leaves a seat through ISExitVehicle; calling exit() from a
+        -- menu skips the animation and the seat bookkeeping.
         ISTimedActionQueue.add(ISExitVehicle:new(player))
     end
+
     ISTimedActionQueue.add(PhunInteriorsEnterAction:new(player, vehicle, seat))
 end

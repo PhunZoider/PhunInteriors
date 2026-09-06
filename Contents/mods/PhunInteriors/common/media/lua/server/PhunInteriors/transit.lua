@@ -23,8 +23,6 @@ Core.modules.transit = Transit
 -- vehicle from a destroyed one.
 -- ---------------------------------------------------------------------------
 
--- Below this a vehicle counts as parked. Matches the client tracker.
-local MOVING_KMH = 0.2
 -- How long to hold a player's exit paperwork open waiting for them to report
 -- that they landed.
 local ARRIVAL_TIMEOUT_MS = 30000
@@ -96,6 +94,13 @@ function Transit.canEnter(player, vehicle)
     local allowed, reason = Core.vehicleAllows(vehicle, class)
     if not allowed then
         return false, reason
+    end
+
+    -- Stepping from a seat into the interior is fine at speed; catching a
+    -- moving vehicle from outside, or abandoning the wheel of one, is not.
+    local mayMove, why = Core.vehicleMotionAllows(vehicle, player)
+    if not mayMove then
+        return false, why
     end
 
     if Core.settings.EntryBlockedByZombies then
@@ -418,7 +423,7 @@ function Transit.leave(player, reason)
     -- even for somebody who walked up on foot. Refusing is self resolving:
     -- the driver parks, logs off or crashes, and then it is stationary.
     local seatOut = nil
-    if vehicle and math.abs(vehicle:getCurrentSpeedKmHour()) >= MOVING_KMH then
+    if vehicle and Core.vehicleIsMoving(vehicle) then
         seatOut = freeSeat(vehicle, occupancy.seat)
         if not seatOut then
             Core.debugLn(tostring(key) .. " tried to leave a moving vehicle with no free seat")
