@@ -84,10 +84,26 @@ function Transit.enter(player, vehicle, seat, standSeat)
     local class = classOrReason
 
     local vehicleId = Core.vehicleId(vehicle, true)
-    local assignment, reason = Slots.acquire(vehicleId, class.roomSet)
+    local assignment, reason, dirty = Slots.acquire(vehicleId, class.roomSet)
     if not assignment then
         notify(player, reason, true)
         return false
+    end
+
+    -- A slot handed over straight from quarantine still holds the last
+    -- tenant's mess. Try to clean it now: if another player is in a
+    -- neighbouring slot the chunk is already loaded and this succeeds, and
+    -- nobody ever sees it. Otherwise the leash finishes the job on arrival,
+    -- which is the first moment the chunk is guaranteed to exist.
+    local scrubOnArrival = false
+    if dirty then
+        local Scrub = require "PhunInteriors/scrub"
+        local cleaned, why = Scrub.slot(assignment.roomSet, assignment.index)
+        if not cleaned then
+            Core.debugLn(string.format("%s#%s still dirty (%s); scrubbing on arrival",
+                tostring(assignment.roomSet), tostring(assignment.index), tostring(why)))
+            scrubOnArrival = true
+        end
     end
     Slots.touch(vehicleId)
 
@@ -175,6 +191,8 @@ function Transit.enter(player, vehicle, seat, standSeat)
         standSeat = requestedDoor,
         captureSlot = pristine or nil,
         captureTries = 0,
+        scrubOnArrival = scrubOnArrival or nil,
+        scrubTries = 0,
         enteredAt = Core.now(),
         zombieSnapshot = snapshot,
         returnTo = {

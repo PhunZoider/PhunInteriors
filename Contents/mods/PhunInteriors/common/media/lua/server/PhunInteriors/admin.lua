@@ -24,12 +24,54 @@ local actions = {}
 actions.list = function()
     local summary = Slots.summary()
     local lines = {}
+
     for _, set in ipairs(summary.sets) do
         table.insert(lines, string.format("%s: %d/%d leased (%s)",
             set.id, set.used, set.total, set.source))
     end
-    table.insert(lines, string.format("quarantine: %d slot(s) awaiting scrub", summary.quarantine))
+
+    -- Longest idle first, because that is the one about to expire and the one
+    -- you want the id of.
+    for _, lease in ipairs(summary.leases) do
+        table.insert(lines, string.format("  %s -> %s#%s, idle %.1f day(s)%s%s%s",
+            lease.vehicleId, lease.roomSet, lease.index, lease.idleDays,
+            lease.lastUser and (", last used by " .. lease.lastUser) or "",
+            lease.occupied and ", occupied now" or "",
+            lease.warned and ", warned" or ""))
+    end
+
+    table.insert(lines, string.format("quarantine: %d slot(s) awaiting scrub%s",
+        summary.quarantine, summary.quarantined or ""))
     return lines
+end
+
+-- Run the lease sweep now rather than on the daily timer.
+actions.sweepleases = function()
+    local expired = Slots.sweepLeases()
+    local lines = {"lease sweep expired " .. tostring(expired) .. " room(s)"}
+    if Slots.lastSweep then
+        table.insert(lines, "  " .. Slots.lastSweep)
+    end
+    if expired == 0 then
+        table.insert(lines, "  note: entering a room renews its lease, so age it and sweep with nothing in between")
+    end
+    return lines
+end
+
+-- Pretend a lease has not been touched for this many days, so the sweep can
+-- act on it. Pair with sweepleases to test expiry without waiting.
+actions.age = function(args)
+    local vehicleId = args.vehicleId
+    local days = tonumber(args.days) or 999
+    if not vehicleId then
+        return {"age needs a vehicleId, and optionally days"}
+    end
+    local assignment = Slots.age(vehicleId, days)
+    if not assignment then
+        return {"no room is leased to " .. tostring(vehicleId)}
+    end
+    return {string.format("%s#%s now looks %s days idle",
+        assignment.roomSet, assignment.index, tostring(days))}
 end
 
 actions.free = function(args)

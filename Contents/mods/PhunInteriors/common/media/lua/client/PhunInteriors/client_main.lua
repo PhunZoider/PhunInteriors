@@ -335,6 +335,8 @@ end
 --     PhunInteriors.admin("remanifest", {roomSet = "phun.van", index = 4})
 --     PhunInteriors.admin("scrub", {roomSet = "phun.van", index = 3})
 --     PhunInteriors.admin("free", {vehicleId = "..."})
+--     PhunInteriors.admin("age", {vehicleId = "...", days = 99})
+--     PhunInteriors.admin("sweepleases")
 --     PhunInteriors.admin("evict", {username = "..."})
 --
 -- Results come back through Core.commands.adminResult and print to the log,

@@ -32,6 +32,18 @@ local function occupiedFor(roomSetId)
     return d.occupied[roomSetId]
 end
 
+--- Drop a slot from the quarantine queue, if it is in it.
+local function dequarantine(roomSetId, index)
+    local queue = store().quarantine
+    for i = #queue, 1, -1 do
+        if queue[i].roomSet == roomSetId and queue[i].index == index then
+            table.remove(queue, i)
+            return true
+        end
+    end
+    return false
+end
+
 local function isQuarantined(roomSetId, index)
     for _, q in ipairs(store().quarantine) do
         if q.roomSet == roomSetId and q.index == index then
@@ -85,21 +97,48 @@ function Slots.acquire(vehicleId, roomSetId)
 
     local occupied = occupiedFor(roomSetId)
 
+    local function lease(index, dirty)
+        local assignment = {
+            roomSet = roomSetId,
+            index = index,
+            lastSeen = Core.now()
+        }
+        occupied[tostring(index)] = vehicleId
+        d.assignments[vehicleId] = assignment
+        Core.debugLn("leased " .. roomSetId .. "#" .. index .. " to " .. tostring(vehicleId) ..
+            (dirty and " (awaiting scrub)" or ""))
+        return assignment
+    end
+
     -- Every slot is leasable. Slot 0 used to be reserved as a pristine copy
     -- to scan blueprints from, which cost a room of map per set and only ever
     -- worked when somebody happened to be standing near it. Blueprints are
     -- authored now, and a slot that is leased captures its own.
     for index = 0, set.count do
         if not occupied[tostring(index)] and not isQuarantined(roomSetId, index) then
-            local assignment = {
-                roomSet = roomSetId,
-                index = index,
-                lastSeen = Core.now()
-            }
-            occupied[tostring(index)] = vehicleId
-            d.assignments[vehicleId] = assignment
-            Core.debugLn("leased " .. roomSetId .. "#" .. index .. " to " .. tostring(vehicleId))
-            return assignment
+            return lease(index, false)
+        end
+    end
+
+    -- Nothing clean left. Take a quarantined slot rather than refuse.
+    --
+    -- Quarantine used to be a one way door. A slot only leaves it by being
+    -- scrubbed, a scrub needs the chunk loaded, and the chunk only loads when
+    -- somebody is near the room -- which nobody is, because the room was
+    -- released precisely because nobody was using it. The measured load radius
+    -- is between 61 and 120 tiles against a 60 tile pitch, so only slots next
+    -- to an occupied one ever drained. Every other released slot was lost for
+    -- good and the pool shrank until the set reported itself full: exactly the
+    -- reference mod's failure, reached from the opposite direction.
+    --
+    -- The invariant weakens from "never reissued dirty" to "never used dirty".
+    -- The caller scrubs it, immediately if its chunk happens to be loaded and
+    -- otherwise the moment the tenant arrives, which is the first point the
+    -- chunk is guaranteed to exist.
+    for index = 0, set.count do
+        if not occupied[tostring(index)] and isQuarantined(roomSetId, index) then
+            dequarantine(roomSetId, index)
+            return lease(index, true), nil, true
         end
     end
 
@@ -121,10 +160,12 @@ function Slots.release(vehicleId, reason)
     occupied[tostring(assignment.index)] = nil
     d.assignments[vehicleId] = nil
 
-    table.insert(d.quarantine, {
-        roomSet = assignment.roomSet,
-        index = assignment.index
-    })
+    if not isQuarantined(assignment.roomSet, assignment.index) then
+        table.insert(d.quarantine, {
+            roomSet = assignment.roomSet,
+            index = assignment.index
+        })
+    end
 
     Core.debugLn("released " .. assignment.roomSet .. "#" .. assignment.index ..
         " (" .. tostring(reason or "unspecified") .. ") -> quarantine")
@@ -174,7 +215,14 @@ function Slots.sweepLeases()
     local cutoff = leaseDays * 24
     local expired = {}
 
+    -- Counted so the sweep can say why it did nothing. "expired 0 rooms" is
+    -- indistinguishable between "no leases", "none old enough" and "the only
+    -- candidate is occupied", and all three look like a broken sweep.
+    local checked, skipped, oldest = 0, 0, 0
+
     for vehicleId, assignment in pairs(d.assignments) do
+        checked = checked + 1
+
         -- never expire a room somebody is standing in
         local inUse = false
         for _, occupancy in pairs(Core.occupants) do
@@ -184,8 +232,13 @@ function Slots.sweepLeases()
             end
         end
 
-        if not inUse then
+        if inUse then
+            skipped = skipped + 1
+        else
             local age = now - (assignment.lastSeen or now)
+            if age > oldest then
+                oldest = age
+            end
             if age > cutoff then
                 table.insert(expired, {id = vehicleId, reason = "lease expired"})
             else
@@ -209,10 +262,31 @@ function Slots.sweepLeases()
         Slots.release(entry.id, entry.reason)
     end
 
+    Slots.lastSweep = string.format(
+        "%d lease(s) checked, %d occupied and skipped, oldest idle %.1f day(s), cutoff %d day(s)",
+        checked, skipped, oldest / 24, leaseDays)
+
     if #expired > 0 then
         Core.logLn("lease sweep expired " .. #expired .. " room(s)")
+    else
+        Core.debugLn("lease sweep expired nothing: " .. Slots.lastSweep)
     end
     return #expired
+end
+
+--- Back-date a lease so it can be expired without waiting out the sandbox.
+--
+-- Purely a testing affordance. Lease expiry is otherwise only reachable by
+-- letting fourteen in-game days pass, which meant the whole release ->
+-- quarantine -> scrub chain had never been run once.
+function Slots.age(vehicleId, days)
+    local assignment = store().assignments[vehicleId]
+    if not assignment then
+        return nil
+    end
+    assignment.lastSeen = Core.now() - ((tonumber(days) or 0) * 24)
+    assignment.warned = nil
+    return assignment
 end
 
 --- Pop one quarantined slot for scrubbing. Returns nil when the queue is empty.
@@ -226,7 +300,17 @@ end
 
 function Slots.summary()
     local d = store()
-    local out = {sets = {}, quarantine = #d.quarantine}
+    local out = {sets = {}, leases = {}, quarantine = #d.quarantine}
+
+    -- Name them. A bare count tells you nothing about whether the queue is
+    -- draining or quietly eating the pool.
+    if #d.quarantine > 0 then
+        local names = {}
+        for _, entry in ipairs(d.quarantine) do
+            table.insert(names, entry.roomSet .. "#" .. entry.index)
+        end
+        out.quarantined = " (" .. table.concat(names, ", ") .. ")"
+    end
     for id, set in pairs(Core.roomSets) do
         local used = 0
         for _ in pairs(occupiedFor(id)) do
@@ -239,6 +323,31 @@ function Slots.summary()
             source = set.source
         })
     end
+
+    -- The leases themselves, not just how many. Every other admin action
+    -- takes a vehicleId, and a summary that only counts them leaves no way to
+    -- find one.
+    local now = Core.now()
+    for vehicleId, assignment in pairs(d.assignments) do
+        local inUse = false
+        for _, occupancy in pairs(Core.occupants) do
+            if occupancy.vehicleId == vehicleId then
+                inUse = true
+                break
+            end
+        end
+        table.insert(out.leases, {
+            vehicleId = vehicleId,
+            roomSet = assignment.roomSet,
+            index = assignment.index,
+            idleDays = (now - (assignment.lastSeen or now)) / 24,
+            lastUser = assignment.lastUser,
+            warned = assignment.warned and true or false,
+            occupied = inUse
+        })
+    end
+    table.sort(out.leases, function(a, b) return a.idleDays > b.idleDays end)
+
     return out
 end
 

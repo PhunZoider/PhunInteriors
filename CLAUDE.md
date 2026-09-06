@@ -8,13 +8,21 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 ## Status
 
-**Playable in single player.** Enter, exit, containment, seat and door restore,
-translations and per slot blueprint capture are all confirmed working in game.
+**Playable in single player.** Confirmed working in game: enter and exit,
+containment, seat and door restore, translations, per slot blueprint capture,
+scrub (including restoring a working light switch), and the whole lease
+lifecycle -- expiry, release to quarantine, reissue from quarantine, and the
+scrub that follows it.
 
-Not yet exercised against a live world: **scrub**, lease expiry, the weight
-mechanic, the destroy guards, and the leash breach path (every exit so far has
-been the exit tile or the context menu, never an out of bounds walk). Nothing
-has been run in multiplayer at all.
+Not yet exercised against a live world: the **weight** mechanic (`Weight.refresh`
+has never been called), the **destroy guards** / `HardenShell`, and the **leash
+breach path** -- every exit so far has been the exit tile or the context menu,
+never an out of bounds walk. Nothing has been run in multiplayer at all.
+
+Lease expiry is reachable without waiting out the sandbox:
+`PhunInteriors.admin("age", {vehicleId = ..., days = 99})` then
+`admin("sweepleases")`. Do not enter the room in between -- entering renews the
+lease, which is the mechanic working, and it silently invalidates the test.
 
 ## Verify before you claim anything works
 
@@ -89,9 +97,27 @@ leash all call `Transit.leave`, which puts the player back at the vehicle. Do
 not add a separate breach handler — collapsing these was a deliberate decision.
 
 **Rooms are leased, not assigned.** Every assignment carries `lastSeen`.
-Released slots go to `quarantine` and are scrubbed before reissue, never
-straight back to the pool. The reference mod never freed a slot, so its pool
-exhausted and the feature silently stopped working.
+Released slots go to `quarantine`. The reference mod never freed a slot, so its
+pool exhausted and the feature silently stopped working.
+
+**A quarantined slot is reissued and then scrubbed, not scrubbed and then
+reissued.** The original order could not work: a scrub needs the chunk loaded,
+the chunk only loads when somebody is near the room, and nobody is near a room
+that was released for being unused. The measured load radius is 61-120 tiles
+against a 60 tile pitch, so only slots adjacent to an occupied one ever
+drained; every other released slot was lost and the pool shrank until the set
+reported itself full. That is the reference mod's failure reached from the
+opposite direction.
+
+So `Slots.acquire` prefers a clean slot, falls back to a quarantined one, and
+returns a third value saying which. `Transit.enter` scrubs it immediately if
+the chunk happens to be loaded; otherwise the leash does it on arrival, the
+first moment the chunk is guaranteed to exist. The invariant is now "never
+*used* dirty" rather than "never reissued dirty".
+
+`Scrub.processQueue` still runs on a timer, but only as opportunistic cleanup
+for slots that happen to be loaded. It is no longer the thing the pool depends
+on.
 
 **Exit position is resolved live.** `resolveReturn` in `transit.lua` looks the
 vehicle up with `getVehicleById(occupancy.vehicleHandle)` and reads its current

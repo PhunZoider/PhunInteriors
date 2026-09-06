@@ -6,6 +6,7 @@ require "PhunInteriors/tools"
 local Core = PhunInteriors
 local Transit = require "PhunInteriors/transit"
 local Manifest = require "PhunInteriors/manifest"
+local Scrub = require "PhunInteriors/scrub"
 local Leash = {}
 Core.modules.leash = Leash
 
@@ -96,16 +97,42 @@ local function attemptCapture(occupancy)
     end
 end
 
+--- Scrub a slot that was handed over straight from quarantine.
+--
+-- Same reasoning as the capture above: this is the first moment the room's
+-- chunk is certainly loaded. The tenant is standing in it and will see it
+-- change, which is not lovely, but the alternative was that quarantined slots
+-- were never reissued and the pool drained away.
+local function attemptScrub(occupancy)
+    local cleaned, why = Scrub.slot(occupancy.roomSet, occupancy.index)
+    occupancy.scrubTries = (occupancy.scrubTries or 0) + 1
+    if cleaned then
+        occupancy.scrubOnArrival = nil
+        return
+    end
+    if occupancy.scrubTries >= Manifest.CAPTURE_ATTEMPTS then
+        occupancy.scrubOnArrival = nil
+        Core.logLn(string.format(
+            "gave up scrubbing %s#%s after %d attempts (%s); the tenant keeps the mess",
+            tostring(occupancy.roomSet), tostring(occupancy.index),
+            occupancy.scrubTries, tostring(why)))
+    end
+end
+
 local function checkOne(player, occupancy)
     local where = Leash.classify(occupancy, player:getX(), player:getY(), player:getZ())
 
-    -- Capture first, and above every early return below it. Capture is not
-    -- containment: it does not care whether this player is exempt or still
+    -- Capture and scrub both sit above every early return below. Neither is
+    -- containment: they do not care whether this player is exempt or still
     -- inside their arrival grace, only that they are standing in the room.
-    -- It sat under the exemption at first, so an admin with noclip on -- the
-    -- normal state while testing -- never captured a single blueprint.
-    if where == "inside" and occupancy.captureSlot then
-        attemptCapture(occupancy)
+    -- Capture sat under the exemption at first, so an admin with noclip on --
+    -- the normal state while testing -- never captured a single blueprint.
+    if where == "inside" then
+        if occupancy.captureSlot then
+            attemptCapture(occupancy)
+        elseif occupancy.scrubOnArrival then
+            attemptScrub(occupancy)
+        end
     end
 
     -- Logged on the transition only; this runs four times a second.
