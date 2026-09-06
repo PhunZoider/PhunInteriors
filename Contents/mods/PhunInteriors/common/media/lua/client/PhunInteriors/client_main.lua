@@ -134,8 +134,8 @@ local function rejoinVehicle(player)
             -- empty result rather than deciding what it means: whether the
             -- vehicle is genuinely gone is a question about the lease, and the
             -- server is the only side holding that.
-            Core.debugLn("rejoin: no vehicle within " .. SEARCH_RADIUS .. " squares of " ..
-                pending.x .. "," .. pending.y .. " after " .. pending.seatTicks .. " ticks")
+            Core.debugLn("rejoin: no vehicle within " .. SEARCH_RADIUS .. " squares of " .. pending.x .. "," ..
+                             pending.y .. " after " .. pending.seatTicks .. " ticks")
             Core.dispatch(Core.commands.arrived, {})
             stopHolding()
         end
@@ -186,7 +186,9 @@ local function rejoinVehicle(player)
     -- charged to somebody else's vehicle. This is the direction of travel
     -- vanilla proves: clients send getId() up and servers resolve it with
     -- getVehicleById, roughly thirty times in VehicleCommands.lua.
-    Core.dispatch(Core.commands.arrived, {id = vehicle:getId()})
+    Core.dispatch(Core.commands.arrived, {
+        id = vehicle:getId()
+    })
 
     stopHolding()
 end
@@ -206,13 +208,11 @@ function holdTeleport()
     pending.ticks = pending.ticks + 1
 
     local square = getCell() and getCell():getGridSquare(pending.x, pending.y, pending.z)
-    local arrived = square ~= nil
-        and math.floor(player:getX()) == pending.x
-        and math.floor(player:getY()) == pending.y
+    local arrived = square ~= nil and math.floor(player:getX()) == pending.x and math.floor(player:getY()) == pending.y
 
     if arrived then
-        Core.debugLn(string.format("teleport: arrived at %s,%s,%s after %d tick(s)",
-            tostring(pending.x), tostring(pending.y), tostring(pending.z), pending.ticks))
+        Core.debugLn(string.format("teleport: arrived at %s,%s,%s after %d tick(s)", tostring(pending.x),
+            tostring(pending.y), tostring(pending.z), pending.ticks))
         -- Coming back out there is a second phase: wait for the vehicle to
         -- appear in the freshly streamed chunk, then get back in it.
         if pending.rejoin then
@@ -226,9 +226,8 @@ function holdTeleport()
 
     if pending.ticks >= HOLD_TICKS then
         Core.logLn(string.format(
-            "teleport: gave up after %d ticks; %s,%s,%s never loaded (square is %s, player at %s,%s)",
-            pending.ticks, tostring(pending.x), tostring(pending.y), tostring(pending.z),
-            square and "there" or "still nil",
+            "teleport: gave up after %d ticks; %s,%s,%s never loaded (square is %s, player at %s,%s)", pending.ticks,
+            tostring(pending.x), tostring(pending.y), tostring(pending.z), square and "there" or "still nil",
             tostring(player:getX()), tostring(player:getY())))
         stopHolding()
         return
@@ -262,7 +261,9 @@ function Client.teleport(data)
     end
     if ISBuildWindow and ISBuildWindow.instance then
         -- pcall because this reaches into vanilla UI state we do not own
-        pcall(function() ISBuildWindow.instance:close() end)
+        pcall(function()
+            ISBuildWindow.instance:close()
+        end)
     end
 
     -- Out of the seat first. player:getVehicle() is the test; BaseVehicle has
@@ -273,9 +274,8 @@ function Client.teleport(data)
         triggerEvent("OnExitVehicle", player)
     end
 
-    Core.debugLn(string.format("teleport: asked for %s,%s,%s; player at %s,%s,%s",
-        tostring(data.x), tostring(data.y), tostring(data.z),
-        tostring(player:getX()), tostring(player:getY()), tostring(player:getZ())))
+    Core.debugLn(string.format("teleport: asked for %s,%s,%s; player at %s,%s,%s", tostring(data.x), tostring(data.y),
+        tostring(data.z), tostring(player:getX()), tostring(player:getY()), tostring(player:getZ())))
 
     player:teleportTo(data.x + 0.5, data.y + 0.5, data.z)
 
@@ -335,9 +335,10 @@ end
 --- Ask to come out. Normally the exit tile does this without being asked, but
 --- the context menu is a discoverable affordance and a safety net.
 function Client.requestLeave()
-    Core.dispatch(Core.commands.leave, {reason = "exit"})
+    Core.dispatch(Core.commands.leave, {
+        reason = "exit"
+    })
 end
-
 
 -- ---------------------------------------------------------------------------
 -- Admin entry point.
@@ -390,14 +391,16 @@ end
 -- the server fell through to its default and reported a number the caller had
 -- never asked for.
 local function payload(action, args, fallback)
-    local out = {action = action or fallback}
+    local out = {
+        action = action or fallback
+    }
     for key, value in pairs(args or {}) do
         local kind = type(value)
         if kind == "string" or kind == "number" or kind == "boolean" then
             out[key] = value
         else
-            Core.logLn("dropping '" .. tostring(key) .. "' from the command: a " ..
-                kind .. " cannot be sent to the server")
+            Core.logLn("dropping '" .. tostring(key) .. "' from the command: a " .. kind ..
+                           " cannot be sent to the server")
         end
     end
     return out

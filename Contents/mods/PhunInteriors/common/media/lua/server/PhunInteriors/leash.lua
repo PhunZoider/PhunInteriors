@@ -88,10 +88,11 @@ local function attemptCapture(occupancy)
     end
     if occupancy.captureTries >= Manifest.CAPTURE_ATTEMPTS then
         -- Give up rather than keep scanning a room that is now lived in.
-        -- This slot falls back to the golden blueprint from here on.
+        -- This slot resolves through Manifest.forSlot from here on, which
+        -- means a sibling in the same set.
         occupancy.captureSlot = nil
         Core.logLn(string.format(
-            "gave up capturing %s#%s after %d attempts (%s); it will fall back to the golden slot",
+            "gave up capturing %s#%s after %d attempts (%s); it will fall back to a sibling room",
             tostring(occupancy.roomSet), tostring(occupancy.index),
             occupancy.captureTries, tostring(reason)))
     end

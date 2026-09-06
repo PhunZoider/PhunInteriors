@@ -168,8 +168,8 @@ function Scrub.slot(roomSetId, index)
         return false, "unknown room set"
     end
 
-    -- The slot's own blueprint if we caught it while pristine, otherwise the
-    -- room set's golden slot. Which one gets used is logged, because falling
+    -- The slot's own blueprint if we caught it while pristine, otherwise any
+    -- sibling in the same set. Which one gets used is logged, because falling
     -- back is the homogenising behaviour and it should be visible when it
     -- happens rather than silently making every room identical.
     local manifest, source = Manifest.forSlot(roomSetId, index)

@@ -42,7 +42,7 @@ Core.modules.manifest = Manifest
 local MANIFEST_VERSION = 2
 
 -- How many leash ticks we keep trying a first lease capture before giving up
--- and falling back to the golden slot. Four a second, so this is ten seconds.
+-- and falling back to a sibling room. Four a second, so this is ten seconds.
 Manifest.CAPTURE_ATTEMPTS = 40
 
 local function slotStore(roomSetId)
@@ -286,7 +286,7 @@ end
 --             last resort, but better than refusing to reset the room.
 --
 -- Which one was used is returned, because a scrub that quietly reaches for
--- the golden slot is a scrub that quietly makes every room identical.
+-- a sibling is a scrub that quietly makes every room identical.
 function Manifest.forSlot(roomSetId, index)
     local shipped = Core.shippedBlueprint(roomSetId, index)
     if shipped then

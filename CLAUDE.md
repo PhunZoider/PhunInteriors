@@ -8,67 +8,72 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 ## Status
 
-**Playable in single player.** Confirmed working in game: enter and exit,
-containment, seat and door restore, translations, per slot blueprint capture,
-scrub (including restoring a working light switch), and the whole lease
-lifecycle -- expiry, release to quarantine, reissue from quarantine, and the
-scrub that follows it.
+**Playable in single player and on a dedicated server.** Confirmed working in
+game: enter and exit, containment, seat and door restore, translations, per
+slot blueprint capture, scrub (including restoring a working light switch), and
+the whole lease lifecycle -- expiry, release to quarantine, reissue from
+quarantine, and the scrub that follows it.
 
-Not yet exercised against a live world: the **destroy guards** / `HardenShell`,
-and the **leash breach path** -- every exit so far has been the exit tile or the
-context menu, never an out of bounds walk.
+**Multiplayer is proven against a real dedicated server**, not a listen host.
+That distinction matters: only a dedicated server unloads the vehicle's chunk
+the way the entire exit design assumes. Position tracking, the three step
+handshake, the arrival-driven weight application and *both* branches of the
+moving-vehicle rule came through clean -- including the one expected to fail,
+exiting into a free seat while somebody else drives the van.
 
-**The whole exit path was rewritten for multiplayer and none of it has been
-run**, in either mode. Position tracking, the three step handshake, the
-moving-vehicle rule and the arrival-driven weight application are all new. The
-old exit worked in single player and could not have worked on a dedicated
-server; the new one should do both, but "should" is doing the work here.
-Re-test single player first -- it is the cheaper way to find a broken handshake.
+Weight is confirmed applying. The `mass delta` line, which this file used to
+record as having never once appeared in a log, now does.
 
-Nothing has been run in multiplayer at all.
+Not yet exercised: the **destroy guards** / `HardenShell`, the **leash breach
+path** (every exit so far has been the exit tile or the context menu, never an
+out of bounds walk), and **towing** -- the tracker pushes `getVehicleTowing()`
+alongside the driven vehicle, but only `phun.van` is registered and vans are
+not towable, so it stays untestable until a towable class exists. Gap #4.
 
 Lease expiry is reachable without waiting out the sandbox:
 `PhunInteriors.admin("age", {vehicleId = ..., days = 99})` then
 `admin("sweepleases")`. Do not enter the room in between -- entering renews the
 lease, which is the mechanic working, and it silently invalidates the test.
 
-## Going into multiplayer
+## Multiplayer
 
-Everything above was proven in single player, where `Core.isLocal` short
-circuits `dispatch`/`respond` into direct calls. Multiplayer is the first time
-any of it makes a round trip.
+Proven on a dedicated server. Until that run, nothing had ever made a round
+trip: `Core.isLocal` short circuits `dispatch`/`respond` into direct calls in
+single player, so SP and coop host prove the logic and nothing about the wire.
 
-Two of the original suspects turned out to be real and are fixed. Both came
-from the same fact, now in the API table: **vehicle level modData is never
-transmitted to a client.**
+Two of the suspected problems were real, and both came from one fact, now in
+the API table: **vehicle level modData is never transmitted to a client.**
 
 - `vehicle:transmitModData()` in `weight.lua` was a no-op at best -- removed,
   and nothing replaces it, because only the server reads the delta.
 - The rejoin phase in `Client.teleport` matched on the modData UUID, which is
-  always nil client side, so on a dedicated server every exit ended in a false
-  "your vehicle is gone" with no re-seat. Replaced by the handshake above.
+  always nil client side, so every dedicated server exit would have ended in a
+  false "your vehicle is gone" with no re-seat. Replaced by the handshake.
 
-Still unproven, in order:
+Confirmed over the wire: enter and exit on foot; enter from a seat and be put
+back in it; position tracking, including the send on stopping; the arrival
+handshake and the weight application that rides it; both branches of the
+moving-vehicle rule; reconnecting while inside; and recovery across a server
+restart. That also settles the wire id -- `getId()` is a short and numbers
+cross as doubles, and it resolves anyway -- and the seat and door capture read
+client side in `Client.beginEnter`.
 
-- **The moving-vehicle exit.** Rule 5 lets you leave into a free seat while the
-  vehicle is moving, and entering a moving vehicle is something vanilla never
-  does. `ISEnterVehicle:start()` silently declines if the character is more than
-  two tiles from the seat's outside position, and the vehicle drives away from
-  where the client just put them. At 50 km/h that is ~0.23 tiles/tick against
-  two tiles of slack, so it should hold, but this is the most likely thing to
-  misbehave.
-- **The wire id.** `getId()` is a short; numbers cross the wire as doubles.
-  `tonumber` is applied on the way in and RV Interior passes it raw on B41, but
-  it is unproven here.
-- **Seat and door capture.** Read client side in `Client.beginEnter` and sent
-  with the enter request. The values are right when they leave; whether they
-  survive the trip is unproven.
+The leash is proven at 4Hz over the network for the exit tile, which is the
+same handler, so `graceUntil` at 6s survives real latency. Its *breach* branch
+is still unexercised.
+
+Still unproven:
+
+- **Towing.** The tracker pushes `getVehicleTowing()` alongside the driven
+  vehicle and the server resolves it the same way, but no registered class is
+  towable, so none of that has run. Blocked on gap #4, not on design.
 - **`Core.tools.onlinePlayers()`** returns only local players on a client and
   everyone on a server. `author.lua` reads `players:get(0)` for "where am I
   standing", which is correct on a listen server and wrong on a dedicated one
   with more than one admin.
-- **The leash** runs server side at 4Hz against positions that now arrive over
-  the network. `graceUntil` is 6s and was tuned against single player timings.
+- **The leash breach path** -- walking out of bounds rather than onto the exit
+  tile. Same `Transit.leave` either way, so the risk is in `Leash.classify`,
+  not in the exit.
 
 ### Prior art
 
