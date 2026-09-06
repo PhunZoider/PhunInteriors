@@ -54,7 +54,14 @@ function Core.registerRoomSet(id, def)
         exits = def.exits or {},
         -- where the generator lives. z is relative, and deliberately outside
         -- the leash, so it is reached through a panel and never on foot.
+        -- Being outside the room is also why it produces no fumes: vanilla
+        -- only makes a building toxic for a generator on a non-exterior
+        -- square, and nobody ever stands next to this one.
         power = def.power or {x = 0, y = 0, z = 1},
+        -- Whether this room has power at all. A tent has no generator and no
+        -- lights, and should not have one conjured for it. Defaults to true,
+        -- so an existing set keeps working without saying anything.
+        powered = def.powered ~= false,
         -- What the fitted-out room weighs before anybody puts anything in it.
         -- The blueprint's own fixtures are deliberately not charged for -- they
         -- are always there, so billing them per item would just be a flat tax

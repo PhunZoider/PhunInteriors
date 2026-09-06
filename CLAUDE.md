@@ -355,20 +355,29 @@ no alternative: `square:haveElectricity()` reads no field, it is
 `chunk:isGeneratorPoweringSquare(x, y, z)`, so generator power is only ever an
 actual activated `IsoGenerator` registered in the chunk.
 
-The **mapper** places it. Vanilla's `MOGenerator.lua` turns sprites
-`appliances_misc_01_0` through `_15` into real `IsoGenerator` objects on map
-load, with fuel 0 — which is exactly right, because the fuel is our projection
-of the battery. `power.lua` searches the whole slot for one on every entry
-rather than caching a location: `set.power` is a hint from the authoring tool,
-not an address, and a mapper may well put the thing on the floor in a corner.
+**Its position is fixed data and does not move.** `set.power` is captured by
+the authoring tool and emitted into the blueprint, and it sits at `z + 1` —
+above the room and outside the leash, reached through a panel and never on
+foot. That placement is also why there are no fumes: vanilla only makes a
+building toxic for a generator on a non-exterior square, and nobody ever
+stands next to this one.
 
-`setActivated(true)` does everything else itself — registers the position with
-the chunk, calls `setSurroundingElectricity`, syncs to clients. It **also**
-marks the building toxic, because a generator running in an enclosed space
-poisons it. We clear that: this generator is a fiction standing in for the
-vehicle's electrical system, and a sealed room three tiles wide would kill the
-tenant it exists to shelter. `setActivated` passes its argument through to
-`setToxic`, so shutting down clears it again on the way out.
+What can change is whether the generator still *exists* — it caught fire, it
+blew up, a scrub rebuilt the square and left an inert copy. So
+`Power.ensureGenerator` places a fresh one when it has gone, following
+vanilla's own recipe from `MOGenerator.lua`: `instanceItem("Base.Generator")`,
+`IsoGenerator.new(item, cell, square)`, `transmitCompleteItemToClients()`. It
+also clears any generator-*shaped* object that is not an `IsoGenerator` first —
+a sprite recreated by name comes back as a plain `IsoObject`, the same trap
+that cost us working light switches. Condition is reset to 100 on every visit,
+because a generator that degrades eventually fails in a room where nobody can
+reach it to fix it, which is a fault report rather than a mechanic.
+
+A room set can opt out entirely with `powered = false` — a tent has no
+generator and should not have one conjured for it.
+
+`setActivated(true)` does everything else itself: registers the position with
+the chunk, calls `setSurroundingElectricity`, syncs to clients.
 
 Weight and power are measured at the same two moments and for the same reason.
 The room is loaded on the way out because the player is standing in it; the

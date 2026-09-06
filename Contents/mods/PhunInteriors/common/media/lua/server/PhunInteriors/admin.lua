@@ -254,7 +254,9 @@ actions.power = function(args)
 
                 local generatorSquare = getCell():getGridSquare(power.x, power.y, power.z)
                 local generator = generatorOn(generatorSquare)
-                if not generatorSquare then
+                if not set.powered then
+                    table.insert(lines, "  this room set is unpowered by design; no generator expected")
+                elseif not generatorSquare then
                     table.insert(lines, "  power square is not loaded")
                 elseif generator then
                     table.insert(lines, string.format(

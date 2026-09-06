@@ -70,49 +70,97 @@ function Power.charge(vehicle)
     return math.max(0, math.min(1, charge))
 end
 
---- The generator serving a slot, wherever it happens to be.
-function Power.findGenerator(roomSetId, index)
+--- The real IsoGenerator on a square, if there is one.
+local function generatorOn(square)
+    local objects = square and square:getObjects()
+    if not objects then
+        return nil
+    end
+    for i = 0, objects:size() - 1 do
+        local object = objects:get(i)
+        if object and instanceof(object, "IsoGenerator") then
+            return object
+        end
+    end
+    return nil
+end
+
+--- Anything on this square that looks like a generator but is not one.
+--
+-- A scrub rebuilds a square from its blueprint, and a generator sprite
+-- recreated by sprite name comes back as a plain IsoObject -- a picture of a
+-- generator, the same trap that cost us working light switches. Left alone it
+-- would sit there while we placed a second, real one beside it.
+local function deadGeneratorOn(square)
+    local objects = square and square:getObjects()
+    if not objects then
+        return nil
+    end
+    for i = 0, objects:size() - 1 do
+        local object = objects:get(i)
+        local sprite = object and object:getSprite()
+        local name = sprite and sprite:getName()
+        -- The sprite set MOGenerator.lua keys off.
+        if name and string.find(name, "^appliances_misc_01_")
+            and not instanceof(object, "IsoGenerator") then
+            return object
+        end
+    end
+    return nil
+end
+
+--- The generator serving a slot, placing one if it has gone.
+--
+-- Position is fixed data: set.power, captured by the authoring tool and
+-- emitted into the blueprint. It does not move. What can happen is that the
+-- generator stops existing -- it caught fire, it blew up, a scrub rebuilt the
+-- square from a blueprint and left an inert copy -- and a room whose lights
+-- never come back because of that is worse than one that quietly repairs
+-- itself.
+--
+-- Creating one follows vanilla's own recipe from MOGenerator.lua, which is
+-- what turns a map-placed sprite into a real generator in the first place.
+function Power.ensureGenerator(roomSetId, index)
     local set = Core.roomSets[roomSetId]
-    if not set then
+    if not set or not set.powered then
         return nil
     end
 
-    local function generatorOn(x, y, z)
-        local square = getCell():getGridSquare(x, y, z)
-        local objects = square and square:getObjects()
-        if not objects then
-            return nil
-        end
-        for i = 0, objects:size() - 1 do
-            local object = objects:get(i)
-            if object and instanceof(object, "IsoGenerator") then
-                return object
-            end
-        end
+    local at = Core.slotPower(set, index)
+    local square = getCell():getGridSquare(at.x, at.y, at.z)
+    if not square then
+        -- Chunk is not loaded. Not a failure, just not now.
         return nil
     end
 
-    -- Where the authoring tool said it would be, if that still holds.
-    local hint = Core.slotPower(set, index)
-    local found = generatorOn(hint.x, hint.y, hint.z)
+    local found = generatorOn(square)
     if found then
         return found
     end
 
-    -- Otherwise anywhere in the room, both levels.
-    local bounds = Core.slotBounds(set, index)
-    for z = bounds.z, bounds.z + 1 do
-        for x = bounds.x1, bounds.x2 do
-            for y = bounds.y1, bounds.y2 do
-                found = generatorOn(x, y, z)
-                if found then
-                    return found
-                end
-            end
-        end
+    local impostor = deadGeneratorOn(square)
+    if impostor then
+        square:transmitRemoveItemFromSquare(impostor)
+        Core.debugLn(string.format("%s#%s had a generator-shaped object that was not one; removed it",
+            tostring(roomSetId), tostring(index)))
     end
 
-    return nil
+    local item = instanceItem("Base.Generator")
+    if not item then
+        Core.logLn("could not create a Base.Generator item")
+        return nil
+    end
+    item:setCondition(100)
+    item:getModData().fuel = 0
+
+    local generator = IsoGenerator.new(item, getCell(), square)
+    -- The constructor adds it to the square itself; MOGenerator.lua has a
+    -- commented-out AddSpecialObject saying as much.
+    generator:transmitCompleteItemToClients()
+
+    Core.logLn(string.format("%s#%s had no generator at %d,%d,%d; placed one",
+        tostring(roomSetId), tostring(index), at.x, at.y, at.z))
+    return generator
 end
 
 --- Start the room's generator on the charge the vehicle had at the door.
@@ -120,16 +168,13 @@ end
 -- Returns true when there is nothing further to do, including when there is no
 -- generator to find -- that is a map problem, and retrying will not fix it.
 function Power.engage(occupancy)
-    if not Core.settings.PowerBinding then
+    local set = Core.roomSets[occupancy.roomSet]
+    if not Core.settings.PowerBinding or not set or not set.powered then
         return true
     end
 
-    local generator = Power.findGenerator(occupancy.roomSet, occupancy.index)
+    local generator = Power.ensureGenerator(occupancy.roomSet, occupancy.index)
     if not generator then
-        Core.logLn(string.format(
-            "%s#%s has no generator, so the room has no power. Place a generator "
-            .. "sprite (appliances_misc_01_0 to _15) in it on the map.",
-            tostring(occupancy.roomSet), tostring(occupancy.index)))
         return true
     end
 
@@ -138,26 +183,24 @@ function Power.engage(occupancy)
         return true
     end
 
+    -- Kept healthy on every visit. A generator that degrades would eventually
+    -- break or burn, and the failure it produces -- a room that stops having
+    -- power for no reason the tenant can see or fix, since they cannot reach
+    -- it -- is not a mechanic, it is a fault report.
+    generator:setCondition(100)
+
     local fuel = (occupancy.batteryAtEntry or 0) * maxFuel
     generator:setFuel(fuel)
     -- setActivated does the rest itself: it registers the generator position
     -- with the chunk, which is what isGeneratorPoweringSquare reads, calls
     -- setSurroundingElectricity, and syncs to clients. Calling those separately
     -- is redundant.
+    --
+    -- It also marks the building toxic for a generator on a non-exterior
+    -- square. Nothing to do about that here: the power square sits above the
+    -- room and outside the leash by design, so it is exterior, nobody ever
+    -- stands next to it, and no fumes are produced.
     generator:setActivated(fuel > 0)
-
-    -- It also marks the building toxic, because a generator running in an
-    -- enclosed space poisons it. Correct for a petrol generator in somebody's
-    -- kitchen, wrong here: this one is a fiction standing in for the vehicle's
-    -- electrical system, and a sealed room three tiles wide would kill the
-    -- tenant it exists to shelter. setActivated passes its argument straight
-    -- through to setToxic, so shutting down clears it again; this clears it
-    -- while running.
-    local square = generator:getSquare()
-    local building = square and square:getBuilding()
-    if building and building:isToxic() then
-        building:setToxic(false)
-    end
 
     -- What it started with, so the way out can charge for the difference.
     occupancy.fuelAtStart = fuel
@@ -178,10 +221,14 @@ function Power.disengage(occupancy)
         return 0
     end
 
-    local generator = Power.findGenerator(occupancy.roomSet, occupancy.index)
+    local set = Core.roomSets[occupancy.roomSet]
+    local at = set and Core.slotPower(set, occupancy.index)
+    local square = at and getCell():getGridSquare(at.x, at.y, at.z)
+    local generator = generatorOn(square)
     if not generator then
-        -- Carried off, or the chunk went while we were not looking. Charging
-        -- for fuel we cannot measure would be a guess.
+        -- Blown up, or the chunk went while we were not looking. Deliberately
+        -- not replaced here: charging for fuel we cannot measure would be a
+        -- guess, and the next entry puts a fresh one in anyway.
         return 0
     end
 
