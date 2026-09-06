@@ -24,11 +24,14 @@ exiting into a free seat while somebody else drives the van.
 Weight is confirmed applying. The `mass delta` line, which this file used to
 record as having never once appeared in a log, now does.
 
-Not yet exercised: the **destroy guards** / `HardenShell`, the **leash breach
-path** (every exit so far has been the exit tile or the context menu, never an
-out of bounds walk), and **towing** -- the tracker pushes `getVehicleTowing()`
-alongside the driven vehicle, but only `phun.van` is registered and vans are
-not towable, so it stays untestable until a towable class exists. Gap #4.
+**Towing is proven too.** One player inside, a second tows the van, and the
+tenant exits into a seat of the moving towed vehicle. That exercises the
+tracker's `getVehicleTowing()` push, the server resolving a towed vehicle, and
+the moving-vehicle rule against something nobody is driving.
+
+Not yet exercised: the **destroy guards** / `HardenShell`, and the **leash
+breach path** -- every exit so far has been the exit tile or the context menu,
+never an out of bounds walk.
 
 Lease expiry is reachable without waiting out the sandbox:
 `PhunInteriors.admin("age", {vehicleId = ..., days = 99})` then
@@ -62,11 +65,11 @@ The leash is proven at 4Hz over the network for the exit tile, which is the
 same handler, so `graceUntil` at 6s survives real latency. Its *breach* branch
 is still unexercised.
 
+Towing is confirmed as well: one player inside, a second towing, the tenant
+exiting into a seat of the moving towed van.
+
 Still unproven:
 
-- **Towing.** The tracker pushes `getVehicleTowing()` alongside the driven
-  vehicle and the server resolves it the same way, but no registered class is
-  towable, so none of that has run. Blocked on gap #4, not on design.
 - **`Core.tools.onlinePlayers()`** returns only local players on a client and
   everyone on a server. `author.lua` reads `players:get(0)` for "where am I
   standing", which is correct on a listen server and wrong on a dedicated one
@@ -436,6 +439,21 @@ and the purpose-built map.
   alternative is to skip the timed action entirely when already seated and just
   go, which reads as "moving to the back" rather than "getting out and getting
   in again". Same design area as the question below.
+
+  **This is no longer only cosmetic.** `ISExitVehicle:isValid()` is
+  `vehicle:isStopped()`, so queueing it means a seated player cannot enter the
+  interior of a *moving* vehicle at all -- and the queue drops both actions
+  silently, so it reads as the menu doing nothing. Found while testing towing:
+  a passenger being towed is not driving anything, and being unable to step
+  into the back is hard to justify to them.
+
+  Skipping the exit when already seated fixes both, and mirrors rule 5 -- if
+  you may leave the interior into a free seat while moving, you may enter it
+  from one. It needs a gate, because the same change would otherwise let a
+  driver abandon the wheel at speed. The test is `vehicle:isDriver(player)` and
+  `vehicle:getVehicleTowedBy() == nil`, since sitting in seat 0 of something
+  under tow is not driving it. `Client.teleport` already calls `vehicle:exit()`
+  for a seated player, so the seat is vacated either way.
 - **Where should you have to stand to get in?** Entry is currently allowed from
   anywhere the radial menu resolves the vehicle, which in practice is anywhere
   around it. Confirmed in game. Sketched, not decided: the back of a van, the
