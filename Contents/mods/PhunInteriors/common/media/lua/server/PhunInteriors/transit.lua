@@ -291,6 +291,10 @@ function Transit.notePosition(handle)
         z = vehicle:getZ()
     }
     assignment.lastKnownHandle = handle
+
+    Core.debugLn(string.format("tracked %s to %d,%d,%d (handle %s)",
+        tostring(vehicleId), vehicle:getX(), vehicle:getY(), vehicle:getZ(),
+        tostring(handle)))
     return true
 end
 

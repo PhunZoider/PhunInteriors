@@ -38,6 +38,13 @@ actions.list = function()
             lease.lastUser and (", last used by " .. lease.lastUser) or "",
             lease.occupied and ", occupied now" or "",
             lease.warned and ", warned" or ""))
+        -- Where an exit would put them, and whether that is a live reading or
+        -- the frozen one. Nothing else surfaces this, and every exit depends
+        -- on it being right.
+        table.insert(lines, string.format("      vehicle at %s (%s)",
+            lease.at and string.format("%d,%d,%d", lease.at.x, lease.at.y, lease.at.z)
+                or "nowhere recorded",
+            lease.loaded and "loaded" or "unloaded, frozen"))
     end
 
     table.insert(lines, string.format("quarantine: %d slot(s) awaiting scrub%s",

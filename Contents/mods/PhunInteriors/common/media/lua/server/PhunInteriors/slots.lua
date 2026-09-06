@@ -350,7 +350,13 @@ function Slots.summary()
             idleDays = (now - (assignment.lastSeen or now)) / 24,
             lastUser = assignment.lastUser,
             warned = assignment.warned and true or false,
-            occupied = inUse
+            occupied = inUse,
+            -- Where the exit will send whoever is inside. Reported because it
+            -- is the one piece of state the whole exit path stands on and
+            -- nothing else makes it visible.
+            at = assignment.lastKnownVehiclePos,
+            loaded = assignment.lastKnownHandle
+                and getVehicleById(assignment.lastKnownHandle) ~= nil or false
         })
     end
     table.sort(out.leases, function(a, b) return a.idleDays > b.idleDays end)
