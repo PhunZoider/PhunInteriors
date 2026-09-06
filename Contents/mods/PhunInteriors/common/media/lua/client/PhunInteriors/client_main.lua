@@ -361,29 +361,35 @@ end
 --
 -- Same dispatcher shape as admin, for the same reason: a panel later is a
 -- view over these calls rather than a rewrite.
+--- Everything the caller passed, minus anything that would not survive the
+--- trip to a dedicated server.
+--
+-- These used to name each field they forwarded, which meant every new action
+-- silently dropped any argument nobody remembered to add to the list. It cost
+-- a debugging session: admin("age", {days = 13}) never sent days at all, so
+-- the server fell through to its default and reported a number the caller had
+-- never asked for.
+local function payload(action, args, fallback)
+    local out = {action = action or fallback}
+    for key, value in pairs(args or {}) do
+        local kind = type(value)
+        if kind == "string" or kind == "number" or kind == "boolean" then
+            out[key] = value
+        else
+            Core.logLn("dropping '" .. tostring(key) .. "' from the command: a " ..
+                kind .. " cannot be sent to the server")
+        end
+    end
+    return out
+end
+
 function Core.author(action, args)
-    Core.dispatch(Core.commands.author, {
-        action = action or "status",
-        id = args and args.id,
-        label = args and args.label,
-        count = args and args.count,
-        pitchX = args and args.pitchX,
-        pitchY = args and args.pitchY,
-        scripts = args and args.scripts,
-        match = args and args.match,
-        partial = args and args.partial
-    })
+    Core.dispatch(Core.commands.author, payload(action, args, "status"))
     return "sent; results are printed to the log"
 end
 
 function Core.admin(action, args)
-    Core.dispatch(Core.commands.admin, {
-        action = action or "list",
-        vehicleId = args and args.vehicleId,
-        roomSet = args and args.roomSet,
-        index = args and args.index,
-        username = args and args.username
-    })
+    Core.dispatch(Core.commands.admin, payload(action, args, "list"))
     return "sent; results are printed to the log"
 end
 
