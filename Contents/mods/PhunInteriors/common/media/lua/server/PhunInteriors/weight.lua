@@ -170,59 +170,13 @@ end
 -- -- no "mass delta" line has ever appeared in a log.
 --
 -- The room, by contrast, is loaded at that moment, because the player is
--- standing in it. So the weight is measured on the way out and applied a few
--- seconds later, once the player has landed back at the vehicle and its chunk
--- has streamed in.
+-- standing in it. So the weight is measured on the way out, and applied when
+-- the player reports that they have landed back at the vehicle -- see
+-- Transit.arrived. That report is the same event that loads the chunk, so
+-- there is nothing here to poll for. This used to be a once-a-second sweep
+-- looking for the vehicle to reappear, which was the same wait dressed up as
+-- a timer.
 -- ---------------------------------------------------------------------------
-
-local INTERVAL_MS = 1000
-local GIVE_UP_MS = 30000
-local pending = {}
-local nextCheck = 0
-
---- Apply this weight to this vehicle as soon as it can be found again.
-function Weight.queue(vehicleId, position, weight)
-    if not vehicleId or not position then
-        return
-    end
-    pending[vehicleId] = {
-        position = {
-            x = position.x,
-            y = position.y,
-            z = position.z or 0
-        },
-        weight = tonumber(weight) or 0,
-        expires = getTimestampMs() + GIVE_UP_MS
-    }
-
-    Core.debugLn(string.format(
-        "interior of %s weighs %.1f; waiting for the vehicle to load before applying",
-        tostring(vehicleId), tonumber(weight) or 0))
-end
-
-function Weight.tick()
-    local now = getTimestampMs()
-    if now < nextCheck then
-        return
-    end
-    nextCheck = now + INTERVAL_MS
-
-    if Core.tools.isEmpty(pending) then
-        return
-    end
-
-    for vehicleId, entry in pairs(pending) do
-        local vehicle = Core.vehicleNear(entry.position.x, entry.position.y, entry.position.z, vehicleId)
-        if vehicle then
-            Weight.apply(vehicle, entry.weight)
-            pending[vehicleId] = nil
-        elseif now > entry.expires then
-            Core.debugLn("gave up applying interior weight to " .. tostring(vehicleId) ..
-                             "; it never came back into a loaded chunk")
-            pending[vehicleId] = nil
-        end
-    end
-end
 
 --- What we are currently charging each leased vehicle, for the admin report.
 --
@@ -230,10 +184,6 @@ end
 -- that the vehicle is usually not loaded.
 function Weight.report()
     local lines = {}
-    local queued = 0
-    for _ in pairs(pending) do
-        queued = queued + 1
-    end
 
     for vehicleId, assignment in pairs(Slots.store().assignments) do
         local position = assignment.lastKnownVehiclePos
@@ -250,8 +200,7 @@ function Weight.report()
     if #lines == 0 then
         table.insert(lines, "no leases")
     end
-    table.insert(lines, string.format("weight factor %s%%, %d application(s) waiting for a vehicle to load",
-        tostring(Core.settings.WeightFactor), queued))
+    table.insert(lines, string.format("weight factor %s%%", tostring(Core.settings.WeightFactor)))
     return lines
 end
 

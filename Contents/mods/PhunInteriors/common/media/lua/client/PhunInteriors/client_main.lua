@@ -61,25 +61,27 @@ end
 
 -- Second phase, once the position has landed.
 --
--- The server cannot do either of these things. While the player is inside, the
--- vehicle's chunk is unloaded, so from the server an unloaded vehicle and a
--- destroyed one look identical -- which is why it used to warn "your vehicle
--- is gone" on every single normal exit. And vanilla only ever puts a character
--- into a seat from a client timed action.
--- Find the vehicle by the identity that actually survives.
+-- Vanilla only ever puts a character into a seat from a client timed action,
+-- so the re-seat has to happen here. Finding the vehicle does not: the server
+-- has already decided which vehicle this is and where it stands, because it
+-- holds the lease and it read the position itself. All that is left here is
+-- geometry -- take the vehicle at the spot the server named -- and then
+-- reporting the id back up so the server can verify it before acting on it.
 --
--- Not getVehicleById. BaseVehicle:getId() is assigned when a vehicle enters
--- the world, and the vehicle unloads while its owner is off in a room, so it
--- comes back carrying a *different* id and the handle we captured on the way
--- in is dead. Confirmed from the logs: the van was plainly there and the
--- lookup returned nil on every single exit.
+-- Deliberately not a modData UUID match, which is what this used to do. Vehicle
+-- level modData is never transmitted to clients: BaseVehicle has getModData and
+-- transmitPartModData but none of IsoObject's sync machinery, and vanilla only
+-- ever reads part:getModData() client side. So the UUID was always nil here on
+-- a dedicated server, the match never succeeded once, and every exit ended in a
+-- false "your vehicle is gone" with no re-seat.
 --
--- Our own UUID lives in the vehicle modData and is written into the save, so
--- it does survive. Sweep the squares around where we landed and match on it.
+-- Deliberately not getVehicleById either. It resolves fine server side, but has
+-- zero client side uses in vanilla, and the id is reassigned when a vehicle
+-- unloads and reloads -- which it always has by this point.
 local SEARCH_RADIUS = 3
 
 local function findVehicle()
-    return Core.vehicleNear(pending.x, pending.y, pending.z, pending.vehicleId, SEARCH_RADIUS)
+    return Core.nearestVehicle(pending.x, pending.y, pending.z, SEARCH_RADIUS)
 end
 
 -- Where a character stands to use a seat, in world coordinates. Vanilla
@@ -128,12 +130,13 @@ local function rejoinVehicle(player)
     if not vehicle then
         pending.seatTicks = pending.seatTicks + 1
         if pending.seatTicks >= SEAT_TICKS then
-            -- Chunk is loaded and the vehicle is not in it. Now the warning is
-            -- true, which it was not when the server sent it.
-            Core.debugLn("rejoin: no vehicle matching " .. tostring(pending.vehicleId) ..
-                " within " .. SEARCH_RADIUS .. " squares of " .. pending.x .. "," .. pending.y ..
-                " after " .. pending.seatTicks .. " ticks")
-            Client.notify({text = "IGUI_PhunInteriors_VehicleGone", warning = true})
+            -- The chunk is loaded and there is no vehicle in it. Report the
+            -- empty result rather than deciding what it means: whether the
+            -- vehicle is genuinely gone is a question about the lease, and the
+            -- server is the only side holding that.
+            Core.debugLn("rejoin: no vehicle within " .. SEARCH_RADIUS .. " squares of " ..
+                pending.x .. "," .. pending.y .. " after " .. pending.seatTicks .. " ticks")
+            Core.dispatch(Core.commands.arrived, {})
             stopHolding()
         end
         return
@@ -178,6 +181,13 @@ local function rejoinVehicle(player)
         ISTimedActionQueue.add(ISEnterVehicle:new(player, vehicle, seat))
     end
 
+    -- Close the handshake. The server checks this id against the lease before
+    -- it does anything with it, so a wrong guess here is caught rather than
+    -- charged to somebody else's vehicle. This is the direction of travel
+    -- vanilla proves: clients send getId() up and servers resolve it with
+    -- getVehicleById, roughly thirty times in VehicleCommands.lua.
+    Core.dispatch(Core.commands.arrived, {id = vehicle:getId()})
+
     stopHolding()
 end
 
@@ -205,7 +215,7 @@ function holdTeleport()
             tostring(pending.x), tostring(pending.y), tostring(pending.z), pending.ticks))
         -- Coming back out there is a second phase: wait for the vehicle to
         -- appear in the freshly streamed chunk, then get back in it.
-        if pending.vehicleHandle then
+        if pending.rejoin then
             pending.arrived = true
             pending.seatTicks = 0
             return
@@ -279,8 +289,7 @@ function Client.teleport(data)
         ticks = 0,
         arrived = false,
         -- Only set on the way out; nil going in, which skips the second phase.
-        vehicleHandle = data.vehicleHandle,
-        vehicleId = data.vehicleId,
+        rejoin = data.rejoin and true or false,
         seat = data.seat,
         standSeat = data.standSeat
     }

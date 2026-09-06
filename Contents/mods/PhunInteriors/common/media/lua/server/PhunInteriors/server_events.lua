@@ -52,9 +52,12 @@ Events.OnClientCommand.Add(function(module, command, player, arguments)
 end)
 
 -- Containment and the exit tile share this one handler.
+--
+-- Weight used to poll here too, waiting for a departing player's vehicle to
+-- come back into a loaded chunk. It is applied on their arrival report now,
+-- which is the same moment without the timer.
 Events.OnTick.Add(function()
     Leash.tick()
-    Weight.tick()
 end)
 
 -- Work the quarantine queue. Needs loaded chunks, so it retries rather than
@@ -67,6 +70,9 @@ end)
 
 Events.EveryOneMinute.Add(function()
     Harden.sweepFire()
+    -- Exit paperwork for a player who never reported landing, eg one who
+    -- disconnected mid teleport.
+    require("PhunInteriors/transit").sweepArrivals()
 end)
 
 Events.EveryDays.Add(function()

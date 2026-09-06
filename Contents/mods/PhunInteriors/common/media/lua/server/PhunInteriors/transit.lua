@@ -14,13 +14,47 @@ Core.modules.transit = Transit
 -- There is exactly one way out. Walking onto an exit tile, stepping through a
 -- hole in the wall, and tripping the leash all call Transit.leave, which puts
 -- the player back at the vehicle. No breach handler, no snap back branch.
+--
+-- Leaving is a three step handshake, because no one side can answer the whole
+-- question. The server decides where the player goes and which seat they are
+-- owed; the client moves them, because vanilla only ever seats a character
+-- from a client timed action; then the client reports which vehicle it
+-- actually found, which is the first moment anybody can tell an unloaded
+-- vehicle from a destroyed one.
 -- ---------------------------------------------------------------------------
+
+-- Below this a vehicle counts as parked. Matches the client tracker.
+local MOVING_KMH = 0.2
+-- How long to hold a player's exit paperwork open waiting for them to report
+-- that they landed.
+local ARRIVAL_TIMEOUT_MS = 30000
+
+-- playerKey -> what is still owed once they confirm where they came out.
+local pendingArrivals = {}
 
 local function notify(player, textKey, isWarning)
     Core.respond(player, Core.commands.notify, {
         text = textKey,
         warning = isWarning and true or false
     })
+end
+
+-- How often a refused exit is allowed to say so.
+local WARN_INTERVAL_MS = 5000
+
+--- Notify, but not four times a second.
+--
+-- Every refusal in Transit.leave is reachable from the exit tile, and the
+-- leash re-tests that tile every 250ms for as long as the player is stood on
+-- it. Without this, being unable to get out means a wall of halo notes rather
+-- than one piece of information.
+local function notifyThrottled(player, occupancy, textKey)
+    local now = getTimestampMs()
+    if occupancy.warnedAt and (now - occupancy.warnedAt) < WARN_INTERVAL_MS then
+        return
+    end
+    occupancy.warnedAt = now
+    notify(player, textKey, true)
 end
 
 --- Count zombies near a point. Used for both the entry gate and the exit tax.
@@ -117,6 +151,9 @@ function Transit.enter(player, vehicle, seat, standSeat)
         y = vehicle:getY(),
         z = vehicle:getZ()
     }
+    -- Good until the vehicle unloads, which is usually seconds from now. The
+    -- tracker refreshes it whenever somebody drives this thing again.
+    assignment.lastKnownHandle = vehicle:getId()
 
     local set = Core.roomSets[assignment.roomSet]
     local spawn = Core.slotSpawn(set, assignment.index)
@@ -219,29 +256,102 @@ function Transit.enter(player, vehicle, seat, standSeat)
     return true
 end
 
---- Resolve where a player should come out.
+--- Record where a leased vehicle is, from a client that can see it moving.
 --
--- Live lookup first: the reference mod caches vehicle position on a one minute
--- timer, so somebody driving your van while you are inside drops you up to
--- sixty seconds in the past, or inside geometry.
-local function resolveReturn(occupancy)
-    -- getCell():getVehicles() returns a java.util.Set. It has size() but no
-    -- get(i), so it cannot be indexed from Lua at all. getVehicleById is the
-    -- direct lookup and is what vanilla VehicleCommands.lua uses. It returns
-    -- nil for an unloaded vehicle, which is the semantics we want: an unloaded
-    -- vehicle correctly falls through to the cached position.
-    --
-    -- vehicleHandle is BaseVehicle:getId(), a short that is only unique within
-    -- a session. Safe to hold here because Core.occupants is in-memory and
-    -- never persisted. The UUID stays the lease key and is re-checked below in
-    -- case the short has been reused.
-    local vehicle = nil
+-- The client sends an id and nothing else, so this reads the position from the
+-- vehicle itself and there is nothing here to take on trust. The id has to be
+-- resolvable, which means the chunk is loaded, which it is -- somebody is
+-- driving it.
+--
+-- Both halves matter. The position is what an exit falls back on, and the
+-- handle is how the next lookup finds the vehicle at all: getId() is
+-- reassigned every time a vehicle unloads and reloads, so the one captured
+-- when the tenant went inside is dead within minutes.
+function Transit.notePosition(handle)
+    if not handle then
+        return false
+    end
+    local vehicle = getVehicleById(handle)
+    if not vehicle then
+        -- Ordinary enough: a player can park and step inside before this
+        -- lands, and by then the chunk may be on its way out.
+        return false
+    end
+    local vehicleId = Core.vehicleId(vehicle, false)
+    local assignment = vehicleId and Slots.find(vehicleId)
+    if not assignment then
+        -- A registered vehicle class that nobody has leased an interior to.
+        -- The client cannot tell the difference, so it pushes for all of them.
+        return false
+    end
+
+    assignment.lastKnownVehiclePos = {
+        x = vehicle:getX(),
+        y = vehicle:getY(),
+        z = vehicle:getZ()
+    }
+    assignment.lastKnownHandle = handle
+    return true
+end
+
+--- The vehicle, if it is loaded right now.
+local function liveVehicle(occupancy, assignment)
+    -- Two handles worth trying. The tracked one is current, refreshed by
+    -- whoever last drove it. The one captured on the way in is usually dead --
+    -- the vehicle unloads as soon as its owner walks off to a room 10,000
+    -- tiles away, and reloads carrying a different id.
+    local handles = {}
+    if assignment and assignment.lastKnownHandle then
+        table.insert(handles, assignment.lastKnownHandle)
+    end
     if occupancy.vehicleHandle then
-        local candidate = getVehicleById(occupancy.vehicleHandle)
+        table.insert(handles, occupancy.vehicleHandle)
+    end
+
+    for _, handle in ipairs(handles) do
+        local candidate = getVehicleById(handle)
+        -- getId() is a short and is reused, so confirm against the lease key.
         if candidate and Core.vehicleId(candidate, false) == occupancy.vehicleId then
-            vehicle = candidate
+            return candidate
         end
     end
+
+    -- No handle resolved, which usually means the vehicle is unloaded -- and an
+    -- unloaded vehicle is stationary by definition, because unloaded means no
+    -- player is near enough to be driving it.
+    --
+    -- Usually, but not always: a vehicle that reloaded and has not been driven
+    -- since is loaded while every handle we hold is dead, and that includes the
+    -- second or two between somebody driving off and the tracker's first push.
+    -- Treating that as frozen would send the player to a parking space the van
+    -- has just left. One sweep, at the only moment the answer matters.
+    local position = assignment and assignment.lastKnownVehiclePos
+    if position then
+        local found = Core.vehicleNear(position.x, position.y, position.z, occupancy.vehicleId)
+        if found then
+            assignment.lastKnownHandle = found:getId()
+            return found
+        end
+    end
+
+    return nil
+end
+
+--- Resolve where a player should come out.
+--
+-- Live first when the vehicle happens to be loaded, because then the position
+-- is simply true. Otherwise the stored one, which is not a stale cache in any
+-- way that can hurt: an unloaded vehicle cannot move, so the last position the
+-- tracker saw is still where it is. The tracker's whole job is making sure
+-- that position was accurate at the instant it unloaded.
+--
+-- Ordering matters between the two stored ones. lastKnownVehiclePos is kept
+-- current by the tracker; occupancy.returnTo is only ever the position at the
+-- moment the tenant went inside, and is here for a lease that predates any
+-- tracking.
+local function resolveReturn(occupancy)
+    local assignment = Slots.find(occupancy.vehicleId)
+    local vehicle = liveVehicle(occupancy, assignment)
 
     if vehicle then
         return {
@@ -251,8 +361,21 @@ local function resolveReturn(occupancy)
         }, vehicle
     end
 
-    -- vehicle is unloaded or gone; fall back to where it was, and say so
-    return occupancy.returnTo, nil
+    return (assignment and assignment.lastKnownVehiclePos) or occupancy.returnTo, nil
+end
+
+--- A seat this player could be put into, preferring the one they came from.
+local function freeSeat(vehicle, preferred)
+    if preferred and preferred >= 0 and vehicle:isSeatInstalled(preferred)
+        and not vehicle:isSeatOccupied(preferred) then
+        return preferred
+    end
+    for seat = 0, vehicle:getMaxPassengers() - 1 do
+        if vehicle:isSeatInstalled(seat) and not vehicle:isSeatOccupied(seat) then
+            return seat
+        end
+    end
+    return nil
 end
 
 --- Take a player out. reason is one of "exit", "leash", "breach", "admin".
@@ -265,8 +388,32 @@ function Transit.leave(player, reason)
 
     local destination, vehicle = resolveReturn(occupancy)
     if not destination then
+        -- Nothing to fall back on. Refusing silently strands the player with a
+        -- dead exit tile and no idea why, so say so; the lease survives, and
+        -- an admin can evict them.
         Core.logLn("could not resolve a return position for " .. tostring(key))
+        notifyThrottled(player, occupancy, "IGUI_PhunInteriors_VehicleGone")
         return false
+    end
+
+    -- You do not step out of a moving vehicle onto the road.
+    --
+    -- Only askable when the vehicle is loaded, which is exactly when it can be
+    -- moving; an unloaded one cannot. The test is speed rather than
+    -- getDriver(), because a towed vehicle moves with nobody at its wheel --
+    -- that is what vanilla's getDriverRegardlessOfTow exists for.
+    --
+    -- A free seat makes it allowable, and forces the exit to use that seat
+    -- even for somebody who walked up on foot. Refusing is self resolving:
+    -- the driver parks, logs off or crashes, and then it is stationary.
+    local seatOut = nil
+    if vehicle and math.abs(vehicle:getCurrentSpeedKmHour()) >= MOVING_KMH then
+        seatOut = freeSeat(vehicle, occupancy.seat)
+        if not seatOut then
+            Core.debugLn(tostring(key) .. " tried to leave a moving vehicle with no free seat")
+            notifyThrottled(player, occupancy, "IGUI_PhunInteriors_VehicleMoving")
+            return false
+        end
     end
 
     -- Weight is only recomputed here. It matters when driving, and the player
@@ -279,9 +426,18 @@ function Transit.leave(player, reason)
     local interiorWeight = Weight.ofSlot(occupancy.roomSet, occupancy.index)
     if vehicle then
         Weight.apply(vehicle, interiorWeight)
-    else
-        Weight.queue(occupancy.vehicleId, destination, interiorWeight)
     end
+
+    -- What is still owed once the player confirms they landed. Applying the
+    -- mass needs the vehicle loaded, and it is not loaded here -- it will be
+    -- the moment the player arrives on top of it, so this waits for their
+    -- report rather than for a timer to notice.
+    pendingArrivals[key] = {
+        vehicleId = occupancy.vehicleId,
+        -- nil when it was applied above, because the vehicle was already loaded
+        weight = (not vehicle) and interiorWeight or nil,
+        expires = getTimestampMs() + ARRIVAL_TIMEOUT_MS
+    }
 
     -- The exit tax. Zombies accumulate rather than despawning, so you come out
     -- into a bigger crowd than you left.
@@ -300,33 +456,98 @@ function Transit.leave(player, reason)
     end
 
     -- Rejoining the seat is a client timed action, and the vehicle is very
-    -- likely still unloaded at this point, so hand the client what it needs
-    -- to do it once the destination chunk has streamed in.
+    -- likely still unloaded at this point, so hand the client what it needs to
+    -- do it once the destination chunk has streamed in.
+    --
+    -- No vehicle identity goes down with this. The client takes whatever
+    -- vehicle is at the position we just named and tells us which one that
+    -- was; we check it against the lease in Transit.arrived. Sending our UUID
+    -- for the client to match on could never have worked, because vehicle
+    -- level modData is not transmitted to clients at all.
     Core.respond(player, Core.commands.teleport, {
         x = destination.x,
         y = destination.y,
         z = destination.z,
         inside = false,
         reason = reason,
-        vehicleHandle = occupancy.vehicleHandle,
-        vehicleId = occupancy.vehicleId,
-        seat = occupancy.seat,
+        rejoin = true,
+        seat = seatOut or occupancy.seat,
         standSeat = occupancy.standSeat
     })
 
-    -- Deliberately no "your vehicle is gone" warning here. While the player
-    -- was inside, the vehicle almost always unloaded, so from this side an
-    -- unloaded vehicle and a destroyed one are indistinguishable and this
-    -- fired on every ordinary exit. The client raises it after the teleport
-    -- lands and the chunk is loaded, where the question can actually be
-    -- answered.
+    -- Deliberately no "your vehicle is gone" warning here. While the player was
+    -- inside, the vehicle almost always unloaded, so from this side an unloaded
+    -- vehicle and a destroyed one are indistinguishable and this fired on every
+    -- ordinary exit. Transit.arrived raises it instead, once the player is
+    -- standing in a loaded chunk and the question has an answer.
     if not vehicle then
-        Core.debugLn("leave: vehicle not loaded here; client will confirm on arrival")
+        Core.debugLn("leave: vehicle not loaded here; waiting for the arrival report")
     end
 
     triggerEvent(Core.events.OnExit, player, reason, owed)
     Core.debugLn(tostring(key) .. " left via " .. tostring(reason))
     return true, owed
+end
+
+--- The player landed back outside and is telling us what they found there.
+--
+-- This is the moment the exit could not be finished at. When Transit.leave
+-- ran, the vehicle's chunk was unloaded and so was every answer that depends
+-- on seeing it: whether it still exists, where it is now, what its interior
+-- weighs against it. The player arriving is what loads that chunk.
+--
+-- handle is the client's answer to "which vehicle is at the spot you sent me
+-- to", and it is checked, not taken. The server holds the lease, so it is the
+-- only side that can say whether that is the right vehicle.
+function Transit.arrived(player, handle)
+    local key = Core.playerKey(player)
+    local record = pendingArrivals[key]
+    if not record then
+        -- Duplicate report, or one that outlived its window. Nothing owed.
+        return false
+    end
+    pendingArrivals[key] = nil
+
+    local vehicle = handle and getVehicleById(handle)
+    if vehicle and Core.vehicleId(vehicle, false) ~= record.vehicleId then
+        -- Somebody else's vehicle parked where yours was. Rare, and it must
+        -- not be charged for what your room holds.
+        Core.logLn("arrival from " .. tostring(key) ..
+            " named a vehicle that does not hold the lease; ignoring it")
+        vehicle = nil
+    end
+
+    if not vehicle then
+        -- Now this is a true statement rather than a guess. The player is
+        -- standing in a loaded chunk and their vehicle is not in it.
+        Core.debugLn(tostring(key) .. " came out and the vehicle was not there")
+        notify(player, "IGUI_PhunInteriors_VehicleGone", true)
+        return false
+    end
+
+    -- It is loaded right now, which is rare enough to be worth banking.
+    Transit.notePosition(handle)
+
+    if record.weight then
+        Weight.apply(vehicle, record.weight)
+    end
+    return true
+end
+
+--- Drop exit paperwork nobody came back to claim.
+--
+-- Only reachable if a client vanished between being sent out and landing --
+-- a disconnect mid teleport. The weight is recalculated from scratch on the
+-- next exit, so losing one costs nothing permanent.
+function Transit.sweepArrivals()
+    local now = getTimestampMs()
+    for key, record in pairs(pendingArrivals) do
+        if now > record.expires then
+            Core.debugLn("no arrival report from " .. tostring(key) ..
+                "; interior weight will be applied on their next exit")
+            pendingArrivals[key] = nil
+        end
+    end
 end
 
 --- Is this player currently inside one of our rooms?

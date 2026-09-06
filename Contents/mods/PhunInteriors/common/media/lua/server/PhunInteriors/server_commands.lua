@@ -62,6 +62,20 @@ Commands[Core.commands.leave] = function(player, args)
     Transit.leave(player, (args and args.reason) or "exit")
 end
 
+-- "This vehicle just moved, go and look at it." Carries an id and no
+-- coordinates, so there is nothing here worth validating: the id either
+-- resolves to a loaded vehicle holding one of our leases or it does not, and
+-- the position is read from the vehicle rather than from the message.
+Commands[Core.commands.updatePosition] = function(player, args)
+    Transit.notePosition(tonumber(args and args.id))
+end
+
+-- The player has landed back outside and is naming the vehicle they found.
+-- Checked against the lease in Transit.arrived, never taken at face value.
+Commands[Core.commands.arrived] = function(player, args)
+    Transit.arrived(player, tonumber(args and args.id))
+end
+
 Commands[Core.commands.author] = function(player, args)
     if not Core.tools.isAdmin(player) then
         Core.logLn("rejected an author command from " .. tostring(Core.playerKey(player)))

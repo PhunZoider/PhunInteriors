@@ -17,7 +17,13 @@ PhunInteriors = {
         adminResult = "adminResult",
         author = "author",
         -- server -> client, so a reconnecting player learns they are inside
-        state = "state"
+        state = "state",
+        -- client -> server: "the vehicle with this id just moved, go and look
+        -- at it". Deliberately carries no coordinates; see Transit.notePosition.
+        updatePosition = "updatePosition",
+        -- client -> server: "I have landed back outside, and this is the id of
+        -- the vehicle I found there". Closes the exit handshake.
+        arrived = "arrived"
     },
     events = {
         OnReady = "PhunInteriorsOnReady",
@@ -164,6 +170,41 @@ function Core.vehicleNear(x, y, z, vehicleId, radius)
         end
     end
     return nil
+end
+
+--- The vehicle nearest a position, whatever it is.
+--
+-- Used client side on the way out of a room, where the question is not "which
+-- vehicle is mine" but "which vehicle is at the spot the server just sent me
+-- to". The server has already resolved identity -- it holds the lease and it
+-- read the position itself -- so the client only has to do the geometry, and
+-- it reports the id it found back up so the server can verify before acting
+-- on it.
+--
+-- This is why nothing here needs the modData UUID. Vehicle level modData is
+-- never transmitted to clients (BaseVehicle carries no sync path for it, only
+-- transmitPartModData), so a client side UUID match can never succeed on a
+-- dedicated server.
+function Core.nearestVehicle(x, y, z, radius)
+    local cell = getCell()
+    if not cell then
+        return nil
+    end
+    radius = radius or 3
+    local best, bestDistance = nil, nil
+    for dx = -radius, radius do
+        for dy = -radius, radius do
+            local square = cell:getGridSquare(x + dx, y + dy, z)
+            local vehicle = square and square:getVehicleContainer()
+            if vehicle then
+                local distance = (dx * dx) + (dy * dy)
+                if not bestDistance or distance < bestDistance then
+                    best, bestDistance = vehicle, distance
+                end
+            end
+        end
+    end
+    return best
 end
 
 function Core.now()
