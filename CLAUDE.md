@@ -371,7 +371,7 @@ B41 tutorial applies.
 | `BaseVehicle` has **no `isInVehicle`**. The occupancy test is `player:getVehicle()`, compared against the vehicle. `vehicle:exit(chr)` and `vehicle:getSeat(chr)` are real. | Confirmed absent from the jar constant pool. |
 | An object's behaviour lives in its class, and `IsoObject.new` always returns a plain `IsoObject` — a restored light switch is a picture of a switch. The class comes from `getSprite(name):getType()`, and vanilla constructs the right one in `ISMoveableSpriteProps.lua:2175-2196`: `IsoLightSwitch.new(getCell(), square, sprite, square:getRoomID())` then `addLightSourceFromSprite()`, with sibling branches on `IsoFlagType.doorN/windowN/WallN` for doors, windows and walls. | `Scrub.createFromSprite` mirrors the light switch branch. Two separate lessons: recreating an object from a sprite name alone loses its behaviour, **and** "vanilla never does X" was wrong here — a `grep` for `IsoLightSwitch` found only `instanceof` tests because the constructor call is 2000 lines into a Moveables file. Search for the *constructor*, not just the class name. |
 | `IsoGridSquare` has **no `getContainer()`** and no `getDeadBody()`. Containers hang off the object (`isoObject:getContainer()`); bodies come from `square:getDeadBodys()`, plural, returning a list. `getDeadBody(index)` is a *hutch* method. Vanilla removes a body with `removeFromWorld()` then `removeFromSquare()`, in that order. | Both were wrong in `Scrub.clearSquare` and threw `Object tried to call nil` the first time a scrub ever ran. Note the jar check passes for both: a class's constant pool contains method names it **calls** as well as ones it owns, so "present" proves nothing on its own — cross-check against vanilla usage. |
-| **`haveElectricity()` and `hasGridPower()` are different things.** `haveElectricity` is the **generator** flag; `hasGridPower` is the **mains**. Vanilla pairs them as `(AllowExteriorGenerator and square:haveElectricity()) or square:hasGridPower()` (`ISVehicleMenu.lua:1088`, and again in `ISWorldObjectContextMenu.lua:460`, where grid power is additionally paired with `getRoom()`). `IsoLightSwitch` consults both plus `isNoPower()` and `hasBatteryPower()`. `IsoGridSquare` has `setHaveElectricity(boolean)` but **no** setter for grid power. Whether the mains is still on is computable in Lua — `ISButtonPrompt.lua:520` divides `getWorldAgeHours()` by 24, adds `(getTimeSinceApo() - 1) * 30`, and compares against `getElecShutModifier()`. | So `setHaveElectricity` cannot switch the mains off, only the generator side — it is not the answer to "the room has power because the grid is still up". `admin("power")` probes all of this in game, including writing the flag and reading it straight back, because `setHaveElectricity` has zero vanilla uses and "declared" is not "holds". |
+| **Electricity, settled from the bytecode.** `haveElectricity()` reads no field at all: it is `chunk:isGeneratorPoweringSquare(x, y, z)`, with an early `false` for an exterior square when `AllowExteriorGenerator` is off. **`setHaveElectricity(boolean)` does not set anything** — it ignores its argument entirely and calls `update()` on any `IsoLightSwitch` on the square. It is a refresh with a setter's name. `hasGridPower()` is `not isNoPower() and doesPowerGridExist()`; `isNoPower()` is `isDerelict() or isUserDefinedRoom()` or the square sitting in a map zone of type `"NoPower"` or `"NoPowerOrWater"`. | Generator power is only ever a **real, active `IsoGenerator` in the chunk** — it cannot be faked with a flag, which is why RV Interior places one. The mains cannot be switched off from Lua, but it *can* on the map: a **`NoPower` zone painted over the interior block** makes `hasGridPower` false there permanently, leaving the generator as the only source. That is a map authoring job, and `admin("power")` reports whether it has been done. Note this row replaced an earlier, wrong one that reasoned from method names — hence `Docs/body.pl`. |
 | **"Is this vehicle moving" is `vehicle:isStopped()`, not a speed threshold.** A stationary vehicle *under tow* reports a non-zero `getCurrentSpeedKmHour()` — the coupling never quite settles — so any epsilon is a guess about physics jitter. `isStopped()` is what vanilla gates vehicle interaction on (`ISExitVehicle:isValid`, `ISVehicleMenu.lua:185`). | Confirmed in game: a parked towed van refused boarding while telling the player it was moving. Seated players were unaffected, because `isAtTheWheel` short-circuits before the speed test — which is exactly the asymmetry that identified the cause. |
 | Putting out a fire is `square:stopFire()` **then** `square:transmitStopFire()`, which is what vanilla's fire brush does (`FireBrushUI.lua:265`). `IsoFire.extinctFire()` and `IsoFireManager.RemoveAllOn(square)` are both declared and both read exactly right — and both have **zero** uses in vanilla lua. | `Harden.sweepFire` used `fire:removeFromWorld()` on the object from `square:getFire()`. That is `IsoObject`'s generic removal: the engine answered every call with `IsoFireManager.Remove unknown fire, ignoring`, so the same fires were re-found and "doused" on every sweep, forever, while still burning. The log said it worked. A plausible-looking declared method with no vanilla uses is the tell, and here there were *two* of them next to the right answer. |
 | `IsoGridSquare` has **no `setBloodSplatLifetime`**. Vanilla `ISCleanBlood:complete()` uses `square:removeBlood(false, false)` then `square:removeGrime()`. | Confirmed absent from the jar. |
@@ -414,6 +414,21 @@ perl Docs/methods.pl /tmp/pzchk/zombie/iso/objects/IsoLightSwitch.class "<init>"
 #   public <init> (IsoCell, IsoGridSquare, IsoSprite, long) -> void
 ```
 
+**And when a declared method does not behave the way its name reads, disassemble
+it.** `Docs/body.pl` dumps a single method body, resolving field and method
+references and string constants. The game ships a JRE, so there is no `javap`;
+this needs no JDK.
+
+```bash
+perl Docs/body.pl /tmp/pzchk/zombie/iso/IsoGridSquare.class haveElectricity
+perl Docs/body.pl /tmp/pzchk/zombie/iso/IsoGridSquare.class hasGridPower "()Z"
+```
+
+Reach for it the moment behaviour contradicts a name. `setHaveElectricity` was
+assumed to be a setter for two rounds of reasoning; one dump showed it ignores
+its argument. A name is a claim, a signature is a contract, and only the body
+is evidence.
+
 Absent is conclusive. **Present is not**: a constant pool holds the names a
 class calls on other classes as well as its own, so `getContainer` shows up in
 `IsoGridSquare` purely because it calls it on an object. Present means "worth
@@ -434,6 +449,14 @@ vanilla uses of a plausible-sounding method is the tell that it was invented.
 
 ## Known gaps
 
+0. **The map needs a `NoPower` zone over the interior block.** Without it the
+   rooms sit on the mains until the grid shuts off, and the generator binding
+   is invisible for the first weeks of a save. `hasGridPower()` is
+   `not isNoPower() and doesPowerGridExist()`, and a `NoPower` (or
+   `NoPowerOrWater`) map zone is the only way to force `isNoPower()` true --
+   there is no Lua setter. It is a five minute job in WorldEd and it must go on
+   the request to whoever builds the map, alongside the coordinates in gap #1.
+   `PhunInteriors.admin("power")` verifies it.
 1. **Room set coordinates are borrowed.** `defaults.lua` points at
    `22560, 12060`, marked `-- BORROWED`. This is space belonging to the
    reference mod (workshop 3543229299) so v1 could be built without map

@@ -120,44 +120,36 @@ end
 -- ---------------------------------------------------------------------------
 -- Power probe.
 --
--- Groundwork for binding the interior generator to the vehicle battery, and a
--- way to settle a question the jar cannot answer.
+-- Groundwork for binding the interior generator to the vehicle battery, and
+-- the tool that settled how B42 electricity actually works. The jar answered
+-- it in the end; this reports the state so a room can be checked in game.
 --
--- What the jar does tell us: haveElectricity() and hasGridPower() are
--- different things. IsoLightSwitch consults both, plus isNoPower() and
--- hasBatteryPower(), and vanilla pairs them as
+-- Three facts, all read out of the bytecode (Docs/body.pl):
 --
---   (AllowExteriorGenerator and square:haveElectricity()) or square:hasGridPower()
+--   haveElectricity() ignores every field. It is
+--     chunk:isGeneratorPoweringSquare(x, y, z), with an early false for an
+--     exterior square when AllowExteriorGenerator is off. Generator power is
+--     therefore only ever real generator power.
 --
--- in ISVehicleMenu.lua:1088. So haveElectricity is the *generator* flag and
--- hasGridPower is the mains. setHaveElectricity therefore controls the
--- generator side, and cannot switch the mains off on its own.
+--   setHaveElectricity(boolean) does not set anything. It ignores its argument
+--     and calls update() on any IsoLightSwitch on the square. It is a refresh
+--     with a setter's name.
 --
--- What it does not tell us, and what this exists to find out: whether a
--- setHaveElectricity we write survives, or whether the engine recomputes the
--- flag on its next pass and quietly reverts us. setHaveElectricity has zero
--- uses in vanilla lua, which by the rule in CLAUDE.md means "worth checking",
--- never "works". So this writes and then reads back.
+--   hasGridPower() is (not isNoPower()) and doesPowerGridExist(), and
+--     isNoPower() is isDerelict() or isUserDefinedRoom() or the square sitting
+--     in a map zone of type "NoPower" or "NoPowerOrWater".
 --
---     PhunInteriors.admin("power")                                -- report
+-- So the mains cannot be switched off from Lua, but it can be switched off on
+-- the map: a NoPower zone painted over the interior block makes hasGridPower
+-- false there for good, leaving the generator as the only source. That is a
+-- job for whoever builds the map, and this reports whether they have done it.
+--
+--     PhunInteriors.admin("power")
 --     PhunInteriors.admin("power", {roomSet = "phun.van", index = 3})
---     PhunInteriors.admin("power", {on = false})                  -- write, verify
 --
--- With no slot given it reports every slot somebody is currently standing in,
--- because that is the only one guaranteed to be loaded.
+-- With no slot it reports every slot somebody is standing in, because that is
+-- the only one guaranteed to be loaded.
 -- ---------------------------------------------------------------------------
-
---- Is the mains still on, globally? Vanilla's own formula, from
---- ISButtonPrompt.lua:520.
-local function mainsStillOn()
-    local shutoff = getSandboxOptions():getElecShutModifier()
-    if not shutoff or shutoff <= -1 then
-        return true, "never shuts off"
-    end
-    local days = getGameTime():getWorldAgeHours() / 24
-        + (getSandboxOptions():getTimeSinceApo() - 1) * 30
-    return days < shutoff, string.format("day %.1f of %s", days, tostring(shutoff))
-end
 
 --- The slots worth reporting on: the one asked for, else whatever is occupied.
 local function slotsToProbe(args)
@@ -172,22 +164,35 @@ local function slotsToProbe(args)
     return out
 end
 
+--- The generator on a square, if there is one.
+local function generatorOn(square)
+    local objects = square and square:getObjects()
+    if not objects then
+        return nil
+    end
+    for i = 0, objects:size() - 1 do
+        local object = objects:get(i)
+        if object and instanceof(object, "IsoGenerator") then
+            return object
+        end
+    end
+    return nil
+end
+
 actions.power = function(args)
     local lines = {}
-    local on, detail = mainsStillOn()
-    table.insert(lines, string.format("mains: %s (%s)", on and "ON" or "off", detail))
+
+    -- The engine's own test, the one hasGridPower calls, rather than a
+    -- reimplementation of the shutoff arithmetic.
+    table.insert(lines, string.format("power grid exists: %s (ElecShutModifier %s)",
+        tostring(getSandboxOptions():doesPowerGridExist()),
+        tostring(getSandboxOptions():getElecShutModifier())))
 
     local targets = slotsToProbe(args)
     if #targets == 0 then
         table.insert(lines, "no slot given and nobody is inside one; " ..
             "pass roomSet and index, or stand in a room")
         return lines
-    end
-
-    -- nil means report only. Present means write it and check it stuck.
-    local want = nil
-    if args.on ~= nil then
-        want = args.on == true or args.on == "true"
     end
 
     for _, target in ipairs(targets) do
@@ -200,28 +205,22 @@ actions.power = function(args)
             table.insert(lines, string.format("%s#%s, power square %d,%d,%d",
                 target.roomSet, target.index, power.x, power.y, power.z))
 
-            local counted, elec, grid, noPower, reverted = 0, 0, 0, 0, 0
+            local counted, elec, grid, noPower, derelict, userRoom = 0, 0, 0, 0, 0, 0
+            local zones = {}
             for z = bounds.z, bounds.z + 1 do
                 for x = bounds.x1, bounds.x2 do
                     for y = bounds.y1, bounds.y2 do
                         local square = getCell():getGridSquare(x, y, z)
                         if square then
                             counted = counted + 1
-                            if want ~= nil then
-                                square:setHaveElectricity(want)
-                                -- The whole point: read it straight back.
-                                if square:haveElectricity() ~= want then
-                                    reverted = reverted + 1
-                                end
-                            end
-                            if square:haveElectricity() then
-                                elec = elec + 1
-                            end
-                            if square:hasGridPower() then
-                                grid = grid + 1
-                            end
-                            if square:isNoPower() then
-                                noPower = noPower + 1
+                            if square:haveElectricity() then elec = elec + 1 end
+                            if square:hasGridPower() then grid = grid + 1 end
+                            if square:isNoPower() then noPower = noPower + 1 end
+                            if square:isDerelict() then derelict = derelict + 1 end
+                            if square:isUserDefinedRoom() then userRoom = userRoom + 1 end
+                            local zone = square:getZoneType()
+                            if zone and zone ~= "" then
+                                zones[zone] = (zones[zone] or 0) + 1
                             end
                         end
                     end
@@ -234,14 +233,36 @@ actions.power = function(args)
                 table.insert(lines, string.format(
                     "  %d square(s): haveElectricity %d, hasGridPower %d, isNoPower %d",
                     counted, elec, grid, noPower))
-                if want ~= nil then
+                -- The three things isNoPower is made of, so a room that is
+                -- still on the mains says why.
+                table.insert(lines, string.format(
+                    "  isDerelict %d, isUserDefinedRoom %d, zones: %s",
+                    derelict, userRoom,
+                    Core.tools.isEmpty(zones) and "none" or (function()
+                        local names = {}
+                        for name, n in pairs(zones) do
+                            table.insert(names, name .. " x" .. n)
+                        end
+                        return table.concat(names, ", ")
+                    end)()))
+
+                if noPower == 0 and getSandboxOptions():doesPowerGridExist() then
+                    table.insert(lines, "  NOTE: on the mains. Paint a NoPower zone "
+                        .. "over this block on the map and the generator becomes "
+                        .. "the only source.")
+                end
+
+                local generatorSquare = getCell():getGridSquare(power.x, power.y, power.z)
+                local generator = generatorOn(generatorSquare)
+                if not generatorSquare then
+                    table.insert(lines, "  power square is not loaded")
+                elseif generator then
                     table.insert(lines, string.format(
-                        "  wrote haveElectricity=%s; %s",
-                        tostring(want),
-                        reverted == 0 and "held on every square"
-                            or (reverted .. " square(s) refused it immediately")))
-                    table.insert(lines, "  re-run without 'on' in a minute; if it has "
-                        .. "drifted back, the engine recomputes it and we cannot hold it")
+                        "  generator: activated %s, fuel %.1f/%.1f, condition %d",
+                        tostring(generator:isActivated()), generator:getFuel(),
+                        generator:getMaxFuel(), generator:getCondition()))
+                else
+                    table.insert(lines, "  no generator on the power square")
                 end
             end
         end
