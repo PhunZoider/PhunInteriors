@@ -135,10 +135,14 @@ actions.evict = function(args)
     if not player then
         return {username .. " is not online"}
     end
-    if Transit.leave(player, "admin") then
+    local left, why = Transit.leave(player, "admin")
+    if left then
         return {"evicted " .. username}
     end
-    return {username .. " is not inside a room"}
+    -- Not always "not inside": the exit refuses a moving vehicle with no free
+    -- seat, and a vehicle it cannot place. Reporting those as "not inside"
+    -- sends an admin looking for the wrong problem.
+    return {"could not evict " .. username .. ": " .. tostring(why)}
 end
 
 -- What every captured blueprint weighs. This is the measurement the design

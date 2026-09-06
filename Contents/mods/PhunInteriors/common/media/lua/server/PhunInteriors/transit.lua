@@ -382,12 +382,19 @@ local function freeSeat(vehicle, preferred)
     return nil
 end
 
---- Take a player out. reason is one of "exit", "leash", "breach", "admin".
+--- Take a player out, or say why not.
+--
+-- reason is one of "exit", "leash", "breach", "admin".
+--
+-- Returns true plus the exit tax on success, or false plus a short reason.
+-- The reason matters because admin evict reports it: without one, every
+-- refusal read as "not inside a room", which is a lie when the truth is
+-- "inside, but the van they are riding in is doing forty".
 function Transit.leave(player, reason)
     local key = Core.playerKey(player)
     local occupancy = Core.occupants[key]
     if not occupancy then
-        return false
+        return false, "not inside a room"
     end
 
     local destination, vehicle = resolveReturn(occupancy)
@@ -397,7 +404,7 @@ function Transit.leave(player, reason)
         -- an admin can evict them.
         Core.logLn("could not resolve a return position for " .. tostring(key))
         notifyThrottled(player, occupancy, "IGUI_PhunInteriors_VehicleGone")
-        return false
+        return false, "their vehicle cannot be located"
     end
 
     -- You do not step out of a moving vehicle onto the road.
@@ -416,7 +423,7 @@ function Transit.leave(player, reason)
         if not seatOut then
             Core.debugLn(tostring(key) .. " tried to leave a moving vehicle with no free seat")
             notifyThrottled(player, occupancy, "IGUI_PhunInteriors_VehicleMoving")
-            return false
+            return false, "their vehicle is moving and every seat is taken"
         end
     end
 
