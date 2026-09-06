@@ -117,6 +117,139 @@ actions.free = function(args)
     return {"no room is leased to " .. tostring(vehicleId)}
 end
 
+-- ---------------------------------------------------------------------------
+-- Power probe.
+--
+-- Groundwork for binding the interior generator to the vehicle battery, and a
+-- way to settle a question the jar cannot answer.
+--
+-- What the jar does tell us: haveElectricity() and hasGridPower() are
+-- different things. IsoLightSwitch consults both, plus isNoPower() and
+-- hasBatteryPower(), and vanilla pairs them as
+--
+--   (AllowExteriorGenerator and square:haveElectricity()) or square:hasGridPower()
+--
+-- in ISVehicleMenu.lua:1088. So haveElectricity is the *generator* flag and
+-- hasGridPower is the mains. setHaveElectricity therefore controls the
+-- generator side, and cannot switch the mains off on its own.
+--
+-- What it does not tell us, and what this exists to find out: whether a
+-- setHaveElectricity we write survives, or whether the engine recomputes the
+-- flag on its next pass and quietly reverts us. setHaveElectricity has zero
+-- uses in vanilla lua, which by the rule in CLAUDE.md means "worth checking",
+-- never "works". So this writes and then reads back.
+--
+--     PhunInteriors.admin("power")                                -- report
+--     PhunInteriors.admin("power", {roomSet = "phun.van", index = 3})
+--     PhunInteriors.admin("power", {on = false})                  -- write, verify
+--
+-- With no slot given it reports every slot somebody is currently standing in,
+-- because that is the only one guaranteed to be loaded.
+-- ---------------------------------------------------------------------------
+
+--- Is the mains still on, globally? Vanilla's own formula, from
+--- ISButtonPrompt.lua:520.
+local function mainsStillOn()
+    local shutoff = getSandboxOptions():getElecShutModifier()
+    if not shutoff or shutoff <= -1 then
+        return true, "never shuts off"
+    end
+    local days = getGameTime():getWorldAgeHours() / 24
+        + (getSandboxOptions():getTimeSinceApo() - 1) * 30
+    return days < shutoff, string.format("day %.1f of %s", days, tostring(shutoff))
+end
+
+--- The slots worth reporting on: the one asked for, else whatever is occupied.
+local function slotsToProbe(args)
+    local out = {}
+    if args.roomSet and args.index then
+        table.insert(out, {roomSet = args.roomSet, index = tonumber(args.index)})
+        return out
+    end
+    for _, occupancy in pairs(Core.occupants) do
+        table.insert(out, {roomSet = occupancy.roomSet, index = occupancy.index})
+    end
+    return out
+end
+
+actions.power = function(args)
+    local lines = {}
+    local on, detail = mainsStillOn()
+    table.insert(lines, string.format("mains: %s (%s)", on and "ON" or "off", detail))
+
+    local targets = slotsToProbe(args)
+    if #targets == 0 then
+        table.insert(lines, "no slot given and nobody is inside one; " ..
+            "pass roomSet and index, or stand in a room")
+        return lines
+    end
+
+    -- nil means report only. Present means write it and check it stuck.
+    local want = nil
+    if args.on ~= nil then
+        want = args.on == true or args.on == "true"
+    end
+
+    for _, target in ipairs(targets) do
+        local set = Core.roomSets[target.roomSet]
+        if not set then
+            table.insert(lines, "unknown room set " .. tostring(target.roomSet))
+        else
+            local bounds = Core.slotBounds(set, target.index)
+            local power = Core.slotPower(set, target.index)
+            table.insert(lines, string.format("%s#%s, power square %d,%d,%d",
+                target.roomSet, target.index, power.x, power.y, power.z))
+
+            local counted, elec, grid, noPower, reverted = 0, 0, 0, 0, 0
+            for z = bounds.z, bounds.z + 1 do
+                for x = bounds.x1, bounds.x2 do
+                    for y = bounds.y1, bounds.y2 do
+                        local square = getCell():getGridSquare(x, y, z)
+                        if square then
+                            counted = counted + 1
+                            if want ~= nil then
+                                square:setHaveElectricity(want)
+                                -- The whole point: read it straight back.
+                                if square:haveElectricity() ~= want then
+                                    reverted = reverted + 1
+                                end
+                            end
+                            if square:haveElectricity() then
+                                elec = elec + 1
+                            end
+                            if square:hasGridPower() then
+                                grid = grid + 1
+                            end
+                            if square:isNoPower() then
+                                noPower = noPower + 1
+                            end
+                        end
+                    end
+                end
+            end
+
+            if counted == 0 then
+                table.insert(lines, "  chunk is not loaded, nothing to read")
+            else
+                table.insert(lines, string.format(
+                    "  %d square(s): haveElectricity %d, hasGridPower %d, isNoPower %d",
+                    counted, elec, grid, noPower))
+                if want ~= nil then
+                    table.insert(lines, string.format(
+                        "  wrote haveElectricity=%s; %s",
+                        tostring(want),
+                        reverted == 0 and "held on every square"
+                            or (reverted .. " square(s) refused it immediately")))
+                    table.insert(lines, "  re-run without 'on' in a minute; if it has "
+                        .. "drifted back, the engine recomputes it and we cannot hold it")
+                end
+            end
+        end
+    end
+
+    return lines
+end
+
 actions.scrub = function(args)
     if args.roomSet and args.index then
         local ok, reason = Scrub.slot(args.roomSet, tonumber(args.index))

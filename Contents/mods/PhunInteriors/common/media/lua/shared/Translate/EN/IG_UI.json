@@ -13,5 +13,5 @@
     "IGUI_PhunInteriors_DrivingCannotEnter": "Not while you are at the wheel",
     "IGUI_PhunInteriors_LeaseWarning": "Your interior will be cleared out soon",
     "IGUI_PhunInteriors_CannotDamage": "The shell of this room will not give",
-    "IGUI_PhunInteriors_AdminUsage": "/interiors list | free <vehicleId> | scrub [roomSet index] | evict <username> | remanifest <roomSet>"
+    "IGUI_PhunInteriors_AdminUsage": "/interiors list | free <vehicleId> | scrub [roomSet index] | power [roomSet index] | evict <username> | remanifest <roomSet>"
 }

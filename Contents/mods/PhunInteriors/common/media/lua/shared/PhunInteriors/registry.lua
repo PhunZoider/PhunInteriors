@@ -334,6 +334,23 @@ function Core.inBounds(bounds, x, y, z)
 end
 
 --- Is this square one of the slot's exit tiles?
+--- Where the generator lives in this slot.
+--
+-- set.power has been captured by the authoring tool, emitted into every
+-- blueprint file and stored here since the beginning, and until now nothing
+-- read it. Note the z is relative and normally 1, so the power square sits a
+-- level above the floor -- which is why every sweep over a slot covers
+-- bounds.z to bounds.z + 1.
+function Core.slotPower(set, index)
+    local o = Core.slotOrigin(set, index)
+    local p = set.power or {x = 0, y = 0, z = 1}
+    return {
+        x = o.x + p.x,
+        y = o.y + p.y,
+        z = o.z + (p.z or 1)
+    }
+end
+
 function Core.isExitSquare(set, index, x, y, z)
     local o = Core.slotOrigin(set, index)
     x, y, z = math.floor(x), math.floor(y), math.floor(z)
