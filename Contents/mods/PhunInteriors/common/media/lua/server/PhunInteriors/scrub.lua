@@ -42,18 +42,34 @@ end
 --- Recreate an object the way the engine would have, not as a bare IsoObject.
 --
 -- An object's behaviour lives in its class, and the class is chosen from the
--- sprite. IsoObject.new always returns a plain IsoObject, so a restored light
--- switch was a picture of a switch with nothing behind it, and a room whose
--- switch had been destroyed could never have light again.
+-- sprite when the map loads. IsoObject.new always returns a plain IsoObject,
+-- so a restored light switch was a picture of a switch with nothing behind it,
+-- and a room whose switch had been destroyed could never have light again.
 --
 -- Vanilla makes exactly this decision in ISMoveableSpriteProps when it places
--- a fixture the player picked up: read the sprite's type, construct the
--- matching class. This mirrors its light switch branch, including the room id
--- and the addLightSourceFromSprite call that actually creates the light.
+-- a fixture the player picked up (shared/Moveables/ISMoveableSpriteProps.lua
+-- :2175-2196). This mirrors it branch for branch.
 --
--- Deliberately only light switches for now. The same file also branches on
--- door, window and wall flags, but those need their own verification and a
--- room without a working light is the failure that was actually reported.
+-- DOORS ARE THE ONE THAT MATTERS NOW, and they did not used to. While the exit
+-- was a tile you stood on, a door that had become scenery was cosmetic -- you
+-- left by standing on the square either way. The exit is the doorway itself
+-- now, so a door that cannot open is a room nobody can leave, and the path
+-- there is real: isStructural captures the door into the blueprint, a tenant
+-- breaks it with HardenShell off, the slot is released, and the scrub puts
+-- back a picture of a door for the next tenant to be sealed in by.
+--
+-- Two subtleties worth not losing:
+--
+--   * The flag says which way the object faces -- doorN means it lies on the
+--     square's north edge -- and it is passed straight through as the `north`
+--     argument. Getting it wrong puts a working door in the wrong wall.
+--   * windowN and WindowN are different flags. Lowercase is a window,
+--     capitalised is an empty window frame. Vanilla distinguishes them and so
+--     does this.
+--
+-- IsoDoor takes the sprite NAME rather than the sprite, which is the overload
+-- vanilla exercises; it also declares one taking an IsoSprite, with zero
+-- vanilla lua uses, so this uses the tested one.
 local function createFromSprite(square, name)
     local sprite = getSprite(name)
     if not sprite then
@@ -65,6 +81,24 @@ local function createFromSprite(square, name)
         local switch = IsoLightSwitch.new(getCell(), square, sprite, square:getRoomID())
         switch:addLightSourceFromSprite()
         return switch
+    end
+
+    local props = sprite:getProperties()
+    if props then
+        if props:has(IsoFlagType.doorN) or props:has(IsoFlagType.doorW) then
+            return IsoDoor.new(getCell(), square, name, props:has(IsoFlagType.doorN))
+        end
+        if props:has(IsoFlagType.WallN) or props:has(IsoFlagType.WallW) then
+            return IsoThumpable.new(getCell(), square, name, props:has(IsoFlagType.WallN), {})
+        end
+        if props:has(IsoFlagType.windowN) or props:has(IsoFlagType.windowW) then
+            local window = IsoWindow.new(getCell(), square, sprite, props:has(IsoFlagType.windowN))
+            window:setIsLocked(false)
+            return window
+        end
+        if props:has(IsoFlagType.WindowN) or props:has(IsoFlagType.WindowW) then
+            return IsoWindowFrame.new(getCell(), square, sprite, props:has(IsoFlagType.WindowN))
+        end
     end
 
     return IsoObject.new(getCell(), square, name)
@@ -160,25 +194,29 @@ local function reconcileSquare(square, wanted, keepLoot, salvage)
     square:removeGrime()
 end
 
---- Rebuild one slot from the manifest of its room set.
+--- Rebuild one slot from the manifest of its room.
 -- Returns true plus any salvaged loot, or false plus a reason.
-function Scrub.slot(roomSetId, index)
-    local set = Core.roomSets[roomSetId]
-    if not set then
-        return false, "unknown room set"
+function Scrub.slot(roomId, index)
+    local room = Core.rooms[roomId]
+    if not room then
+        return false, "unknown room"
     end
 
-    -- The slot's own blueprint if we caught it while pristine, otherwise any
-    -- sibling in the same set. Which one gets used is logged, because falling
-    -- back is the homogenising behaviour and it should be visible when it
-    -- happens rather than silently making every room identical.
-    local manifest, source = Manifest.forSlot(roomSetId, index)
+    -- THIS SLOT's blueprint, so a stamp the author decorated differently is
+    -- restored to what it actually was. Which source it came from is logged,
+    -- because a scrub falling through to a sibling is about to overwrite
+    -- whatever was painted here with a different slot's decor, and that should
+    -- be visible rather than silent.
+    local manifest, source = Manifest.forSlot(roomId, index)
     if not manifest then
         return false, "no blueprint for this slot yet"
     end
 
-    local bounds = Core.slotBounds(set, index)
-    local origin = Core.slotOrigin(set, index)
+    local bounds = Core.slotBounds(room, index)
+    local origin = Core.slotOrigin(room, index)
+    if not bounds then
+        return false, "no such slot in this room"
+    end
     local keepLoot = Core.settings.ScrubKeepsLoot
     local salvage = keepLoot and {} or nil
     local touched = 0
@@ -209,7 +247,7 @@ function Scrub.slot(roomSetId, index)
         end
     end
 
-    Core.logLn("scrubbed " .. roomSetId .. "#" .. index .. " (" .. touched ..
+    Core.logLn("scrubbed " .. roomId .. "#" .. index .. " (" .. touched ..
         " squares, from its " .. tostring(source) .. " blueprint)")
     return true, salvage
 end
@@ -226,11 +264,11 @@ function Scrub.processQueue(limit)
         if not entry then
             break
         end
-        local ok, reason = Scrub.slot(entry.roomSet, entry.index)
+        local ok, reason = Scrub.slot(entry.room, entry.index)
         if ok then
             done = done + 1
         else
-            Core.debugLn("deferring scrub of " .. entry.roomSet .. "#" .. entry.index ..
+            Core.debugLn("deferring scrub of " .. entry.room .. "#" .. entry.index ..
                 ": " .. tostring(reason))
             table.insert(deferred, entry)
             break
