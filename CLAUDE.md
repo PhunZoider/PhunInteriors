@@ -377,6 +377,24 @@ from the driver's. No preference is sent, so *which side you leave by decides
 where you come out, rather than where you got in*. A room that names no front
 lands you beside the vehicle, exactly as before.
 
+**"Free" is not the same question as "reachable".** A seat can be fitted and
+empty and still have no door of its own, because an empty `position outside {}`
+block in a vehicle script *deletes* the position it inherited from a template.
+That is how vanilla's own `VanSeats` rear seats work, and `Base.RollingRefuge`
+does it to five of its six -- including seat 0, the driver's. So the cab exit's
+"counting from the driver's" would have picked a seat nobody can get into, and
+`ISEnterVehicle:start` reads that position with no nil check, which is a thrown
+error rather than a quiet refusal. `Core.seatIsEnterable` is the one test, and
+it is `isEnterBlocked`, which is what vanilla's own menu gates on. See the API
+table.
+
+The consequence is honest rather than a workaround: a cab exit from an RV whose
+only door is at the front right lands you in the front passenger seat, because
+that is where that vehicle's door is. Where an exit does carry a preference --
+somebody who got in from a seat and is being put back in it -- a doorless
+target is reached the way a player would have to reach it, by boarding at a
+door and queueing `ISSwitchVehicleSeat` across.
+
 `cab` is a boolean rather than an edge of its own because a cab is always at
 the front of the thing — across the whole shipped map there was never a seat
 exit anywhere else. Two fields would have been two ways to say one fact, and
@@ -1671,6 +1689,7 @@ B41 tutorial applies.
 | Moving a player is `IsoGameCharacter:teleportTo(x, y, z)` (overloads `(FFI)`, `(III)`, `(FF)`, `(II)`). `setX`/`setLastX` also works — PhunZones2 ports players that way. | `Client.teleport` uses `teleportTo`, `+ 0.5` to centre on the tile, as vanilla's `StreamMapWindow` does. |
 | **One teleport call is not enough across the map.** The player moves, but the destination chunk is not loaded, and the engine restores anyone on a square that does not exist. It reads as "the teleport silently did nothing" — the position log shows the move landing and then being undone. | `Client.teleport` re-asserts the position every tick until `getGridSquare` at the destination is non-nil (`HOLD_TICKS`). Applies leaving a room too: the vehicle's chunk unloads while the player is inside. The leash `graceUntil` **must** outlast that window. |
 | `ISEnterVehicle:new(character, vehicle, seat)` is the only sanctioned way into a seat, and its `start()` silently returns without entering if the character is more than 2 tiles from `getPassengerPosition(seat, "outside")`. `isValid` then fails and the queue drops it, so a failed re-seat degrades to standing there rather than hanging — **this happens by default**, because the only position the server can send is the vehicle centre, which is further than 2 tiles on anything van sized. Teleport to the outside position first (`getWorldPos(pos:getOffset(), Vector3f)`, as vanilla does). `getBestSeat`, `isSeatOccupied`, `getMaxPassengers`, `getCharacter` all exist on `BaseVehicle`. | Re-seating on exit is a client action in `Client.teleport`'s second phase, run only once the destination chunk has streamed in. |
+| **An empty `position outside { }` block DELETES the position, and a seat without one crashes `ISEnterVehicle`.** From the bytecode, `VehicleScript.LoadPosition` opens with `if (block.isEmpty()) { positions.remove(existing); return null; }` -- so an empty block is how a script cancels a position it inherited from a template, and `getPassengerPosition(seat, "outside")` then answers null. `ISEnterVehicle:start` does `outside:getOffset()` at line 43 with **no nil check**, and so does `ISVehicleMenu`'s own `distanceToPassengerPosition`. The sanctioned test is `vehicle:isEnterBlocked(chr, seat)`, an alias for `isExitBlocked(chr, seat)`, which returns true when either the inside or the outside position is null and otherwise runs `PolygonalMap2.lineClearCollide` between the two. `PolygonalMap2.instance` is built in a static initialiser, so it is never nil, and the only client-only branch in there is gated on `GameClient.client`. | A fitted, empty seat is **not** necessarily a seat anybody can be put into. Vanilla's own `VanSeats` rear seats have no door, and `Base.RollingRefuge` empties five of its six -- including **seat 0, the driver's** -- so a cab exit that took "the first free seat counting from the driver's" threw on the first RV that reached it. `Core.seatIsEnterable` is the one shared test, called by `firstFreeSeat` and `resolveSeat` client side and by `freeSeat` server side, where it also gates the moving-vehicle rule. Vanilla's answer for getting into a doorless seat is to board by one with a door and queue `ISSwitchVehicleSeat:new(chr, seatTo, seatFrom)` -- with `seatFrom` passed explicitly, because at queue time the character is not in the vehicle and the constructor's own default reads `getVehicle()`. |
 | `vehicle:getSeat(player)` returns -1 once the character is out of the seat, and our entry action refuses to run until exactly that. | The seat **must** be captured client side in `Client.beginEnter`, before `ISExitVehicle` is queued, and sent with the enter request. Reading it server side in `Transit.enter` always yielded -1. |
 | From the server, an unloaded vehicle and a destroyed one are indistinguishable: `getVehicleById` returns nil for both. The vehicle's chunk is always unloaded while its owner is in a room, **and it reloads with a different `getId()`**, so the captured handle never resolves again. Confirmed from the logs. | `Transit.leave` must **not** warn `VehicleGone`; it fired on every normal exit. The client raises it after arrival, where the chunk is loaded and the question is answerable. `getVehicleById` is in `LuaManager$GlobalObject`, so it works client side too. |
 | `instanceof(object, "IsoFloor")` has **zero** uses in vanilla Lua and filters nothing — a room captured with and without it returned the identical 29 objects. Vanilla finds a floor with `square:getFloor()`, which every build and debug tool uses. | Identify a floor by identity against `square:getFloor()`, not by class. Zero vanilla uses of a plausible-sounding call is the tell, and it applies to `instanceof` class names as much as to methods. |

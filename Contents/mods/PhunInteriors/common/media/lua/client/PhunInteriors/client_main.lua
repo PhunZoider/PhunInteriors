@@ -42,38 +42,66 @@ local function stopHolding()
     Events.OnTick.Remove(holdTeleport)
 end
 
---- The seat we came from if it is still free, otherwise the best one going.
+--- The seat we came from if it can still be taken, otherwise the best one
+--- going.
+--
+-- Returns the seat to ENTER by, and optionally a second seat to switch into
+-- once aboard. Those differ when the seat somebody left from has no door of
+-- its own: boarding by a door seat and switching across is vanilla's own
+-- answer (ISVehicleMenu.processEnter), and it is the only way to keep "enter
+-- from a seat and be put back in it" true for the rear seat of a VanSeats or
+-- an RV.
+--
+-- Every candidate goes through Core.seatIsEnterable, which is where the door
+-- test lives and why. The first branch used to ask isSeatOccupied alone, so it
+-- would hand back a seat that was never fitted and, worse, one with no outside
+-- position at all -- which is not a quiet failure but a hard error inside
+-- ISEnterVehicle:start.
 local function resolveSeat(vehicle, wanted, player)
-    if wanted and wanted >= 0 and not vehicle:isSeatOccupied(wanted) then
+    if Core.seatIsEnterable(vehicle, wanted, player) then
         return wanted
     end
+
+    -- Fitted and empty, but no way into it from the ground. Board wherever we
+    -- can switch across from and then switch, which is what a player doing
+    -- this by hand would have to do.
+    if wanted and wanted >= 0 and vehicle:isSeatInstalled(wanted) and not vehicle:isSeatOccupied(wanted) and
+        ISVehicleMenu and ISVehicleMenu.getBestSwitchSeatEnter then
+        local door = ISVehicleMenu.getBestSwitchSeatEnter(player, vehicle, wanted)
+        if door then
+            return door, wanted
+        end
+    end
+
     local best = vehicle:getBestSeat(player)
-    if best and best >= 0 and not vehicle:isSeatOccupied(best) then
+    if Core.seatIsEnterable(vehicle, best, player) then
         return best
     end
     for seat = 0, vehicle:getMaxPassengers() - 1 do
-        if not vehicle:isSeatOccupied(seat) then
+        if Core.seatIsEnterable(vehicle, seat, player) then
             return seat
         end
     end
     return nil
 end
 
---- Any seat that is fitted and empty, nearest the front first.
+--- Any seat that can be got into from outside, nearest the front first.
 --
 -- What a cab exit wants: the door said "put me up front", not "put me back
--- where I was", so there is no preferred seat to honour. Counting up from 0
--- gets the driver's seat first, then the passenger, which is the order
--- somebody walking to the front of their own van would expect.
+-- where I was", so there is no preferred seat to honour and nothing to switch
+-- across into afterwards. Counting up from 0 gets the driver's seat first,
+-- then the passenger, which is the order somebody walking to the front of
+-- their own van would expect.
 --
--- isSeatInstalled as well as isSeatOccupied, matching the server's freeSeat.
--- A seat that was never fitted is not occupied either, so testing only the
--- one would hand back a seat that is not there -- and ISEnterVehicle would
--- then fail quietly, which is the failure mode this whole path exists to
--- avoid.
-local function firstFreeSeat(vehicle)
+-- It is Core.seatIsEnterable rather than isSeatOccupied alone, and the third
+-- of its three tests is the one that matters: an RV whose only door is at the
+-- front right leaves seat 0 fitted and empty and completely unreachable from
+-- the ground, and handing that seat to ISEnterVehicle throws. So a cab exit
+-- from a Rolling Refuge lands in the front passenger seat, which is the truth
+-- about where that vehicle's door is.
+local function firstFreeSeat(vehicle, player)
     for seat = 0, vehicle:getMaxPassengers() - 1 do
-        if vehicle:isSeatInstalled(seat) and not vehicle:isSeatOccupied(seat) then
+        if Core.seatIsEnterable(vehicle, seat, player) then
             return seat
         end
     end
@@ -341,9 +369,9 @@ local function rejoinVehicle(player)
     -- door said "put me in the front", not "put me back where I was". Every
     -- other exit only re-seats somebody who was seated on the way in, because
     -- a player who walked up to the van on foot should come back out on foot.
-    local seat = nil
+    local seat, switchTo = nil, nil
     if pending.cab then
-        seat = firstFreeSeat(vehicle)
+        seat = firstFreeSeat(vehicle, player)
         if not seat then
             -- Reported rather than worked around. The server still holds the
             -- lease, so it can put them back in the room, and standing them
@@ -351,7 +379,7 @@ local function rejoinVehicle(player)
             Core.debugLn("rejoin: cab exit, but every seat is taken")
         end
     elseif pending.seat and pending.seat >= 0 then
-        seat = resolveSeat(vehicle, pending.seat, player)
+        seat, switchTo = resolveSeat(vehicle, pending.seat, player)
         if not seat then
             Core.debugLn("rejoin: every seat is occupied, staying outside")
         end
@@ -400,6 +428,16 @@ local function rejoinVehicle(player)
     if seat then
         Core.debugLn("rejoin: seat " .. tostring(pending.seat) .. " requested, taking " .. tostring(seat))
         ISTimedActionQueue.add(ISEnterVehicle:new(player, vehicle, seat))
+
+        -- The seat they left from has no door of its own, so they boarded by
+        -- one that has. Vanilla queues the switch the same way, with the seat
+        -- we came in by passed explicitly: ISSwitchVehicleSeat works it out
+        -- from getVehicle() otherwise, and at queue time they are still
+        -- standing on the road.
+        if switchTo then
+            Core.debugLn("rejoin: switching across to seat " .. tostring(switchTo))
+            ISTimedActionQueue.add(ISSwitchVehicleSeat:new(player, switchTo, seat))
+        end
     end
 
     -- Close the handshake. The server checks this id against the lease before

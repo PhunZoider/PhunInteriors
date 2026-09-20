@@ -872,6 +872,45 @@ function Core.isAtTheWheel(vehicle, player)
     return vehicle:isDriver(player) and vehicle:getVehicleTowedBy() == nil
 end
 
+
+--- Could this player be put into this seat from outside the vehicle?
+--
+-- Three facts, and the third is the one that bites. A seat may not be fitted,
+-- it may be taken, and it may have no door of its own.
+--
+-- A script says where a character stands to use a seat with a `position
+-- outside` block, and an EMPTY one DELETES the position it inherited from a
+-- template: VehicleScript.LoadPosition removes the entry and returns null for
+-- a block with no values in it. That is how an author says "this seat is not
+-- reachable from the ground" -- vanilla's own VanSeats rear seats do it, and
+-- so does the Rolling Refuge RV, which empties five of its six. You board by
+-- the one door and switch seats inside.
+--
+-- Handing such a seat to ISEnterVehicle is a hard error rather than a quiet
+-- failure. Its start() does getPassengerPosition(seat, "outside"):getOffset()
+-- with no nil check at all (ISEnterVehicle.lua:41-43), and vanilla's own
+-- distanceToPassengerPosition is written the same way. So a seat has to pass
+-- this before anybody is handed it, and isEnterBlocked is the exact test
+-- vanilla's own menu gates on, for this exact reason: see the comment above
+-- ISVehicleMenu.getBestSwitchSeatEnter.
+--
+-- It is more than the nil check, and the rest is worth having. isExitBlocked,
+-- which isEnterBlocked is a one line alias for, also runs lineClearCollide
+-- between the seat's inside and outside positions, so a door up against a wall
+-- is refused too. PolygonalMap2.instance is built in a static initialiser and
+-- is therefore never nil, and the only client-only branch in there is gated on
+-- GameClient.client, so this is safe to ask on a dedicated server -- which is
+-- what lets it be one implementation rather than two that can disagree.
+function Core.seatIsEnterable(vehicle, seat, character)
+    if not vehicle or not seat or seat < 0 then
+        return false
+    end
+    if not vehicle:isSeatInstalled(seat) or vehicle:isSeatOccupied(seat) then
+        return false
+    end
+    return not vehicle:isEnterBlocked(character, seat)
+end
+
 --- Can this player move from where they are into the interior right now?
 -- Returns true, or false plus a translation key.
 --

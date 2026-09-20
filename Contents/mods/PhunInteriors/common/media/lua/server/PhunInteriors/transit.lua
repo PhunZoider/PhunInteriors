@@ -1040,13 +1040,18 @@ local function resolveReturn(player, occupancy)
 end
 
 --- A seat this player could be put into, preferring the one they came from.
-local function freeSeat(vehicle, preferred)
-    if preferred and preferred >= 0 and vehicle:isSeatInstalled(preferred)
-        and not vehicle:isSeatOccupied(preferred) then
+--
+-- Core.seatIsEnterable rather than isSeatInstalled plus isSeatOccupied, and it
+-- is the same call the client makes when it actually does the seating. This
+-- decides whether leaving a MOVING vehicle is allowed at all, so an answer the
+-- client then refuses would put somebody on the road at forty: an RV with one
+-- door has five fitted, empty seats that nobody can be put into from outside.
+local function freeSeat(vehicle, preferred, player)
+    if Core.seatIsEnterable(vehicle, preferred, player) then
         return preferred
     end
     for seat = 0, vehicle:getMaxPassengers() - 1 do
-        if vehicle:isSeatInstalled(seat) and not vehicle:isSeatOccupied(seat) then
+        if Core.seatIsEnterable(vehicle, seat, player) then
             return seat
         end
     end
@@ -1105,7 +1110,7 @@ function Transit.leave(player, reason, via)
     -- the driver parks, logs off or crashes, and then it is stationary.
     local seatOut = nil
     if vehicle and Core.vehicleIsMoving(vehicle) then
-        seatOut = freeSeat(vehicle, occupancy.seat)
+        seatOut = freeSeat(vehicle, occupancy.seat, player)
         if not seatOut then
             Core.debugLn(tostring(key) .. " tried to leave a moving vehicle with no free seat")
             notifyThrottled(player, occupancy, "IGUI_PhunInteriors_VehicleMoving")

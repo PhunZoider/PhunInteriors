@@ -283,6 +283,32 @@ check("unloaded is not moving", Core.vehicleIsMoving(unloaded), false)
 check("destroyed is not moving", Core.vehicleIsMoving(destroyed), false)
 check("nil is not moving", Core.vehicleIsMoving(nil), false)
 
+-- 11b. a seat with no door of its own.
+--
+-- A `position outside {}` block with nothing in it DELETES the position a
+-- template supplied, so getPassengerPosition(seat, "outside") answers null and
+-- isEnterBlocked answers true. Vanilla's VanSeats rear seats do it and so does
+-- the Rolling Refuge RV, which empties five of its six. Handing such a seat to
+-- ISEnterVehicle is a hard error at ISEnterVehicle.lua:43, not a quiet no-op,
+-- which is why every picker on both sides goes through this.
+local function seatedVehicle(seats)
+    return {
+        isSeatInstalled = function(_, seat) return seats[seat] ~= nil end,
+        isSeatOccupied = function(_, seat) return seats[seat] == "taken" end,
+        isEnterBlocked = function(_, _, seat) return seats[seat] == "nodoor" end
+    }
+end
+-- Seat 0 is the driver, fitted and empty and unreachable from the ground.
+local rv = seatedVehicle({[0] = "nodoor", [1] = "free", [2] = "nodoor", [3] = "taken"})
+
+check("a free seat with a door is enterable", Core.seatIsEnterable(rv, 1, nil), true)
+check("a fitted, empty, doorless seat is not", Core.seatIsEnterable(rv, 0, nil), false)
+check("an occupied seat is not", Core.seatIsEnterable(rv, 3, nil), false)
+check("a seat that was never fitted is not", Core.seatIsEnterable(rv, 9, nil), false)
+check("getBestSeat's -1 is not", Core.seatIsEnterable(rv, -1, nil), false)
+check("nil seat is not", Core.seatIsEnterable(rv, nil, nil), false)
+check("nil vehicle is not", Core.seatIsEnterable(nil, 0, nil), false)
+
 -- 12. registration opens exactly once, however many times it is asked to.
 -- In SP both server_events and client_events run the boot sequence.
 local fired = 0
