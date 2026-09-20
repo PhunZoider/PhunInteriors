@@ -1,0 +1,49 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            // Run this in WorldEd's own window of time: after it has saved a
+            // cell, before you export the lots. WorldEd rewrites every border
+            // lot rect to the building plus one each time it saves, and that
+            // extra square blanks the neighbouring cell's first fence wall --
+            // one new gap per cell you touched. The "sync, check, deploy"
+            // task runs tighten too, but that is after the export, so there it
+            // can only repair the project for next time and tell you the
+            // lotpacks it just copied are stale.
+            // Via the wrapper, not `perl` directly: perl ships with Git but
+            // only Git Bash puts it on PATH, so a task calling perl straight
+            // fails with "not recognized". tighten.cmd finds it the same way
+            // map.cmd does.
+            "label": "Map: tighten lot rects (before exporting)",
+            "type": "shell",
+            "command": "${workspaceFolder}\\tighten.cmd",
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": ["/d", "/c"]
+                }
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "clear": true
+            }
+        },
+        {
+            "label": "Map: sync, check, deploy, reset",
+            "type": "shell",
+            "command": "${workspaceFolder}\\map.cmd",
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": ["/d", "/c"]
+                }
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "clear": true
+            }
+        }
+    ]
+}

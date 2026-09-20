@@ -3,7 +3,7 @@ VERSION = 1,
 option PhunInteriors.Debug
 {
     type = boolean,
-    default = false,
+    default = true,
     page = PhunInteriors,
     translation = PhunInteriors_Debug,
 }
@@ -13,7 +13,7 @@ option PhunInteriors.WeightFactor
     type = integer,
     default = 50,
     min = 0,
-    max = 100,
+    max = 1000,
     page = PhunInteriors,
     translation = PhunInteriors_WeightFactor,
 }
@@ -64,24 +64,14 @@ option PhunInteriors.EntryZombieRadius
     translation = PhunInteriors_EntryZombieRadius,
 }
 
-option PhunInteriors.LeaseDays
+option PhunInteriors.RoomProtectedDays
 {
     type = integer,
     default = 14,
     min = 0,
-    max = 365,
+    max = 99999999,
     page = PhunInteriors,
-    translation = PhunInteriors_LeaseDays,
-}
-
-option PhunInteriors.LeaseWarningDays
-{
-    type = integer,
-    default = 2,
-    min = 0,
-    max = 60,
-    page = PhunInteriors,
-    translation = PhunInteriors_LeaseWarningDays,
+    translation = PhunInteriors_RoomProtectedDays,
 }
 
 option PhunInteriors.ScrubKeepsLoot
@@ -108,11 +98,28 @@ option PhunInteriors.BreachEjects
     translation = PhunInteriors_BreachEjects,
 }
 
-option PhunInteriors.Scripts_phun_van
+option PhunInteriors.AdminNoClipExempt
 {
-    type = string,
-    default = ,
+    type = boolean,
+    default = true,
     page = PhunInteriors,
-    translation = PhunInteriors_Scripts_phun_van,
+    translation = PhunInteriors_AdminNoClipExempt,
 }
 
+option PhunInteriors.PowerBinding
+{
+    type = boolean,
+    default = true,
+    page = PhunInteriors,
+    translation = PhunInteriors_PowerBinding,
+}
+
+option PhunInteriors.PowerDrainFactor
+{
+    type = integer,
+    default = 100,
+    min = 0,
+    max = 1000,
+    page = PhunInteriors,
+    translation = PhunInteriors_PowerDrainFactor,
+}

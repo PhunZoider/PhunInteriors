@@ -1,0 +1,96 @@
+version = 1
+tileset
+{
+    file = phuninteriors_01
+    size = 8,8
+    id = 1
+    // phuninteriors_01_0
+    tile
+    {
+        xy = 0,0
+        FloorMaterial = Road_06
+        exterior = 
+        solidfloor = 
+    }
+    // phuninteriors_01_1
+    tile
+    {
+        xy = 1,0
+        FloorMaterial = Road_06
+        exterior = 
+        solidfloor = 
+    }
+    // phuninteriors_01_8
+    tile
+    {
+        xy = 0,1
+        CantClimb = 
+        StopCar = 
+        WallType = wall
+        WallW = 
+        wall = 
+    }
+    // phuninteriors_01_9
+    tile
+    {
+        xy = 1,1
+        CantClimb = 
+        StopCar = 
+        WallN = 
+        WallType = wall
+        wall = 
+    }
+    // phuninteriors_01_10
+    tile
+    {
+        xy = 2,1
+        CantClimb = 
+        CornerNorthWall = phuninteriors_01_9
+        CornerWestWall = phuninteriors_01_8
+        StopCar = 
+        WallNW = 
+        WallType = wall
+        wall = 
+    }
+    // phuninteriors_01_11
+    tile
+    {
+        xy = 3,1
+        CornerNorthWall = phuninteriors_01_9
+        CornerWestWall = phuninteriors_01_8
+        WallSE = 
+        wall = 
+    }
+    // phuninteriors_01_16
+    tile
+    {
+        xy = 0,2
+        CustomName = TaxiPhones
+        Facing = W
+        GroupName = TaxiPhones
+    }
+    // phuninteriors_01_17
+    tile
+    {
+        xy = 1,2
+        CustomName = TaxiPhones
+        Facing = S
+        GroupName = TaxiPhones
+    }
+    // phuninteriors_01_18
+    tile
+    {
+        xy = 2,2
+        CustomName = TaxiPhones
+        Facing = W
+        GroupName = TaxiPhones
+    }
+    // phuninteriors_01_19
+    tile
+    {
+        xy = 3,2
+        CustomName = TaxiPhones
+        Facing = N
+        GroupName = TaxiPhones
+    }
+}

@@ -25,15 +25,29 @@ set WSTEST=%USERPROFILE%\Zomboid\Workshop\PhunInteriorsTest
 echo [PhunInteriors] Deploying to %MODDIR%
 
 rem --- Live mods -------------------------------------------------------------
+rem xclude applies HERE, and this is the only line where it can. The Workshop
+rem staging copies below pass it too, but they then throw their Contents folder
+rem away and take it from %MODDIR%, so a file not filtered on this line ships
+rem in all four trees. That is how phuninteriors.tiles.txt kept arriving after
+rem being added to the list.
+rem
+rem xcopy matches each entry as a SUBSTRING of the whole source path, so keep
+rem them specific: "phuninteriors.tiles.txt" is safe, and a bare
+rem "phuninteriors.tiles" would take the real tiledefs with it.
 for %%M in (%MODS%) do (
     rmdir /S /Q "%MODDIR%\%%M" 2>nul
-    xcopy "%SRC%Contents\mods\%%M" "%MODDIR%\%%M" /Y /I /E /F /Q >nul
+    xcopy "%SRC%Contents\mods\%%M" "%MODDIR%\%%M" /Y /I /E /F /Q /EXCLUDE:%SRC%xclude >nul
     if errorlevel 1 echo [PhunInteriors] FAILED copying %%M
 )
 
 rem --- Test-id variants ------------------------------------------------------
 rem Copy the live mod, then overlay Tests\root\<Mod> which swaps in a mod.info
 rem carrying the *test ids. Lets both versions sit side by side in one install.
+rem
+rem Neither copy here takes /EXCLUDE. The first does not need it, because
+rem %MODDIR%\<Mod> was already filtered above. The second must not have it: its
+rem source path contains "Tests", which is an xclude entry, so the substring
+rem match would hit every file and the overlay would copy nothing at all.
 for %%M in (%MODS%) do (
     rmdir /S /Q "%MODDIR%\%%MTest" 2>nul
     xcopy "%MODDIR%\%%M" "%MODDIR%\%%MTest" /Y /I /E /F /Q >nul
@@ -43,6 +57,10 @@ for %%M in (%MODS%) do (
 )
 
 rem --- Workshop staging, live ------------------------------------------------
+rem media\maps ships. It used to be stripped from both staging trees
+rem because the lotpacks were the reference mod's map and could not be
+rem redistributed. Cells 87,46 and 88,46 are ours now, and the rooms do not
+rem exist without them, so a Workshop build that drops them has no rooms.
 rmdir /S /Q "%WS%" 2>nul
 xcopy "%SRC%" "%WS%" /Y /I /E /F /Q /EXCLUDE:%SRC%xclude >nul
 rmdir /S /Q "%WS%\Tests" 2>nul

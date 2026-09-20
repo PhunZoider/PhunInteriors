@@ -12,3 +12,10 @@ CLAUDE.md
 .html
 deploy.cmd
 converter
+.bak
+.tmp
+.orig
+.gitattributes
+.pl
+phuninteriors.tiles.txt
+.cmd
