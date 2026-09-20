@@ -2,6 +2,10 @@ if isClient() then
     return
 end
 require "PhunInteriors/registry"
+-- Core.isOurSpace, for the world object half of the ledger. Every boot path
+-- happens to load this first anyway; the require is here so that a reordering
+-- cannot quietly take it away.
+require "PhunInteriors/bounds"
 local Core = PhunInteriors
 local Slots = require "PhunInteriors/slots"
 local Power = {}
@@ -228,15 +232,29 @@ end
 -- still anything to draw on. Without it, a tenant sitting inside long enough
 -- to empty a full tank would watch the lights die while their van sat outside
 -- with a charged battery.
-local function projectedCharge(assignment)
-    local known = tonumber(assignment.batteryKnown) or 0
+--- What the outstanding debt comes to, as a fraction of whatever is paying.
+--
+-- Pulled out of projectedCharge because two callers have to agree about it
+-- exactly. This one predicts the moment the room goes dark; Power.syncObject
+-- takes the fuel out of the generator that makes it happen. Written twice they
+-- would drift, and the symptom is the worst kind available: a room that
+-- darkens at a level the tank never reaches, or one that never darkens at all.
+--
+-- A fraction rather than litres, because the other end of this is sometimes a
+-- battery, and 0..1 is the only quantity both ends can express.
+local function owedCharge(assignment)
     local owed = tonumber(assignment.fuelOwed) or 0
     local maxFuel = tonumber(assignment.generatorMaxFuel) or 0
-    if maxFuel <= 0 then
-        return known
+    if owed <= 0 or maxFuel <= 0 then
+        return 0
     end
     local factor = tonumber(Core.settings.PowerDrainFactor) or 100
-    return known - ((owed / maxFuel) * (factor / 100))
+    return (owed / maxFuel) * (factor / 100)
+end
+Power.owedCharge = owedCharge
+
+local function projectedCharge(assignment)
+    return (tonumber(assignment.batteryKnown) or 0) - owedCharge(assignment)
 end
 Power.projectedCharge = projectedCharge
 
@@ -364,6 +382,188 @@ function Power.syncVehicle(vehicleId, vehicle)
     end
 
     assignment.batteryKnown = charge
+end
+
+-- ---------------------------------------------------------------------------
+-- The other end of the ledger, for a holder that is not a vehicle.
+--
+-- A tent has no battery, so entering one used to declare the battery full and
+-- clear the debt -- which made the room a free, permanent mains supply, the
+-- one thing the power binding exists to prevent. It was honest scaffolding at
+-- the time, and this is the piece it was standing in for.
+--
+-- What pays instead is a real generator the player parked beside the tent, and
+-- WHICH generator is deliberately not a question of ours. haveElectricity() on
+-- the tent's own square is the same test that decides whether a fridge stood
+-- next to it would run, so a tent is powered exactly when its own square is,
+-- and a server that turns AllowExteriorGenerator off is saying that a
+-- generator outdoors powers nothing. This says the same thing without having
+-- to be told, and without a field on the room that could disagree with vanilla.
+--
+-- Generator to generator the two ends are the same quantity, which is what
+-- makes this half simpler than the vehicle's: PowerDrainFactor exists only
+-- because litres and battery percentage are not, and at its default of 100 a
+-- litre burned in the room is a litre out of the tank beside the tent. The
+-- conversion is owedCharge, shared with the projection, so the level at which
+-- the room predicts it will go dark is the level the tank actually reaches.
+-- ---------------------------------------------------------------------------
+
+-- The perimeter of a square ring, one entry per offset. Cached because the
+-- search below asks for the same twenty or so rings on every call, and
+-- rebuilding those tables per visit would be the only allocation on this path.
+local ringCache = {}
+local function ringOffsets(ring)
+    if ringCache[ring] then
+        return ringCache[ring]
+    end
+    local out = {}
+    if ring == 0 then
+        out = {{0, 0}}
+    else
+        for d = -ring, ring do
+            table.insert(out, {d, -ring})
+            table.insert(out, {d, ring})
+        end
+        for d = -ring + 1, ring - 1 do
+            table.insert(out, {-ring, d})
+            table.insert(out, {ring, d})
+        end
+    end
+    ringCache[ring] = out
+    return out
+end
+
+--- The nearest activated generator in range of this square, or nil.
+--
+-- Rings outward rather than sweeping a box, for two reasons. A tent with a
+-- generator two tiles away is answered in twenty squares rather than eleven
+-- thousand; and where a player has several, the one they parked closest is the
+-- one billed, which is the answer they would give if asked.
+--
+-- getGenerator() is vanilla's own accessor and reads the square's special
+-- objects, so it is one list lookup rather than a walk of everything standing
+-- there. Activated matters: only an activated generator registers its position
+-- with the chunk, so only an activated one is powering anything.
+local function generatorNear(square)
+    local cell = getCell()
+    if not cell then
+        return nil
+    end
+    -- Vanilla's own numbers, because vanilla's own test is what said there was
+    -- a generator here at all. GeneratorTileRange is a Euclidean radius.
+    local radius = tonumber(SandboxVars and SandboxVars.GeneratorTileRange) or 20
+    local levels = tonumber(SandboxVars and SandboxVars.GeneratorVerticalPowerRange) or 3
+    local x0, y0, z0 = square:getX(), square:getY(), square:getZ()
+
+    -- This level first, then one up, then one down, and outward. The vertical
+    -- range is symmetrical and the tent's own floor is overwhelmingly where it
+    -- will be.
+    local zs = {0}
+    for d = 1, levels do
+        table.insert(zs, d)
+        table.insert(zs, -d)
+    end
+
+    for ring = 0, radius do
+        for _, offset in ipairs(ringOffsets(ring)) do
+            local dx, dy = offset[1], offset[2]
+            if (dx * dx) + (dy * dy) <= radius * radius then
+                for _, dz in ipairs(zs) do
+                    local candidate = cell:getGridSquare(x0 + dx, y0 + dy, z0 + dz)
+                    local generator = candidate and candidate:getGenerator()
+                    if generator and generator:isActivated() then
+                        return generator
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+--- Settle the debt against the generator powering a world object holder.
+--
+-- The twin of Power.syncVehicle, called at the same two moments and for the
+-- same reason: the holder is loaded while the tenant is standing on it, which
+-- is entering and landing back, and it is loaded at no other time.
+--
+-- `at` is where the holder is, which for a tent is its grid anchor. Nothing
+-- about the object's identity is needed here -- this bills whatever generator
+-- is powering that spot, exactly as the room is lit by whatever generator is
+-- in range of it.
+function Power.syncObject(leaseKey, at)
+    if not Core.settings.PowerBinding or not at then
+        return
+    end
+    local assignment = leaseKey and Slots.find(leaseKey)
+    if not assignment then
+        return
+    end
+
+    -- A tent pitched INSIDE one of our own rooms would otherwise be billed to
+    -- that room's own generator, which we refuel for nothing: the interior
+    -- would be paying itself. Refused rather than solved, because a holder
+    -- standing in a room is a question about nested interiors and not one
+    -- about power.
+    if Core.isOurSpace(at.x, at.y, at.z or 0) then
+        assignment.batteryKnown = 0
+        Core.debugLn("power: " .. tostring(leaseKey) ..
+            " is standing inside one of our own rooms; it powers nothing")
+        return
+    end
+
+    local cell = getCell()
+    local square = cell and cell:getGridSquare(at.x, at.y, at.z or 0)
+    if not square then
+        -- Not loaded, so nothing here is readable. Leave the ledger alone: the
+        -- debt is still owed and the last reading is still the last reading.
+        return
+    end
+
+    -- Vanilla's answer, and the only gate on the walk below. A tent nobody has
+    -- parked a generator at is answered in one call and never rings at all.
+    if not square:haveElectricity() then
+        -- Flat, so the room goes dark, and the debt is KEPT: a generator
+        -- wheeled up later inherits it, which is the same rule the vehicle
+        -- half applies to a battery installed later.
+        assignment.batteryKnown = 0
+        return
+    end
+
+    local generator = generatorNear(square)
+    if not generator then
+        -- The square says it has power and nothing in range of it is a
+        -- generator, which should not be possible and is worth saying rather
+        -- than quietly reading as a flat battery.
+        assignment.batteryKnown = 0
+        Core.logLn("power: " .. tostring(leaseKey) ..
+            " has electricity but no generator was found in range; treating it as dark")
+        return
+    end
+
+    local maxFuel = tonumber(generator:getMaxFuel()) or 0
+    local fuel = tonumber(generator:getFuel()) or 0
+
+    local owed = owedCharge(assignment)
+    if owed > 0 and maxFuel > 0 then
+        -- owedCharge is a fraction of a tank, so this is the same quantity the
+        -- projection subtracted, said in this generator's litres.
+        local used = owed * maxFuel
+        local after = math.max(0, fuel - used)
+        generator:setFuel(after)
+        -- Without this the change never leaves the server. Vanilla's own
+        -- ISAddFuel:complete() pairs setFuel with sync(), and this is the same
+        -- write. Deliberately NOT setActivated: the generator belongs to the
+        -- player, and running it dry is theirs to notice rather than ours to
+        -- switch off.
+        generator:sync()
+        Core.debugLn(string.format("interior drew %.1f fuel off the generator: %.1f -> %.1f",
+            used, fuel, after))
+        fuel = after
+        assignment.fuelOwed = 0
+    end
+
+    assignment.batteryKnown = (maxFuel > 0) and (fuel / maxFuel) or 0
 end
 
 return Power

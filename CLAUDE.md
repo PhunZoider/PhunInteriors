@@ -1544,6 +1544,39 @@ because there is nothing to charge. That last path is already proven in game:
 settle it, and left to accumulate it would send the projected charge negative
 and darken a room for no reason a designer could see.
 
+**The world object half is `Power.syncObject`, and it asks vanilla rather than
+the registry.** A tent has no battery, so what pays is a generator the player
+parked beside it -- and which generator is not a question of ours:
+`haveElectricity()` on the holder's own square is the same test that decides
+whether a fridge stood next to it would run. So a tent is powered exactly when
+its own square is, a server that turns `AllowExteriorGenerator` off is saying
+an outdoor generator powers nothing, and no field on the room can disagree with
+vanilla about it. Only then does it walk outward in rings for the generator
+itself, nearest first, so the one the tenant parked closest is the one billed
+and the common case of no generator at all costs one call.
+
+It runs at the two moments the holder is loaded, which is the two the pickup
+lock already uses: entering, and landing back on top of it. Generator to
+generator the units are the same quantity, so `PowerDrainFactor` at its default
+of 100 makes a litre burned in the room a litre out of the tank. The conversion
+is `Power.owedCharge`, shared with `projectedCharge` for a reason worth keeping:
+written twice they would drift, and the symptom is a room that darkens at a
+level the tank never reaches, or one that never darkens at all.
+
+**Until this existed, entering a tent declared the battery full**, which made a
+tent a free and permanent mains supply -- the one thing the power binding
+exists to prevent. It was deliberate scaffolding with a comment saying so, and
+it is the shape of failure to expect from the rest of the holder work: a stub
+that is invisible because it errs toward the room *working*. No generator now
+means a dark room, which is the honest answer and the same one the flat battery
+gives.
+
+One refusal is written into it rather than derived. A tent pitched **inside**
+one of our own rooms would otherwise be billed to that room's own generator,
+which we refuel for nothing, so the interior would be paying itself:
+`Core.isOurSpace` on the holder refuses that outright. Nested interiors are a
+question of their own and this is not the place to answer them.
+
 **`selfPowered` is the one case that derivation cannot reach** — a room you
 *drive* to and still want lit for free. It suppresses the ledger only: the room
 still needs a real `generator` offset, because `haveElectricity()` reads no
@@ -1705,6 +1738,7 @@ B41 tutorial applies.
 | **`instanceof` cannot identify a placed moveable, and the inconsistency is *within one object*.** Of a single TentGreen's tiles, `camping_04_100` loads as a plain `IsoObject` and `camping_04_103` as an `IsoThumpable`. | Identify by `CustomItem`; reach for `instanceof` only to guard behaviour you are about to invoke. Same lesson as the light switches from the other end — there the class was lost by rebuilding, here it was never uniform to begin with. |
 | **Object modData survives a save and a reload, and `AddSpecialObject` adds to `square.objects` as well as `specialObjects`.** A key written client side and left through a quit to the main menu came back intact on both a tent and the floor beneath it. `IsoObject.transmitModData` addresses a plain object by `square:getObjects():indexOf(object)` (`MovingObject.set`, objectType 1), and in single player both network flags are false so it falls through to `flagForHotSave()`. | A world object can hold a durable lease id across a save, a reload and a chunk unload, which a **vehicle cannot** — see the vehicle modData row. So a non-vehicle holder needs neither position keying nor the client-side identity workaround the exit handshake exists for. It does **not** survive being picked up; see the next row, which is the one that decides the design. |
 | **modData does not survive a tent being picked up, and whether it does depends on which tile was clicked.** Every tent carries the `ForceSingleItem` tile property, and that branch of `ISMoveableSpriteProps:pickUpMoveable` builds a fresh item from the anchor sprite and puts modData on it in exactly one place: `if instanceof(obj, "IsoThumpable") then self:saveThumpableParameters(item:getModData(), obj) end`, where `obj` is the object on the **clicked** square. The per-tile `pickUpMoveableInternal` calls run with `createItem = false`, so the items that *do* carry `movableData` are built and thrown away. And a single TentGreen is both classes at once — `camping_04_103` is an `IsoThumpable`, `camping_04_100` is not. | Picking a tent up by one corner carries its whole modData and by another carries **nothing at all**, not even `movableData`. Writing the id to every tile does not help: what is tested is the clicked tile's *class*, not whether it holds the id. So a lease must **never depend on surviving a pickup** — a tent put back down would mint a fresh id, take a different room, and leave the old one leased to an id nothing carries until reclaim took it, which is a tenant's belongings quietly disappearing. Refusing the pickup is what makes this moot; see "Known gaps" #11. |
+| **Finding the generator that powers a square.** `IsoGridSquare.getGenerator()` returns the generator standing on that square and reads `getSpecialObjects()`, so it is one list lookup. `IsoGenerator.isPoweringSquare(gx, gy, gz, x, y, z)` is static and **pure geometry** -- `IsoUtils.DistanceToSquared <= generatorRadius�` plus a vertical range -- with no activation test in it; `generatorRadius` and `generatorVerticalPowerRange` are set from `SandboxVars.GeneratorTileRange` / `GeneratorVerticalPowerRange` by `setGeneratorRange`. `IsoChunk.isGeneratorPoweringSquare` walks `generatorsTouchingThisChunk`, a list of positions the chunk only carries while a generator is activated, and `IsoGenerator.AllGenerators` is a static list of every loaded one. Vanilla lua uses **none** of these, and pairs `setFuel` with `generator:sync()` (`ISAddFuel:complete()`). | So `square:haveElectricity()` true already implies an activated generator in range, which makes it the gate and not the walk: `Power.syncObject` asks it first and only then rings outward with `getGenerator()` to find which one to bill. Nearest first, so several generators resolve to the one the tenant parked closest. `AllGenerators` would be cheaper still and is deliberately not used -- it is a static field rather than a method, nothing in vanilla lua reads one, and the ring walk is bounded by a sandbox radius anyway. |
 
 ### Checking an API call before you use it
 
@@ -2812,6 +2846,24 @@ cells are actually towns.
       `RoomReclaimed` notice are stamped on vehicles only, so a tent whose
       room is reclaimed loses its contents with no message. The vehicle path
       has an answer and this does not yet.
+    - **The generator binding**, which is newer than the rest of this and was
+      written because a tent with no generator anywhere near it still came out
+      lit. Reported in game, and correct at the time: entering declared the
+      battery full. `Power.syncObject` is what replaced that, and none of it
+      has run. Three things to watch, in order. Whether `haveElectricity()`
+      answers true for an outdoor tent -- it should, every vanilla preset sets
+      `AllowExteriorGenerator`, and if it does not then no tent is ever
+      powered. Whether the ring walk finds the generator: a `has electricity
+      but no generator was found in range` line in the log is that failing,
+      and it is logged rather than swallowed precisely because it should be
+      impossible. And whether the fuel actually comes off the player's tank on
+      the way out, which is one `admin("power")` before and after a visit.
+    - **A tent with no generator is simply dark, and says nothing.** That is
+      the designed answer and it is also indistinguishable, from inside, from
+      the room being broken. The vehicle half has the same shape and has
+      always had it, so this is not new -- but a tent is the first holder
+      where the tenant has to *choose* to provide the power, which makes it
+      the first one where not knowing is a fair complaint.
 
     **Two bugs found on the way, stacked**, and neither had anything to do
     with pickups. Together they meant a tent could not be given a room
@@ -3051,16 +3103,14 @@ see "A room states nothing about what may carry it" in Architecture. What a
 room is for is the binding's answer, which is also what makes a community room
 or a spawn room reachable with no new registry surface at all.
 
-Power is the part that gets *better*. The room half of the ledger does not know
-what is on the other end, so swapping the vehicle battery for a real
-`IsoGenerator` the player parked near the tent leaves `Power.syncRoom`
-untouched and makes the units match: `PowerDrainFactor` exists today only to
-convert burned fuel into battery percentage because the two are not the same
-quantity, and generator to generator it is 1:1. Which generator is vanilla's
-own question -- `haveElectricity()` on the tent's square, the same test that
-decides whether a fridge beside it would run -- and the answer is then stored
-on the lease, because a generator does not move either. Probed in game at 2.2
-tiles: activated, full, and the tent square reading `electricity=true`.
+Power was the part that got *better*, and it is **built** -- see "The world
+object half is `Power.syncObject`" in Architecture. The prediction held: the
+room half of the ledger does not know what is on the other end, so `syncRoom`
+was not touched at all, and generator to generator the units match. What the
+spike got wrong was only that the answer would be stored on the lease. It is
+not: the generator is looked up again each time, because unlike a battery it is
+not attached to the holder and the player may move it, sell it, or run it dry
+between visits.
 
 The spike had its own scaffolding -- `client/PhunInteriors/client_probe.lua`,
 an admin-only context menu that dumped a square, its generators, and tagged

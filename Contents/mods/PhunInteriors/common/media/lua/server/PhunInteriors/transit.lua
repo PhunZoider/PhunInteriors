@@ -674,13 +674,15 @@ function Transit.enterObject(player, object, anchor)
         z = anchor.z or 0
     }
 
-    -- No battery, and no generator bound to it yet -- power for a world object
-    -- holder is a separate piece. Say full so a lit room is lit, and clear the
-    -- ledger for the same reason the admin port does: nothing settles a debt
-    -- that has nothing to settle it against, and left to accumulate it would
-    -- eventually darken the room for no visible reason.
-    assignment.batteryKnown = 1
-    assignment.fuelOwed = 0
+    -- What pays for the light. A world object has no battery, so the other end
+    -- of the ledger is a generator the player parked beside it -- and whether
+    -- there is one is vanilla's own question, asked of the tent's own square.
+    -- No generator there means a dark room, which is the honest answer: this
+    -- used to declare the battery full, and a tent was a free mains supply.
+    --
+    -- Here because here is the one moment the object is certainly loaded, the
+    -- same reason the pickup lock is written a few lines below.
+    Power.syncObject(holderId, anchor)
 
     if not placeInside(player, assignment, {
         vehicleId = holderId,
@@ -1218,9 +1220,10 @@ function Transit.leave(player, reason, via)
         -- A world object files a much smaller version of the same paperwork,
         -- and for the same reason the vehicle does: the thing the server needs
         -- to touch is not loaded here, and the player arriving is what loads
-        -- it. There is nothing to weigh and no seat to return to -- the only
-        -- outstanding job is re-asserting the pickup lock on the tent they are
-        -- about to be standing on.
+        -- it. There is nothing to weigh and no seat to return to, so what is
+        -- left is the two jobs that need the tent itself: taking the fuel the
+        -- visit burned off the generator beside it, and re-asserting the
+        -- pickup lock on it.
         --
         -- An admin port files nothing, still. There is no object there either.
         pendingArrivals[key] = {
@@ -1324,12 +1327,17 @@ function Transit.arrived(player, handle, seated)
     -- the first moment the server knows they have.
     Transit.shoveZombies(player:getX(), player:getY(), player:getZ(), Core.settings.ExitShoveRadius)
 
-    -- A world object holder. Nothing was driven here, nothing is owed against
-    -- a battery and there is no seat to be refused, so the whole report is
-    -- "the tent is loaded again, decide whether it may be packed away". The
-    -- handle the client sent is ignored: it was looking for a vehicle and
-    -- there is none, and the object is resolved from the position instead.
+    -- A world object holder. Nothing was driven here and there is no seat to
+    -- be refused, so the whole report is "the tent is loaded again": settle
+    -- what it owes, and decide whether it may be packed away. The handle the
+    -- client sent is ignored -- it was looking for a vehicle and there is
+    -- none, and the object is resolved from the position instead.
     if record.holder then
+        -- And the fuel the visit burned comes off the generator beside it, for
+        -- the same reason the weight comes off the vehicle here: the thing
+        -- that pays was not loaded when they left, and their arriving on top
+        -- of it is what loaded it.
+        Power.syncObject(record.holder, record.at)
         Transit.refreshHolderLock(record.holder, record.at)
         return true
     end
