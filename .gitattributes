@@ -1,0 +1,11 @@
+# The map cells are binary and now tracked (they used to be gitignored while
+# the map was borrowed). core.autocrlf is on for this checkout, and git's
+# binary detection is a heuristic over the first 8000 bytes -- these files
+# would almost certainly be detected correctly, but a lotpack silently
+# rewritten by line-ending conversion is close to undiagnosable, so say it.
+*.lotpack  binary
+*.lotheader binary
+*.bin      binary
+*.pack     binary
+*.tiles    binary
+*.xcf      binary
