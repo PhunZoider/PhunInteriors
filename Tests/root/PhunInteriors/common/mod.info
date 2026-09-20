@@ -5,3 +5,5 @@ description=Instanced vehicle interiors that recycle their space, contain the pl
 poster=poster.png
 icon=icon.png
 versionMin=42.0.0
+tiledef=phuninteriors 3050
+pack=phuninteriors

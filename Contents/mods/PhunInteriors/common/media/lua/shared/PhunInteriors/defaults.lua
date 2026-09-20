@@ -8,7 +8,7 @@ local Core = PhunInteriors
 -- Docs/pi-mappings.csv and Docs/pi-vehicles.csv. Edit those and regenerate;
 -- an edit made here is lost on the next run.
 --
--- 83 rooms, 99 rows of ten stamps, 990 slots.
+-- 84 rooms, 100 rows of ten stamps, 1000 slots.
 --
 -- A ROOM is a contract: one shape, and every place on the map it is stamped.
 -- Two rooms whose CONTRACT differs are two registrations. What is on the
@@ -21,16 +21,18 @@ local Core = PhunInteriors
 --     x = cellX * 256 + 15 + 25 * col        col 0..9, west to east
 --     y = cellY * 256 +  5 + 42 * (row - 1)  row 1..6, north to south
 --
--- so every location below is arithmetic rather than a reading, and there is
--- not one fixup on the whole map. `perl Docs/roomcheck.pl` is what checks that
+-- so a cell laid out as ten by six needs no coordinate written down. A
+-- building placed on its own is not on that grid and states its floor corner
+-- outright -- `Floor X` and `Floor Y` in pi-mappings.csv, cell-local -- because
+-- no arithmetic describes it. `perl Docs/roomcheck.pl` is what checks either
 -- against the lotpacks, and it is not optional: the registry declares a
 -- FOOTPRINT and the map draws a FLOOR, and this map puts the south and east
 -- walls outside the floor, so `size` is the floor plus one in each direction.
 --
 -- The slot INDEX is the identity a lease persists, and it runs in map order --
--- (chunk x, chunk y, row, position in row) -- never in the order rows happen
--- to appear in a CSV. A map coordinate is stable under editing; a line number
--- is not.
+-- (chunk x, chunk y, y, x), which for a grid row is (cell, row, column) --
+-- never the order rows happen to appear in a CSV. A map coordinate is
+-- stable under editing; a line number is not.
 --
 -- No room states `requires`. It is a vehicle vocabulary and it only ever did
 -- one job beyond documentation -- refusing the wrecks a `match` predicate
@@ -658,6 +660,20 @@ local function registerRooms()
             [17] = {23230, 12247, 0},
             [18] = {23255, 12247, 0},
             [19] = {23280, 12247, 0}
+        }
+    })
+
+    -- Spawn -- floor 8x9, 1 slots, room def 'garagestorage'.
+    -- Stamped at 87,49 at 4,19.
+    Core.registerRoom("phun.room.Spawn", {
+        label = "Spawn",
+        source = SOURCE,
+        size = {w = 9, h = 10},
+        spawn = {x = 4, y = 4},
+        selfPowered = true,
+        generator = {x = 13, y = -6, z = 1},
+        locations = {
+            [0] = {22276, 12563, 0}
         }
     })
 
@@ -2320,6 +2336,14 @@ local function registerVehicles()
         source = SOURCE,
         rooms = {"phun.room.Semi_Trailer_Water"},
         scripts = {"Base.SemiTrailerVan", "Base.SemiTrailerVanCattle", "Base.SemiTrailerVan_mil", "Base.W900_Container"}
+    })
+
+    -- Spawn: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Spawn",
+        source = SOURCE,
+        rooms = {"phun.room.Spawn"},
+        scripts = {"Base.CarTaxi"}
     })
 
     -- Step Van: 1 bound directly, 30 more overflowing in.

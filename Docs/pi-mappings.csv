@@ -1,4 +1,4 @@
-﻿Chunk Column,Chunk Row,Chunk,Chunk X,Chunk Y,Row,Building,Room def,Vehicle scripts
+﻿Chunk Column,Chunk Row,Chunk,Chunk X,Chunk Y,Row,Building,Room def,Vehicle scripts,Floor X,Floor Y
 1,1,"87, 46",87,46,1,Van,shed,"Base.Van, Base.VanDeerValley, Base.VanJonesFabrication, Base.VanMetalheads, Base.VanOldMill, Base.VanRiversideFabrication, Base.VanSeats_Valkyrie, Base.Van_BugWipers, Base.Van_Locksmith  (+ every other Van*/StepVan* as matcher overflow)"
 1,1,"87, 46",87,46,2,Van,shed,"Base.Van, Base.VanDeerValley, Base.VanJonesFabrication, Base.VanMetalheads, Base.VanOldMill, Base.VanRiversideFabrication, Base.VanSeats_Valkyrie, Base.Van_BugWipers, Base.Van_Locksmith  (+ every other Van*/StepVan* as matcher overflow)"
 1,1,"87, 46",87,46,3,Van_Ambulance,medical,Base.VanAmbulance (+ Base.90fordF350ambulance overflowing in from the bay)
@@ -101,3 +101,4 @@
 5,3,"91, 48",91,48,4,Bus_Prison,prisoncells,Base.87fordB700prison
 5,3,"91, 48",91,48,5,Bus_School,elementaryschool,Base.87fordB700school
 5,3,"91, 48",91,48,6,Bus_School,elementaryschool,Base.87fordB700school
+1,4,"87, 49",87,49,,Spawn,garagestorage,Base.CarTaxi,4,19

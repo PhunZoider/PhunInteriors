@@ -79,35 +79,64 @@ for my $r (@$assigned) {
 }
 
 # --- placements -> locations ------------------------------------------------
-# Sorted by (cell x, cell y, row) and then west to east, which is the index
-# order a lease persists. Appending a row to a CSV claims fresh indexes only if
-# it sorts last by THAT key, not by line number.
+# A placement is either a ROW of ten stamps on the grid, or a single stamp at
+# an explicit floor corner within its cell -- `Floor X` and `Floor Y` in
+# pi-mappings.csv, both cell-local, and both filled in or neither. The grid is
+# what a cell laid out as ten-by-six wants; an explicit corner is for a
+# building placed on its own, which no arithmetic describes.
+#
+# Sorted by (cell x, cell y, y, x), which for a grid row is exactly
+# (cell x, cell y, row, col) -- y rises with the row and x with the column --
+# and which also puts a one-off stamp where it actually sits rather than where
+# a `Row` column claims. That is the index order a lease persists, so appending
+# to a CSV claims fresh indexes only if it sorts last by THAT key, not by line
+# number. Indexes are per room, so a brand new room can never renumber another.
 my @placed;
 for my $m (@$mappings) {
     my $id = trim($m->{Building});
     next unless length $id;
     die "pi-mappings names room '$id', which pi-assigned does not declare\n"
         unless $room{$id};
-    push @placed, {
-        id  => $id,
-        cx  => trim($m->{"Chunk X"}) + 0,
-        cy  => trim($m->{"Chunk Y"}) + 0,
-        row => trim($m->{Row}) + 0,
-    };
+    my $cx = trim($m->{"Chunk X"}) + 0;
+    my $cy = trim($m->{"Chunk Y"}) + 0;
+    my ($fx, $fy) = (trim($m->{"Floor X"}), trim($m->{"Floor Y"}));
+    my $row = trim($m->{Row});
+
+    if (length $fx or length $fy) {
+        die "pi-mappings places '$id' in $cx,$cy with only one of Floor X / "
+          . "Floor Y; a one-off stamp needs both or neither\n"
+            unless length $fx and length $fy;
+        push @placed, {
+            id    => $id,
+            cx    => $cx,
+            cy    => $cy,
+            at    => [[$cx * $CELL + $fx, $cy * $CELL + $fy]],
+            where => "$cx,$cy at $fx,$fy",
+        };
+    } else {
+        die "pi-mappings places '$id' in $cx,$cy with no Row and no floor "
+          . "corner\n" unless length $row;
+        my $y = $cy * $CELL + $OFF_Y + ($row - 1) * $PITCH_Y;
+        push @placed, {
+            id    => $id,
+            cx    => $cx,
+            cy    => $cy,
+            at    => [map { [$cx * $CELL + $OFF_X + $_ * $PITCH_X, $y] }
+                          0 .. $COLS - 1],
+            where => "$cx,$cy row $row",
+        };
+    }
 }
 @placed = sort { $a->{cx} <=> $b->{cx}
               || $a->{cy} <=> $b->{cy}
-              || $a->{row} <=> $b->{row} } @placed;
+              || $a->{at}[0][1] <=> $b->{at}[0][1]
+              || $a->{at}[0][0] <=> $b->{at}[0][0] } @placed;
 
 my %locations;   # room id => [ [x, y, z], ... ] in index order
 my %rowsfor;     # room id => ["87,46 row 1", ...] for the comment
 for my $p (@placed) {
-    my $y = $p->{cy} * $CELL + $OFF_Y + ($p->{row} - 1) * $PITCH_Y;
-    for my $col (0 .. $COLS - 1) {
-        my $x = $p->{cx} * $CELL + $OFF_X + $col * $PITCH_X;
-        push @{$locations{$p->{id}}}, [$x, $y, 0];
-    }
-    push @{$rowsfor{$p->{id}}}, "$p->{cx},$p->{cy} row $p->{row}";
+    push @{$locations{$p->{id}}}, [@$_, 0] for @{$p->{at}};
+    push @{$rowsfor{$p->{id}}}, $p->{where};
 }
 for my $id (sort keys %room) {
     die "room '$id' is declared but never placed\n" unless $locations{$id};
@@ -209,16 +238,18 @@ local Core = PhunInteriors
 --     x = cellX * 256 + $OFF_X + $PITCH_X * col        col 0..$lastcol, west to east
 --     y = cellY * 256 +  $OFF_Y + $PITCH_Y * (row - 1)  row 1..6, north to south
 --
--- so every location below is arithmetic rather than a reading, and there is
--- not one fixup on the whole map. `perl Docs/roomcheck.pl` is what checks that
+-- so a cell laid out as ten by six needs no coordinate written down. A
+-- building placed on its own is not on that grid and states its floor corner
+-- outright -- `Floor X` and `Floor Y` in pi-mappings.csv, cell-local -- because
+-- no arithmetic describes it. `perl Docs/roomcheck.pl` is what checks either
 -- against the lotpacks, and it is not optional: the registry declares a
 -- FOOTPRINT and the map draws a FLOOR, and this map puts the south and east
 -- walls outside the floor, so `size` is the floor plus one in each direction.
 --
 -- The slot INDEX is the identity a lease persists, and it runs in map order --
--- (chunk x, chunk y, row, position in row) -- never in the order rows happen
--- to appear in a CSV. A map coordinate is stable under editing; a line number
--- is not.
+-- (chunk x, chunk y, y, x), which for a grid row is (cell, row, column) --
+-- never the order rows happen to appear in a CSV. A map coordinate is
+-- stable under editing; a line number is not.
 --
 -- No room states `requires`. It is a vehicle vocabulary and it only ever did
 -- one job beyond documentation -- refusing the wrecks a `match` predicate

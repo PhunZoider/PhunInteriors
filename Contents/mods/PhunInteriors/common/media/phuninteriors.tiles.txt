@@ -65,32 +65,249 @@ tileset
     tile
     {
         xy = 0,2
+        BlocksPlacement = 
+        CustomItem = PhunInteriors.TaxiPhone
         CustomName = TaxiPhones
-        Facing = W
+        Facing = E
         GroupName = TaxiPhones
+        HitByCar = 
+        IsMoveAble = 
+        StopCar = 
+        solid = 
     }
     // phuninteriors_01_17
     tile
     {
         xy = 1,2
+        BlocksPlacement = 
+        CustomItem = PhunInteriors.TaxiPhone
         CustomName = TaxiPhones
+        Eoffset = -1
         Facing = S
         GroupName = TaxiPhones
+        HitByCar = 
+        IsMoveAble = 
+        StopCar = 
+        solid = 
     }
     // phuninteriors_01_18
     tile
     {
         xy = 2,2
+        BlocksPlacement = 
+        CustomItem = PhunInteriors.TaxiPhone
         CustomName = TaxiPhones
+        Eoffset = -2
         Facing = W
         GroupName = TaxiPhones
+        HitByCar = 
+        IsMoveAble = 
+        StopCar = 
+        solid = 
     }
     // phuninteriors_01_19
     tile
     {
         xy = 3,2
+        BlocksPlacement = 
+        CustomItem = PhunInteriors.TaxiPhone
         CustomName = TaxiPhones
         Facing = N
         GroupName = TaxiPhones
+        HitByCar = 
+        IsMoveAble = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_24
+    tile
+    {
+        xy = 0,3
+        CustomItem = PhunInteriors.Manhole
+        CustomName = Manhole
+        Facing = N
+        GroupName = Manhole
+        IsMoveAble = 
+        MoveType = FloorRug
+        RenderLayer = Floor
+        attachedFloor = 
+    }
+    // phuninteriors_01_28
+    tile
+    {
+        xy = 4,3
+        CustomItem = PhunInteriors.Manhole
+        CustomName = Manhole
+        Facing = W
+        GroupName = Manhole
+        IsMoveAble = 
+        MoveType = FloorRug
+        RenderLayer = Floor
+        attachedFloor = 
+    }
+    // phuninteriors_01_29
+    tile
+    {
+        xy = 5,3
+        CustomItem = PhunInteriors.Manhole
+        CustomName = Manhole
+        Facing = S
+        GroupName = Manhole
+        IsMoveAble = 
+        MoveType = FloorRug
+        RenderLayer = Floor
+        attachedFloor = 
+    }
+    // phuninteriors_01_32
+    tile
+    {
+        xy = 0,4
+        CantClimb = 
+        HitByCar = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_33
+    tile
+    {
+        xy = 1,4
+        CantClimb = 
+        HitByCar = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_34
+    tile
+    {
+        xy = 2,4
+        CantClimb = 
+        HitByCar = 
+        IsHigh = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_35
+    tile
+    {
+        xy = 3,4
+        CantClimb = 
+        HitByCar = 
+        IsHigh = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_36
+    tile
+    {
+        xy = 4,4
+        CantClimb = 
+        HitByCar = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_37
+    tile
+    {
+        xy = 5,4
+        CantClimb = 
+        HitByCar = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_38
+    tile
+    {
+        xy = 6,4
+        CantClimb = 
+        HitByCar = 
+        IsHigh = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_39
+    tile
+    {
+        xy = 7,4
+        CantClimb = 
+        HitByCar = 
+        IsHigh = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_40
+    tile
+    {
+        xy = 0,5
+        CantClimb = 
+        HitByCar = 
+        IsHigh = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_41
+    tile
+    {
+        xy = 1,5
+        CantClimb = 
+        HitByCar = 
+        IsHigh = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_42
+    tile
+    {
+        xy = 2,5
+        CantClimb = 
+        HitByCar = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_43
+    tile
+    {
+        xy = 3,5
+        CantClimb = 
+        HitByCar = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_44
+    tile
+    {
+        xy = 4,5
+        CantClimb = 
+        HitByCar = 
+        IsHigh = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_45
+    tile
+    {
+        xy = 5,5
+        CantClimb = 
+        HitByCar = 
+        IsHigh = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_46
+    tile
+    {
+        xy = 6,5
+        CantClimb = 
+        HitByCar = 
+        StopCar = 
+        solid = 
+    }
+    // phuninteriors_01_47
+    tile
+    {
+        xy = 7,5
+        CantClimb = 
+        HitByCar = 
+        StopCar = 
+        solid = 
     }
 }

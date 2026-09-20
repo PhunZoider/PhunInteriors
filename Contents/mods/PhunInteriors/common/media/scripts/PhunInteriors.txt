@@ -1,5 +1,26 @@
 module PhunInteriors
 {
+
+    item TaxiPhone
+    {
+        DisplayCategory   = Furniture,
+        ItemType          = base:moveable,
+        Icon              = TaxiPhone,
+        Weight            = 250,
+        DisplayName       = Taxi Phone,
+        WorldObjectSprite = phuninteriors_01_16,
+    }
+
+    item Manhole
+    {
+        DisplayCategory   = Furniture,
+        ItemType          = base:moveable,
+        Icon              = Manhole,
+        Weight            = 250,
+        DisplayName       = Manhole Cover,
+        WorldObjectSprite = phuninteriors_01_28,
+    }    
+
     item RainReservoirKit
     {
         DisplayCategory = Material,
