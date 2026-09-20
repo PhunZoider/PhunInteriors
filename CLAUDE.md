@@ -733,6 +733,52 @@ shape (`size`, `spawn`, `front`, `cab`, `generator`, `selfPowered`,
 cell is roofed with a solid north wall and the other is open with a double
 door.
 
+**A room id is the label, slugged, and it says nothing about the shape.**
+`phun.room.Van_Mechanic` with `label = "Van - Mechanic"`, family first, and the
+`phun.room.` namespace kept. Three decisions, each with a reason worth keeping:
+
+- **The size is out of the id.** It used to be in it twice over -- the scheme
+  before last was `3x4_bookstore` and the one before this was
+  `Van_Mechanic_2x3` -- and it is the one *mutable* fact an id could carry.
+  Cells on this map get reworked and footprints change; an id is what a lease
+  persists, so a stale `_2x3` can never be corrected. It is also already a
+  column in the room list, two along from the id.
+- **Family first, in the label as well as the id**, so both sort into families.
+  `Mechanic Van` sorts under M and scatters the vans across eighty rows;
+  `Van - Mechanic` does not. Rooms come down sorted by id (`Admin.roomState`),
+  so the two orders agree.
+- **A family is a kind of HOLDER, never a room def and never a brand.** Van,
+  Step Van, Truck, Bus, Semi Trailer, Trailer, Container, Camper, RV, Tent.
+  Naming one after its def would make "family" mean two things in one column,
+  and it is the `requires` category error again: a fact about what is *in* the
+  room standing in for a fact about what *carries* it. The nine rooms with room
+  def `camping` are the case that settled it -- `Camping - X` was refused for
+  that reason, and because that def is itself a compromise (vanilla has no
+  lived-in-caravan room, so a camping *store* was the nearest). They split into
+  **Camper** for the towed and **RV** for the driven, which is a boundary the
+  contract already draws rather than a label: a towed camper has no cab to
+  leave into and a motorhome does, so the family line is exactly where `cab`
+  falls. `Winnebago` went at the same time, being a brand, and one the game
+  does not contain -- the mod vehicle is `WhennyagoInitiative`, a pun on it.
+  `Trailer` could not take the campers either way, because `Trailer_Medium` is
+  a `SemiTruckBox` room and `Trailer - Medium` would have collided.
+- **The prefix stays**, because a room id is a key in a registry shared with
+  third parties and `Tent` or `Bus` is exactly what somebody else would pick.
+  `registerRoom` warns on a redefinition rather than doing it silently, but the
+  live leases are re-pointed either way, and the docs tell third parties to
+  namespace theirs.
+
+**The id is not prose and must not become prose.** `Van - Mechanic` as the id
+was considered and refused: the label is editable at runtime in the room form
+and the id is what a lease persists, so two strings that look identical with
+opposite mutability is a trap. An underscored slug reads as a key. It follows
+that the label must never be *derived* from the id at runtime either -- they
+are set together once, in `Docs/pi-assigned.csv`, and diverge from there.
+
+Nothing in the lua parses a room id, splits one, or keys on the prefix, so this
+is a data decision rather than a code one: three CSV columns and a regenerate.
+It was taken while nothing had shipped, which is the only time it is free.
+
 **What a room deliberately does not fix is what is on the squares.** Wallpaper,
 carpet, overlays, fittings — those are captured in game, per slot, on first
 lease, so a map author can decorate the stamps differently and each is restored

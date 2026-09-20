@@ -1,103 +1,103 @@
 ﻿Chunk Column,Chunk Row,Chunk,Chunk X,Chunk Y,Row,Building,Room def,Vehicle scripts
-1,1,"87, 46",87,46,1,Van_2x3,shed,"Base.Van, Base.VanDeerValley, Base.VanJonesFabrication, Base.VanMetalheads, Base.VanOldMill, Base.VanRiversideFabrication, Base.VanSeats_Valkyrie, Base.Van_BugWipers, Base.Van_Locksmith  (+ every other Van*/StepVan* as matcher overflow)"
-1,1,"87, 46",87,46,2,Van_2x3,shed,"Base.Van, Base.VanDeerValley, Base.VanJonesFabrication, Base.VanMetalheads, Base.VanOldMill, Base.VanRiversideFabrication, Base.VanSeats_Valkyrie, Base.Van_BugWipers, Base.Van_Locksmith  (+ every other Van*/StepVan* as matcher overflow)"
-1,1,"87, 46",87,46,3,Van_Ambulance_2x3,medical,"Base.VanAmbulance (+ Base.90fordF350ambulance overflowing in from the bay)"
-1,1,"87, 46",87,46,4,Van_Armored_2x4,jewelrystorage,Base.87fordF700bank
-1,1,"87, 46",87,46,5,Van_ArtSupply_2x3,artstore,Base.Van_CraftSupplies
-1,1,"87, 46",87,46,6,Van_Bar_2x3,bar,"Base.Van_Charlemange_Beer, Base.Van_KnoxDisti"
-1,2,"87, 47",87,47,1,Van_Blacksmith_2x3,blacksmith,Base.Van_Blacksmith
-1,2,"87, 47",87,47,2,Van_Butcher_2x3,butcher,
-1,2,"87, 47",87,47,3,Van_Camper_2x4,campingstorage,"Base.63Type2Van, Base.63Type2VanHippie, Base.63Type2VanApocalypse, Base.63Type2VanMilitary"
-1,2,"87, 47",87,47,4,Van_Carpenter_2x3,carpentryworkshop,"Base.VanCarpenter, Base.VanJohnMcCoy, Base.VanMccoy, Base.VanMicheles, Base.VanRosewoodworking, Base.VanWPCarpentry"
-1,2,"87, 47",87,47,5,Van_Comms_2x3,radiostorage,"Base.VanKnoxCom, Base.VanRadio, Base.VanRadio_3N"
-1,2,"87, 47",87,47,6,Van_Construction_2x3,construction,"Base.VanBeckmans, Base.VanBuilder, Base.VanCoastToCoast, Base.VanKerrHomes, Base.VanPennSHam"
-1,3,"87, 48",87,48,1,Van_Electrical_2x3,electronicsstorage,"Base.Van_LectroMax, Base.VanPluggedInElectrics, Base.Van_VoltMojo"
-1,3,"87, 48",87,48,2,Van_Farms_2x3,farmstorage,Base.VanOvoFarm
-1,3,"87, 48",87,48,3,Van_Fossil_2x3,fossoil,Base.VanFossoil
-1,3,"87, 48",87,48,4,Van_Furniture_3x6,furniturestore,Base.87fordF700box
-1,3,"87, 48",87,48,5,Van_Gardener_2x3,gardenstore,"Base.VanGardener, Base.VanGardenGods, Base.VanLouisvilleLandscaping, Base.VanMooreMechanics, Base.VanTreyBaines"
-1,3,"87, 48",87,48,6,Van_GasElect_2x3,gasstore,"Base.VanKnobCreekGas, Base.VanUtility"
-2,1,"88, 46",88,46,1,Van_Glass_2x3,glassesstore,Base.Van_Glass
-2,1,"88, 46",88,46,2,Van_Greens_2x3,grocery,"Base.VanGreenes, Base.Van_Perfick_Potato"
-2,1,"88, 46",88,46,3,Van_Leather_2x3,leatherworkshop,Base.Van_Leather
-2,1,"88, 46",88,46,4,Van_Love_2x3,stripclubvip,"Base.VanSeats_LadyDelighter, Base.VanSeats_Mural, Base.VanSeats_Space, Base.VanSeats_Trippy, Base.Van_Transit"
-2,1,"88, 46",88,46,5,Van_Mail_2x3,post,Base.VanMail
-2,1,"88, 46",88,46,6,Van_Masonry_2x3,masonrystore,Base.Van_Masonry
-2,2,"88, 47",88,47,1,Van_Mechanic_2x3,mechanic,"Base.VanMechanic, Base.VanBrewsterHarbin, Base.VanKorshunovs, Base.VanMobileMechanics, Base.VanPlattAuto"
-2,2,"88, 47",88,47,2,Van_Plumbing_2x3,toolstore,Base.VanUncloggers
-2,2,"88, 47",88,47,3,Van_Police_2x3,policestorage,
-2,2,"88, 47",88,47,4,Van_Prison_2x3,prisoncells,Base.VanSeats_Prison
-2,2,"88, 47",88,47,5,Van_Seats_2x3,empty,"Base.VanSeats, Base.VanSeatsAirportShuttle, Base.VanSeats_Creature"
-2,2,"88, 47",88,47,6,Van_Seats_2x3,empty,"Base.VanSeats, Base.VanSeatsAirportShuttle, Base.VanSeats_Creature"
-2,3,"88, 48",88,48,1,Van_Spiffo_2x3,spiffoskitchen,Base.VanSpiffo
-2,3,"88, 48",88,48,2,Van_Tailor_2x3,tailoringworkshop,Base.Van_HeritageTailors
-2,3,"88, 48",88,48,3,Van_Welding_2x3,weldingstorage,"Base.VanMeltingPointMetal, Base.VanSchwabSheetMetal, Base.Van_MassGenFac"
-2,3,"88, 48",88,48,4,Ambulance_3x3,medical,"Base.90fordF350ambulance"
-2,3,"88, 48",88,48,5,Bus_3x9,shed,"Base.87fordB700military, Base.87fordB700prison, Base.87fordB700school  (all three as fallback overflow)"
-2,3,"88, 48",88,48,6,Bus_3x9,shed,"Base.87fordB700military, Base.87fordB700prison, Base.87fordB700school  (all three as fallback overflow)"
-3,1,"89,46",89,46,1,StepVan_3x4,storage,Base.StepVan  (+ StepVan* overflow)
-3,1,"89, 46",89,46,2,StepVan_3x4,storage,Base.StepVan  (+ StepVan* overflow)
-3,1,"89, 46",89,46,3,StepVan_Beer_3x4,beergarden,Base.StepVan_Genuine_Beer
-3,1,"89, 46",89,46,4,StepVan_Blacksmith_3x4,blacksmith,Base.StepVan_Blacksmith
-3,1,"89, 46",89,46,5,StepVan_Book_3x4,bookstore,Base.StepVan_MobileLibrary
-3,1,"89, 46",89,46,6,StepVan_Butcher_3x4,butcher,Base.StepVan_Butchers
-3,2,"89, 47",89,47,1,StepVan_Carpentry_3x4,carpentryworkshop,Base.StepVan_Jorgensen
-3,2,"89, 47",89,47,2,StepVan_Catering_3x4,cafeteriakitchen,"Base.StepVanAirportCatering, Base.StepVan_SouthEasternHosp"
-3,2,"89, 47",89,47,3,StepVan_Citr8_3x4,conveniencestore,"Base.StepVan_Citr8, Base.StepVan_Zippee"
-3,2,"89, 47",89,47,4,StepVan_Fish_3x4,catfish_dining,Base.StepVan_MarineBites
-3,2,"89, 47",89,47,5,StepVan_Florist_3x4,florist,Base.StepVan_Florist
-3,2,"89, 47",89,47,6,StepVan_Glass_3x4,glassmakingworkshop,Base.StepVan_Glass
-3,3,"89, 48",89,48,1,StepVan_Groceries_3x4,grocerystorage,Base.StepVan_Cereal
-3,3,"89, 48",89,48,2,StepVan_Laundry_3x4,laundry,Base.StepVan_HuangsLaundry
-3,3,"89, 48",89,48,3,StepVan_Logistics_3x4,poststorage,Base.StepVan_USL
-3,3,"89, 48",89,48,4,StepVan_Mail_3x4,captainoffice,Base.StepVanMail
-3,3,"89, 48",89,48,5,StepVan_Masonry_3x4,masonrystore,Base.StepVan_Masonry
-3,3,"89, 48",89,48,6,StepVan_Mechanic_3x4,mechanic,"Base.StepVan_LouisvilleMotorShop, Base.StepVan_Mechanic"
-3,4,"89, 49",89,49,1,StepVan_News_3x4,newspaperprint_herald,Base.StepVan_Heralds
-3,4,"89, 49",89,49,2,StepVan_Paint_3x4,paintershop,Base.StepVan_SouthEasternPaint
-3,4,"89, 49",89,49,3,StepVan_Plants_3x4,greenhouse,Base.StepVan_RandisPlants
-3,4,"89, 49",89,49,4,StepVan_Plonkies_3x4,gas2go,Base.StepVan_Plonkies
-3,4,"89, 49",89,49,5,StepVan_Propane_3x4,gasstorage,Base.StepVan_Propane
-3,4,"89, 49",89,49,6,StepVan_Repair_3x4,toolstore,Base.StepVan_CompleteRepairShop
-4,1,"90, 46",90,46,1,StepVan_Swat_3x4,policeswat,"Base.StepVan_LouisvilleSWAT, Base.87fordF700swat, Base.90fordF350SWAT"
-4,1,"90, 46",90,46,2,StepVan_Tailoring_3x4,tailoringstore,Base.StepVan_SmartKut
-4,1,"90, 46",90,46,3,StepVan_Whiskey_3x4,whiskeybottling,Base.StepVan_Scarlet
+1,1,"87, 46",87,46,1,Van,shed,"Base.Van, Base.VanDeerValley, Base.VanJonesFabrication, Base.VanMetalheads, Base.VanOldMill, Base.VanRiversideFabrication, Base.VanSeats_Valkyrie, Base.Van_BugWipers, Base.Van_Locksmith  (+ every other Van*/StepVan* as matcher overflow)"
+1,1,"87, 46",87,46,2,Van,shed,"Base.Van, Base.VanDeerValley, Base.VanJonesFabrication, Base.VanMetalheads, Base.VanOldMill, Base.VanRiversideFabrication, Base.VanSeats_Valkyrie, Base.Van_BugWipers, Base.Van_Locksmith  (+ every other Van*/StepVan* as matcher overflow)"
+1,1,"87, 46",87,46,3,Van_Ambulance,medical,Base.VanAmbulance (+ Base.90fordF350ambulance overflowing in from the bay)
+1,1,"87, 46",87,46,4,Truck_Armored,jewelrystorage,Base.87fordF700bank
+1,1,"87, 46",87,46,5,Van_Art_Supply,artstore,Base.Van_CraftSupplies
+1,1,"87, 46",87,46,6,Van_Alcohol,bar,"Base.Van_Charlemange_Beer, Base.Van_KnoxDisti"
+1,2,"87, 47",87,47,1,Van_Blacksmith,blacksmith,Base.Van_Blacksmith
+1,2,"87, 47",87,47,2,Van_Butcher,butcher,
+1,2,"87, 47",87,47,3,Van_VW_Camper,campingstorage,"Base.63Type2Van, Base.63Type2VanHippie, Base.63Type2VanApocalypse, Base.63Type2VanMilitary"
+1,2,"87, 47",87,47,4,Van_Carpenter,carpentryworkshop,"Base.VanCarpenter, Base.VanJohnMcCoy, Base.VanMccoy, Base.VanMicheles, Base.VanRosewoodworking, Base.VanWPCarpentry"
+1,2,"87, 47",87,47,5,Van_Comms,radiostorage,"Base.VanKnoxCom, Base.VanRadio, Base.VanRadio_3N"
+1,2,"87, 47",87,47,6,Van_Construction,construction,"Base.VanBeckmans, Base.VanBuilder, Base.VanCoastToCoast, Base.VanKerrHomes, Base.VanPennSHam"
+1,3,"87, 48",87,48,1,Van_Electrical,electronicsstorage,"Base.Van_LectroMax, Base.VanPluggedInElectrics, Base.Van_VoltMojo"
+1,3,"87, 48",87,48,2,Van_Farm,farmstorage,Base.VanOvoFarm
+1,3,"87, 48",87,48,3,Van_Fossil,fossoil,Base.VanFossoil
+1,3,"87, 48",87,48,4,Truck_Furniture,furniturestore,Base.87fordF700box
+1,3,"87, 48",87,48,5,Van_Gardening,gardenstore,"Base.VanGardener, Base.VanGardenGods, Base.VanLouisvilleLandscaping, Base.VanMooreMechanics, Base.VanTreyBaines"
+1,3,"87, 48",87,48,6,Van_Gas_and_Electric,gasstore,"Base.VanKnobCreekGas, Base.VanUtility"
+2,1,"88, 46",88,46,1,Van_Glass,glassesstore,Base.Van_Glass
+2,1,"88, 46",88,46,2,Van_Greens,grocery,"Base.VanGreenes, Base.Van_Perfick_Potato"
+2,1,"88, 46",88,46,3,Van_Leather,leatherworkshop,Base.Van_Leather
+2,1,"88, 46",88,46,4,Van_Love,stripclubvip,"Base.VanSeats_LadyDelighter, Base.VanSeats_Mural, Base.VanSeats_Space, Base.VanSeats_Trippy, Base.Van_Transit"
+2,1,"88, 46",88,46,5,Van_Mail,post,Base.VanMail
+2,1,"88, 46",88,46,6,Van_Masonry,masonrystore,Base.Van_Masonry
+2,2,"88, 47",88,47,1,Van_Mechanic,mechanic,"Base.VanMechanic, Base.VanBrewsterHarbin, Base.VanKorshunovs, Base.VanMobileMechanics, Base.VanPlattAuto"
+2,2,"88, 47",88,47,2,Van_Plumbing,toolstore,Base.VanUncloggers
+2,2,"88, 47",88,47,3,Van_Police,policestorage,
+2,2,"88, 47",88,47,4,Van_Prison,prisoncells,Base.VanSeats_Prison
+2,2,"88, 47",88,47,5,Van_Seats,empty,"Base.VanSeats, Base.VanSeatsAirportShuttle, Base.VanSeats_Creature"
+2,2,"88, 47",88,47,6,Van_Seats,empty,"Base.VanSeats, Base.VanSeatsAirportShuttle, Base.VanSeats_Creature"
+2,3,"88, 48",88,48,1,Van_Spiffo,spiffoskitchen,Base.VanSpiffo
+2,3,"88, 48",88,48,2,Van_Tailor,tailoringworkshop,Base.Van_HeritageTailors
+2,3,"88, 48",88,48,3,Van_Welding,weldingstorage,"Base.VanMeltingPointMetal, Base.VanSchwabSheetMetal, Base.Van_MassGenFac"
+2,3,"88, 48",88,48,4,Ambulance_Bay,medical,Base.90fordF350ambulance
+2,3,"88, 48",88,48,5,Bus,shed,"Base.87fordB700military, Base.87fordB700prison, Base.87fordB700school  (all three as fallback overflow)"
+2,3,"88, 48",88,48,6,Bus,shed,"Base.87fordB700military, Base.87fordB700prison, Base.87fordB700school  (all three as fallback overflow)"
+3,1,"89,46",89,46,1,Step_Van,storage,Base.StepVan  (+ StepVan* overflow)
+3,1,"89, 46",89,46,2,Step_Van,storage,Base.StepVan  (+ StepVan* overflow)
+3,1,"89, 46",89,46,3,Step_Van_Beer,beergarden,Base.StepVan_Genuine_Beer
+3,1,"89, 46",89,46,4,Step_Van_Blacksmith,blacksmith,Base.StepVan_Blacksmith
+3,1,"89, 46",89,46,5,Step_Van_Book,bookstore,Base.StepVan_MobileLibrary
+3,1,"89, 46",89,46,6,Step_Van_Butcher,butcher,Base.StepVan_Butchers
+3,2,"89, 47",89,47,1,Step_Van_Carpentry,carpentryworkshop,Base.StepVan_Jorgensen
+3,2,"89, 47",89,47,2,Step_Van_Catering,cafeteriakitchen,"Base.StepVanAirportCatering, Base.StepVan_SouthEasternHosp"
+3,2,"89, 47",89,47,3,Step_Van_Citr8,conveniencestore,"Base.StepVan_Citr8, Base.StepVan_Zippee"
+3,2,"89, 47",89,47,4,Step_Van_Fish,catfish_dining,Base.StepVan_MarineBites
+3,2,"89, 47",89,47,5,Step_Van_Florist,florist,Base.StepVan_Florist
+3,2,"89, 47",89,47,6,Step_Van_Glass,glassmakingworkshop,Base.StepVan_Glass
+3,3,"89, 48",89,48,1,Step_Van_Groceries,grocerystorage,Base.StepVan_Cereal
+3,3,"89, 48",89,48,2,Step_Van_Laundry,laundry,Base.StepVan_HuangsLaundry
+3,3,"89, 48",89,48,3,Step_Van_Logistics,poststorage,Base.StepVan_USL
+3,3,"89, 48",89,48,4,Step_Van_Mail,captainoffice,Base.StepVanMail
+3,3,"89, 48",89,48,5,Step_Van_Masonry,masonrystore,Base.StepVan_Masonry
+3,3,"89, 48",89,48,6,Step_Van_Mechanic,mechanic,"Base.StepVan_LouisvilleMotorShop, Base.StepVan_Mechanic"
+3,4,"89, 49",89,49,1,Step_Van_News,newspaperprint_herald,Base.StepVan_Heralds
+3,4,"89, 49",89,49,2,Step_Van_Paint,paintershop,Base.StepVan_SouthEasternPaint
+3,4,"89, 49",89,49,3,Step_Van_Plants,greenhouse,Base.StepVan_RandisPlants
+3,4,"89, 49",89,49,4,Step_Van_Plonkies,gas2go,Base.StepVan_Plonkies
+3,4,"89, 49",89,49,5,Step_Van_Propane,gasstorage,Base.StepVan_Propane
+3,4,"89, 49",89,49,6,Step_Van_Repair,toolstore,Base.StepVan_CompleteRepairShop
+4,1,"90, 46",90,46,1,Step_Van_SWAT,policeswat,"Base.StepVan_LouisvilleSWAT, Base.87fordF700swat, Base.90fordF350SWAT"
+4,1,"90, 46",90,46,2,Step_Van_Tailoring,tailoringstore,Base.StepVan_SmartKut
+4,1,"90, 46",90,46,3,Step_Van_Whiskey,whiskeybottling,Base.StepVan_Scarlet
 4,1,"90, 46",90,46,4,,,
 4,1,"90, 46",90,46,5,,,
 4,1,"90, 46",90,46,6,,,
-4,2,"90, 47",90,47,1,Trailer_3x13,warehouse,"Base.SemiTrailerVan, Base.W900_Container"
-4,2,"90, 47",90,47,2,Trailer_3x13,warehouse,"Base.SemiTrailerVan, Base.W900_Container"
-4,2,"90, 47",90,47,3,Trailer_2_3x13,factorystorage,Base.SemiTrailerVanCattle
-4,2,"90, 47",90,47,4,Trailer_2_3x13,factorystorage,Base.SemiTrailerVanCattle
-4,2,"90, 47",90,47,5,Trailer_3_3x13,waterstorage,Base.SemiTrailerVan_mil
-4,2,"90, 47",90,47,6,Trailer_3_3x13,waterstorage,Base.SemiTrailerVan_mil
-4,3,"90, 48",90,48,1,Winnebago_3x9,camping,Base.RollingRefuge
-4,3,"90, 48",90,48,2,Winnebago_3x9,camping,Base.RollingRefuge 
-4,3,"90, 48",90,48,3,Caravan_3x9,camping,Base.Trailer54FlyingCloud22
-4,3,"90, 48",90,48,4,Caravan_3x9,camping,Base.Trailer54FlyingCloud22
-4,3,"90, 48",90,48,5,Caravan_3x5,camping,Base.Trailer61Bambi16
-4,3,"90, 48",90,48,6,Caravan_3x5,camping,Base.Trailer61Bambi16
-4,4,"90, 49",90,49,1,Trailer_3x9,storage,Base.SemiTruckBox
-4,4,"90, 49",90,49,2,Trailer_3x9,storage,Base.SemiTruckBox_mil
-4,4,"90, 49",90,49,3,Trailer_Livestock_3x4,barn,"Base.Trailer_Livestock, Base.Trailer_Horsebox"
-4,4,"90, 49",90,49,4,Trailer_Livestock_3x4,barn,"Base.Trailer_Livestock, Base.Trailer_Horsebox"
-4,4,"90, 49",90,49,5,Trailer_Military_3x9,armystorage,"Base.TrailerM128van, Base.TrailerM129van"
-4,4,"90, 49",90,49,6,Trailer_Military_3x9,armystorage,"Base.TrailerM128van, Base.TrailerM129van"
-5,1,"91, 46",91,46,1,Caravan_2x3,camping,Base.Trailer87Scamp13
-5,1,"91, 46",91,46,2,Caravan_2x4,camping,Base.Trailer87Scamp16
-5,1,"91, 46",91,46,3,Caravan_Dasher_2x4,camping,Base.DashRoamer
-5,1,"91, 46",91,46,4,Caravan_WB_3x5,camping,Base.WhennyagoInitiative
-5,1,"91, 46",91,46,5,Tent_2x3,empty,"Base.TentGreen, Base.TentBlue, Base.TentBrown, Base.TentYellow"
-5,1,"91, 46",91,46,6,Military_4x4,armytent,"Base.86chevyM1010, Base.86chevyM1031"
-5,2,"91, 47",91,47,1,K15_GAGE_4x5,armysurplus,"Base.84gageV300apc, Base.84gageV300fsv, Base.lockMartM577"
-5,2,"91, 47",91,47,2,RV_3x9,camping,
-5,2,"91, 47",91,47,3,RV2_3x9,camping,
-5,2,"91, 47",91,47,4,Container_3x6,warehouse,"Base.isoContainer2, Base.TrailerM747lowbed"
-5,2,"91, 47",91,47,5,Container2_3x6,factorystorage,"Base.isoContainer4, Base.TrailerM747lowbed"
-5,2,"91, 47",91,47,6,Container3_3x6,storageunit,"Base.isoContainer5, Base.TrailerM747lowbed"
-5,3,"91, 48",91,48,1,Bus_Military_3x9,oldarmy,Base.87fordB700military
-5,3,"91, 48",91,48,2,Bus_Military_3x9,oldarmy,Base.87fordB700military
-5,3,"91, 48",91,48,3,Bus_Prison_3x9,prisoncells,Base.87fordB700prison
-5,3,"91, 48",91,48,4,Bus_Prison_3x9,prisoncells,Base.87fordB700prison
-5,3,"91, 48",91,48,5,Bus_School_3x9,elementaryschool,Base.87fordB700school
-5,3,"91, 48",91,48,6,Bus_School_3x9,elementaryschool,Base.87fordB700school
+4,2,"90, 47",90,47,1,Semi_Trailer_Warehouse,warehouse,"Base.SemiTrailerVan, Base.W900_Container"
+4,2,"90, 47",90,47,2,Semi_Trailer_Warehouse,warehouse,"Base.SemiTrailerVan, Base.W900_Container"
+4,2,"90, 47",90,47,3,Semi_Trailer_Factory,factorystorage,Base.SemiTrailerVanCattle
+4,2,"90, 47",90,47,4,Semi_Trailer_Factory,factorystorage,Base.SemiTrailerVanCattle
+4,2,"90, 47",90,47,5,Semi_Trailer_Water,waterstorage,Base.SemiTrailerVan_mil
+4,2,"90, 47",90,47,6,Semi_Trailer_Water,waterstorage,Base.SemiTrailerVan_mil
+4,3,"90, 48",90,48,1,RV_Large,camping,Base.RollingRefuge
+4,3,"90, 48",90,48,2,RV_Large,camping,Base.RollingRefuge 
+4,3,"90, 48",90,48,3,Camper_Large,camping,Base.Trailer54FlyingCloud22
+4,3,"90, 48",90,48,4,Camper_Large,camping,Base.Trailer54FlyingCloud22
+4,3,"90, 48",90,48,5,Camper_Medium,camping,Base.Trailer61Bambi16
+4,3,"90, 48",90,48,6,Camper_Medium,camping,Base.Trailer61Bambi16
+4,4,"90, 49",90,49,1,Trailer_Medium,storage,Base.SemiTruckBox
+4,4,"90, 49",90,49,2,Trailer_Medium,storage,Base.SemiTruckBox_mil
+4,4,"90, 49",90,49,3,Trailer_Livestock,barn,"Base.Trailer_Livestock, Base.Trailer_Horsebox"
+4,4,"90, 49",90,49,4,Trailer_Livestock,barn,"Base.Trailer_Livestock, Base.Trailer_Horsebox"
+4,4,"90, 49",90,49,5,Trailer_Military,armystorage,"Base.TrailerM128van, Base.TrailerM129van"
+4,4,"90, 49",90,49,6,Trailer_Military,armystorage,"Base.TrailerM128van, Base.TrailerM129van"
+5,1,"91, 46",91,46,1,Camper_Mini,camping,Base.Trailer87Scamp13
+5,1,"91, 46",91,46,2,Camper_Small,camping,Base.Trailer87Scamp16
+5,1,"91, 46",91,46,3,Camper_Dasher,camping,Base.DashRoamer
+5,1,"91, 46",91,46,4,RV_Small,camping,Base.WhennyagoInitiative
+5,1,"91, 46",91,46,5,Tent,empty,"Base.TentGreen, Base.TentBlue, Base.TentBrown, Base.TentYellow"
+5,1,"91, 46",91,46,6,Military_Box,armytent,"Base.86chevyM1010, Base.86chevyM1031"
+5,2,"91, 47",91,47,1,GAGE_K15,armysurplus,"Base.84gageV300apc, Base.84gageV300fsv, Base.lockMartM577"
+5,2,"91, 47",91,47,2,RV_Spare_1,camping,
+5,2,"91, 47",91,47,3,RV_Spare_2,camping,
+5,2,"91, 47",91,47,4,Container_Warehouse,warehouse,"Base.isoContainer2, Base.TrailerM747lowbed"
+5,2,"91, 47",91,47,5,Container_Factory,factorystorage,"Base.isoContainer4, Base.TrailerM747lowbed"
+5,2,"91, 47",91,47,6,Container_Storage,storageunit,"Base.isoContainer5, Base.TrailerM747lowbed"
+5,3,"91, 48",91,48,1,Bus_Military,oldarmy,Base.87fordB700military
+5,3,"91, 48",91,48,2,Bus_Military,oldarmy,Base.87fordB700military
+5,3,"91, 48",91,48,3,Bus_Prison,prisoncells,Base.87fordB700prison
+5,3,"91, 48",91,48,4,Bus_Prison,prisoncells,Base.87fordB700prison
+5,3,"91, 48",91,48,5,Bus_School,elementaryschool,Base.87fordB700school
+5,3,"91, 48",91,48,6,Bus_School,elementaryschool,Base.87fordB700school

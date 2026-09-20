@@ -120,7 +120,7 @@ for my $id (sort keys %room) {
 # settles it. A room reached by items takes no vehicles and vice versa:
 # Core.roomsForVehicle walks only vehicle bindings and roomsForObject only
 # object ones, so the kinds cannot cross.
-my %ITEM_ROOM = map { $_ => 1 } ("Tent_2x3");
+my %ITEM_ROOM = map { $_ => 1 } ("Tent");
 
 my (%scripts, %items);
 for my $b (@$bindings) {

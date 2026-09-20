@@ -130,28 +130,34 @@ function UI:createChildren()
     -- most often leads to and the one that used to be a second list on screen.
     self.list:setOnMouseDoubleClick(self, self.onSlotsClick)
 
-    self:addListColumn(getText("IGUI_PhunInteriors_Col_Room"), 0, {field = "id"})
-    -- The label, and it is here because its absence read as a bug: an admin
-    -- who renames a room and sees nothing change in the only list that names
-    -- rooms concludes the rename did not take. It is also the only human name
-    -- a room has -- "Bus - Military" against `phun.room.Bus_Military_3x9` --
-    -- and the id column is sorted by a string most of which is boilerplate.
-    self:addListColumn(getText("IGUI_PhunInteriors_Col_Label"), 0.28, {
-        field = "label",
-        color = {0.85, 0.85, 0.75}
+    -- The label leads, and the id follows it. They say the same thing -- "Van
+    -- - Mechanic" against `phun.room.Van_Mechanic` -- but one of them opens
+    -- with ten characters of namespace that are identical on every row, so an
+    -- id column in front is a column you read past rather than read. Putting
+    -- the name first is also what gives `label` a job: before this it was a
+    -- near duplicate of the id sitting in second place, which is why renaming
+    -- a room appeared to change nothing.
+    --
+    -- The id keeps a full width column rather than being squeezed, because it
+    -- is what you copy for `PhunInteriors.admin("editRoom", {room = ...})` and
+    -- what a binding names, and a truncated id is no use for either.
+    self:addListColumn(getText("IGUI_PhunInteriors_Col_Label"), 0, {field = "label"})
+    self:addListColumn(getText("IGUI_PhunInteriors_Col_Room"), 0.24, {
+        field = "id",
+        color = {0.65, 0.65, 0.65}
     })
-    self:addListColumn(getText("IGUI_PhunInteriors_Col_Size"), 0.44, {
+    self:addListColumn(getText("IGUI_PhunInteriors_Col_Size"), 0.48, {
         field = "size",
         color = {0.7, 0.75, 0.8}
     })
-    self:addListColumn(getText("IGUI_PhunInteriors_Col_Slots"), 0.50, {field = "slots"})
-    self:addListColumn(getText("IGUI_PhunInteriors_Col_Free"), 0.56, {field = "free"})
-    self:addListColumn(getText("IGUI_PhunInteriors_Col_Exit"), 0.62, {
+    self:addListColumn(getText("IGUI_PhunInteriors_Col_Slots"), 0.54, {field = "slots"})
+    self:addListColumn(getText("IGUI_PhunInteriors_Col_Free"), 0.59, {field = "free"})
+    self:addListColumn(getText("IGUI_PhunInteriors_Col_Exit"), 0.64, {
         field = "exit",
         color = {0.8, 0.8, 0.65}
     })
-    self:addListColumn(getText("IGUI_PhunInteriors_Col_Power"), 0.71, {field = "power"})
-    self:addListColumn(getText("IGUI_PhunInteriors_Col_Vehicles"), 0.80, {
+    self:addListColumn(getText("IGUI_PhunInteriors_Col_Power"), 0.72, {field = "power"})
+    self:addListColumn(getText("IGUI_PhunInteriors_Col_Vehicles"), 0.81, {
         field = "reach",
         color = {0.7, 0.7, 0.7}
     })

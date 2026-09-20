@@ -49,7 +49,7 @@ local function registerRooms()
 
     -- Ambulance Bay -- floor 3x3, 10 slots, room def 'medical'.
     -- Stamped at 88,48 row 4.
-    Core.registerRoom("phun.room.Ambulance_3x3", {
+    Core.registerRoom("phun.room.Ambulance_Bay", {
         label = "Ambulance Bay",
         source = SOURCE,
         size = {w = 4, h = 4},
@@ -73,7 +73,7 @@ local function registerRooms()
 
     -- Bus -- floor 3x9, 20 slots, room def 'shed'.
     -- Stamped at 88,48 row 5, 88,48 row 6.
-    Core.registerRoom("phun.room.Bus_3x9", {
+    Core.registerRoom("phun.room.Bus", {
         label = "Bus",
         source = SOURCE,
         size = {w = 4, h = 10},
@@ -106,7 +106,7 @@ local function registerRooms()
 
     -- Bus - Military -- floor 3x9, 20 slots, room def 'oldarmy'.
     -- Stamped at 91,48 row 1, 91,48 row 2.
-    Core.registerRoom("phun.room.Bus_Military_3x9", {
+    Core.registerRoom("phun.room.Bus_Military", {
         label = "Bus - Military",
         source = SOURCE,
         size = {w = 4, h = 10},
@@ -140,7 +140,7 @@ local function registerRooms()
 
     -- Bus - Prison -- floor 3x9, 20 slots, room def 'prisoncells'.
     -- Stamped at 91,48 row 3, 91,48 row 4.
-    Core.registerRoom("phun.room.Bus_Prison_3x9", {
+    Core.registerRoom("phun.room.Bus_Prison", {
         label = "Bus - Prison",
         source = SOURCE,
         size = {w = 4, h = 10},
@@ -173,7 +173,7 @@ local function registerRooms()
 
     -- Bus - School -- floor 3x9, 20 slots, room def 'elementaryschool'.
     -- Stamped at 91,48 row 5, 91,48 row 6.
-    Core.registerRoom("phun.room.Bus_School_3x9", {
+    Core.registerRoom("phun.room.Bus_School", {
         label = "Bus - School",
         source = SOURCE,
         size = {w = 4, h = 10},
@@ -205,89 +205,33 @@ local function registerRooms()
         }
     })
 
-    -- Caravan - Mini -- floor 2x3, 10 slots, room def 'camping'.
-    -- Stamped at 91,46 row 1.
-    Core.registerRoom("phun.room.Caravan_2x3", {
-        label = "Caravan - Mini",
-        source = SOURCE,
-        size = {w = 3, h = 4},
-        spawn = {x = 1, y = 1},
-        front = "north",
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {23311, 11781, 0},
-            [1] = {23336, 11781, 0},
-            [2] = {23361, 11781, 0},
-            [3] = {23386, 11781, 0},
-            [4] = {23411, 11781, 0},
-            [5] = {23436, 11781, 0},
-            [6] = {23461, 11781, 0},
-            [7] = {23486, 11781, 0},
-            [8] = {23511, 11781, 0},
-            [9] = {23536, 11781, 0}
-        }
-    })
-
-    -- Caravan - Small -- floor 2x4, 10 slots, room def 'camping'.
-    -- Stamped at 91,46 row 2.
-    Core.registerRoom("phun.room.Caravan_2x4", {
-        label = "Caravan - Small",
+    -- Camper - Dasher -- floor 2x4, 10 slots, room def 'camping'.
+    -- Stamped at 91,46 row 3.
+    Core.registerRoom("phun.room.Camper_Dasher", {
+        label = "Camper - Dasher",
         source = SOURCE,
         size = {w = 3, h = 5},
         spawn = {x = 1, y = 1},
         front = "north",
         generator = {x = 1, y = 17, z = 0},
         locations = {
-            [0] = {23311, 11823, 0},
-            [1] = {23336, 11823, 0},
-            [2] = {23361, 11823, 0},
-            [3] = {23386, 11823, 0},
-            [4] = {23411, 11823, 0},
-            [5] = {23436, 11823, 0},
-            [6] = {23461, 11823, 0},
-            [7] = {23486, 11823, 0},
-            [8] = {23511, 11823, 0},
-            [9] = {23536, 11823, 0}
+            [0] = {23311, 11865, 0},
+            [1] = {23336, 11865, 0},
+            [2] = {23361, 11865, 0},
+            [3] = {23386, 11865, 0},
+            [4] = {23411, 11865, 0},
+            [5] = {23436, 11865, 0},
+            [6] = {23461, 11865, 0},
+            [7] = {23486, 11865, 0},
+            [8] = {23511, 11865, 0},
+            [9] = {23536, 11865, 0}
         }
     })
 
-    -- Caravan - Medium -- floor 3x5, 20 slots, room def 'camping'.
-    -- Stamped at 90,48 row 5, 90,48 row 6.
-    Core.registerRoom("phun.room.Caravan_3x5", {
-        label = "Caravan - Medium",
-        source = SOURCE,
-        size = {w = 4, h = 6},
-        spawn = {x = 1, y = 1},
-        front = "north",
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {23055, 12461, 0},
-            [1] = {23080, 12461, 0},
-            [2] = {23105, 12461, 0},
-            [3] = {23130, 12461, 0},
-            [4] = {23155, 12461, 0},
-            [5] = {23180, 12461, 0},
-            [6] = {23205, 12461, 0},
-            [7] = {23230, 12461, 0},
-            [8] = {23255, 12461, 0},
-            [9] = {23280, 12461, 0},
-            [10] = {23055, 12503, 0},
-            [11] = {23080, 12503, 0},
-            [12] = {23105, 12503, 0},
-            [13] = {23130, 12503, 0},
-            [14] = {23155, 12503, 0},
-            [15] = {23180, 12503, 0},
-            [16] = {23205, 12503, 0},
-            [17] = {23230, 12503, 0},
-            [18] = {23255, 12503, 0},
-            [19] = {23280, 12503, 0}
-        }
-    })
-
-    -- Caravan - Large -- floor 3x9, 20 slots, room def 'camping'.
+    -- Camper - Large -- floor 3x9, 20 slots, room def 'camping'.
     -- Stamped at 90,48 row 3, 90,48 row 4.
-    Core.registerRoom("phun.room.Caravan_3x9", {
-        label = "Caravan - Large",
+    Core.registerRoom("phun.room.Camper_Large", {
+        label = "Camper - Large",
         source = SOURCE,
         size = {w = 4, h = 10},
         spawn = {x = 1, y = 1},
@@ -317,56 +261,89 @@ local function registerRooms()
         }
     })
 
-    -- Caravan - Dasher -- floor 2x4, 10 slots, room def 'camping'.
-    -- Stamped at 91,46 row 3.
-    Core.registerRoom("phun.room.Caravan_Dasher_2x4", {
-        label = "Caravan - Dasher",
-        source = SOURCE,
-        size = {w = 3, h = 5},
-        spawn = {x = 1, y = 1},
-        front = "north",
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {23311, 11865, 0},
-            [1] = {23336, 11865, 0},
-            [2] = {23361, 11865, 0},
-            [3] = {23386, 11865, 0},
-            [4] = {23411, 11865, 0},
-            [5] = {23436, 11865, 0},
-            [6] = {23461, 11865, 0},
-            [7] = {23486, 11865, 0},
-            [8] = {23511, 11865, 0},
-            [9] = {23536, 11865, 0}
-        }
-    })
-
-    -- Winnebago - Small -- floor 3x5, 10 slots, room def 'camping'.
-    -- Stamped at 91,46 row 4.
-    Core.registerRoom("phun.room.Caravan_WB_3x5", {
-        label = "Winnebago - Small",
+    -- Camper - Medium -- floor 3x5, 20 slots, room def 'camping'.
+    -- Stamped at 90,48 row 5, 90,48 row 6.
+    Core.registerRoom("phun.room.Camper_Medium", {
+        label = "Camper - Medium",
         source = SOURCE,
         size = {w = 4, h = 6},
         spawn = {x = 1, y = 1},
         front = "north",
         generator = {x = 1, y = 17, z = 0},
         locations = {
-            [0] = {23311, 11907, 0},
-            [1] = {23336, 11907, 0},
-            [2] = {23361, 11907, 0},
-            [3] = {23386, 11907, 0},
-            [4] = {23411, 11907, 0},
-            [5] = {23436, 11907, 0},
-            [6] = {23461, 11907, 0},
-            [7] = {23486, 11907, 0},
-            [8] = {23511, 11907, 0},
-            [9] = {23536, 11907, 0}
+            [0] = {23055, 12461, 0},
+            [1] = {23080, 12461, 0},
+            [2] = {23105, 12461, 0},
+            [3] = {23130, 12461, 0},
+            [4] = {23155, 12461, 0},
+            [5] = {23180, 12461, 0},
+            [6] = {23205, 12461, 0},
+            [7] = {23230, 12461, 0},
+            [8] = {23255, 12461, 0},
+            [9] = {23280, 12461, 0},
+            [10] = {23055, 12503, 0},
+            [11] = {23080, 12503, 0},
+            [12] = {23105, 12503, 0},
+            [13] = {23130, 12503, 0},
+            [14] = {23155, 12503, 0},
+            [15] = {23180, 12503, 0},
+            [16] = {23205, 12503, 0},
+            [17] = {23230, 12503, 0},
+            [18] = {23255, 12503, 0},
+            [19] = {23280, 12503, 0}
         }
     })
 
-    -- Container 2 -- floor 3x6, 10 slots, room def 'factorystorage'.
+    -- Camper - Mini -- floor 2x3, 10 slots, room def 'camping'.
+    -- Stamped at 91,46 row 1.
+    Core.registerRoom("phun.room.Camper_Mini", {
+        label = "Camper - Mini",
+        source = SOURCE,
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
+        front = "north",
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23311, 11781, 0},
+            [1] = {23336, 11781, 0},
+            [2] = {23361, 11781, 0},
+            [3] = {23386, 11781, 0},
+            [4] = {23411, 11781, 0},
+            [5] = {23436, 11781, 0},
+            [6] = {23461, 11781, 0},
+            [7] = {23486, 11781, 0},
+            [8] = {23511, 11781, 0},
+            [9] = {23536, 11781, 0}
+        }
+    })
+
+    -- Camper - Small -- floor 2x4, 10 slots, room def 'camping'.
+    -- Stamped at 91,46 row 2.
+    Core.registerRoom("phun.room.Camper_Small", {
+        label = "Camper - Small",
+        source = SOURCE,
+        size = {w = 3, h = 5},
+        spawn = {x = 1, y = 1},
+        front = "north",
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23311, 11823, 0},
+            [1] = {23336, 11823, 0},
+            [2] = {23361, 11823, 0},
+            [3] = {23386, 11823, 0},
+            [4] = {23411, 11823, 0},
+            [5] = {23436, 11823, 0},
+            [6] = {23461, 11823, 0},
+            [7] = {23486, 11823, 0},
+            [8] = {23511, 11823, 0},
+            [9] = {23536, 11823, 0}
+        }
+    })
+
+    -- Container - Factory -- floor 3x6, 10 slots, room def 'factorystorage'.
     -- Stamped at 91,47 row 5.
-    Core.registerRoom("phun.room.Container2_3x6", {
-        label = "Container 2",
+    Core.registerRoom("phun.room.Container_Factory", {
+        label = "Container - Factory",
         source = SOURCE,
         size = {w = 4, h = 7},
         spawn = {x = 1, y = 1},
@@ -386,10 +363,10 @@ local function registerRooms()
         }
     })
 
-    -- Container 3 -- floor 3x6, 10 slots, room def 'storageunit'.
+    -- Container - Storage -- floor 3x6, 10 slots, room def 'storageunit'.
     -- Stamped at 91,47 row 6.
-    Core.registerRoom("phun.room.Container3_3x6", {
-        label = "Container 3",
+    Core.registerRoom("phun.room.Container_Storage", {
+        label = "Container - Storage",
         source = SOURCE,
         size = {w = 4, h = 7},
         spawn = {x = 1, y = 1},
@@ -409,10 +386,10 @@ local function registerRooms()
         }
     })
 
-    -- Container -- floor 3x6, 10 slots, room def 'warehouse'.
+    -- Container - Warehouse -- floor 3x6, 10 slots, room def 'warehouse'.
     -- Stamped at 91,47 row 4.
-    Core.registerRoom("phun.room.Container_3x6", {
-        label = "Container",
+    Core.registerRoom("phun.room.Container_Warehouse", {
+        label = "Container - Warehouse",
         source = SOURCE,
         size = {w = 4, h = 7},
         spawn = {x = 1, y = 1},
@@ -434,7 +411,7 @@ local function registerRooms()
 
     -- GAGE K15 -- floor 4x5, 10 slots, room def 'armysurplus'.
     -- Stamped at 91,47 row 1.
-    Core.registerRoom("phun.room.K15_GAGE_4x5", {
+    Core.registerRoom("phun.room.GAGE_K15", {
         label = "GAGE K15",
         source = SOURCE,
         size = {w = 5, h = 6},
@@ -458,7 +435,7 @@ local function registerRooms()
 
     -- Military Box -- floor 4x4, 10 slots, room def 'armytent'.
     -- Stamped at 91,46 row 6.
-    Core.registerRoom("phun.room.Military_4x4", {
+    Core.registerRoom("phun.room.Military_Box", {
         label = "Military Box",
         source = SOURCE,
         size = {w = 5, h = 5},
@@ -479,10 +456,10 @@ local function registerRooms()
         }
     })
 
-    -- RV 2 -- floor 3x9, 10 slots, room def 'camping'.
-    -- Stamped at 91,47 row 3.
-    Core.registerRoom("phun.room.RV2_3x9", {
-        label = "RV 2",
+    -- RV - Large -- floor 3x9, 20 slots, room def 'camping'.
+    -- Stamped at 90,48 row 1, 90,48 row 2.
+    Core.registerRoom("phun.room.RV_Large", {
+        label = "RV - Large",
         source = SOURCE,
         size = {w = 4, h = 10},
         spawn = {x = 1, y = 1},
@@ -490,23 +467,57 @@ local function registerRooms()
         cab = true,
         generator = {x = 1, y = 17, z = 0},
         locations = {
-            [0] = {23311, 12121, 0},
-            [1] = {23336, 12121, 0},
-            [2] = {23361, 12121, 0},
-            [3] = {23386, 12121, 0},
-            [4] = {23411, 12121, 0},
-            [5] = {23436, 12121, 0},
-            [6] = {23461, 12121, 0},
-            [7] = {23486, 12121, 0},
-            [8] = {23511, 12121, 0},
-            [9] = {23536, 12121, 0}
+            [0] = {23055, 12293, 0},
+            [1] = {23080, 12293, 0},
+            [2] = {23105, 12293, 0},
+            [3] = {23130, 12293, 0},
+            [4] = {23155, 12293, 0},
+            [5] = {23180, 12293, 0},
+            [6] = {23205, 12293, 0},
+            [7] = {23230, 12293, 0},
+            [8] = {23255, 12293, 0},
+            [9] = {23280, 12293, 0},
+            [10] = {23055, 12335, 0},
+            [11] = {23080, 12335, 0},
+            [12] = {23105, 12335, 0},
+            [13] = {23130, 12335, 0},
+            [14] = {23155, 12335, 0},
+            [15] = {23180, 12335, 0},
+            [16] = {23205, 12335, 0},
+            [17] = {23230, 12335, 0},
+            [18] = {23255, 12335, 0},
+            [19] = {23280, 12335, 0}
         }
     })
 
-    -- RV -- floor 3x9, 10 slots, room def 'camping'.
+    -- RV - Small -- floor 3x5, 10 slots, room def 'camping'.
+    -- Stamped at 91,46 row 4.
+    Core.registerRoom("phun.room.RV_Small", {
+        label = "RV - Small",
+        source = SOURCE,
+        size = {w = 4, h = 6},
+        spawn = {x = 1, y = 1},
+        front = "north",
+        cab = true,
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23311, 11907, 0},
+            [1] = {23336, 11907, 0},
+            [2] = {23361, 11907, 0},
+            [3] = {23386, 11907, 0},
+            [4] = {23411, 11907, 0},
+            [5] = {23436, 11907, 0},
+            [6] = {23461, 11907, 0},
+            [7] = {23486, 11907, 0},
+            [8] = {23511, 11907, 0},
+            [9] = {23536, 11907, 0}
+        }
+    })
+
+    -- RV - Spare 1 -- floor 3x9, 10 slots, room def 'camping'.
     -- Stamped at 91,47 row 2.
-    Core.registerRoom("phun.room.RV_3x9", {
-        label = "RV",
+    Core.registerRoom("phun.room.RV_Spare_1", {
+        label = "RV - Spare 1",
         source = SOURCE,
         size = {w = 4, h = 10},
         spawn = {x = 1, y = 1},
@@ -527,9 +538,132 @@ local function registerRooms()
         }
     })
 
+    -- RV - Spare 2 -- floor 3x9, 10 slots, room def 'camping'.
+    -- Stamped at 91,47 row 3.
+    Core.registerRoom("phun.room.RV_Spare_2", {
+        label = "RV - Spare 2",
+        source = SOURCE,
+        size = {w = 4, h = 10},
+        spawn = {x = 1, y = 1},
+        front = "south",
+        cab = true,
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23311, 12121, 0},
+            [1] = {23336, 12121, 0},
+            [2] = {23361, 12121, 0},
+            [3] = {23386, 12121, 0},
+            [4] = {23411, 12121, 0},
+            [5] = {23436, 12121, 0},
+            [6] = {23461, 12121, 0},
+            [7] = {23486, 12121, 0},
+            [8] = {23511, 12121, 0},
+            [9] = {23536, 12121, 0}
+        }
+    })
+
+    -- Semi Trailer - Factory -- floor 3x13, 20 slots, room def 'factorystorage'.
+    -- Stamped at 90,47 row 3, 90,47 row 4.
+    Core.registerRoom("phun.room.Semi_Trailer_Factory", {
+        label = "Semi Trailer - Factory",
+        source = SOURCE,
+        size = {w = 4, h = 14},
+        spawn = {x = 1, y = 1},
+        front = "south",
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23055, 12121, 0},
+            [1] = {23080, 12121, 0},
+            [2] = {23105, 12121, 0},
+            [3] = {23130, 12121, 0},
+            [4] = {23155, 12121, 0},
+            [5] = {23180, 12121, 0},
+            [6] = {23205, 12121, 0},
+            [7] = {23230, 12121, 0},
+            [8] = {23255, 12121, 0},
+            [9] = {23280, 12121, 0},
+            [10] = {23055, 12163, 0},
+            [11] = {23080, 12163, 0},
+            [12] = {23105, 12163, 0},
+            [13] = {23130, 12163, 0},
+            [14] = {23155, 12163, 0},
+            [15] = {23180, 12163, 0},
+            [16] = {23205, 12163, 0},
+            [17] = {23230, 12163, 0},
+            [18] = {23255, 12163, 0},
+            [19] = {23280, 12163, 0}
+        }
+    })
+
+    -- Semi Trailer - Warehouse -- floor 3x13, 20 slots, room def 'warehouse'.
+    -- Stamped at 90,47 row 1, 90,47 row 2.
+    Core.registerRoom("phun.room.Semi_Trailer_Warehouse", {
+        label = "Semi Trailer - Warehouse",
+        source = SOURCE,
+        size = {w = 4, h = 14},
+        spawn = {x = 1, y = 1},
+        front = "south",
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23055, 12037, 0},
+            [1] = {23080, 12037, 0},
+            [2] = {23105, 12037, 0},
+            [3] = {23130, 12037, 0},
+            [4] = {23155, 12037, 0},
+            [5] = {23180, 12037, 0},
+            [6] = {23205, 12037, 0},
+            [7] = {23230, 12037, 0},
+            [8] = {23255, 12037, 0},
+            [9] = {23280, 12037, 0},
+            [10] = {23055, 12079, 0},
+            [11] = {23080, 12079, 0},
+            [12] = {23105, 12079, 0},
+            [13] = {23130, 12079, 0},
+            [14] = {23155, 12079, 0},
+            [15] = {23180, 12079, 0},
+            [16] = {23205, 12079, 0},
+            [17] = {23230, 12079, 0},
+            [18] = {23255, 12079, 0},
+            [19] = {23280, 12079, 0}
+        }
+    })
+
+    -- Semi Trailer - Water -- floor 3x13, 20 slots, room def 'waterstorage'.
+    -- Stamped at 90,47 row 5, 90,47 row 6.
+    Core.registerRoom("phun.room.Semi_Trailer_Water", {
+        label = "Semi Trailer - Water",
+        source = SOURCE,
+        size = {w = 4, h = 14},
+        spawn = {x = 1, y = 1},
+        front = "south",
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23055, 12205, 0},
+            [1] = {23080, 12205, 0},
+            [2] = {23105, 12205, 0},
+            [3] = {23130, 12205, 0},
+            [4] = {23155, 12205, 0},
+            [5] = {23180, 12205, 0},
+            [6] = {23205, 12205, 0},
+            [7] = {23230, 12205, 0},
+            [8] = {23255, 12205, 0},
+            [9] = {23280, 12205, 0},
+            [10] = {23055, 12247, 0},
+            [11] = {23080, 12247, 0},
+            [12] = {23105, 12247, 0},
+            [13] = {23130, 12247, 0},
+            [14] = {23155, 12247, 0},
+            [15] = {23180, 12247, 0},
+            [16] = {23205, 12247, 0},
+            [17] = {23230, 12247, 0},
+            [18] = {23255, 12247, 0},
+            [19] = {23280, 12247, 0}
+        }
+    })
+
     -- Step Van -- floor 3x4, 20 slots, room def 'storage'.
     -- Stamped at 89,46 row 1, 89,46 row 2.
-    Core.registerRoom("phun.room.StepVan_3x4", {
+    Core.registerRoom("phun.room.Step_Van", {
         label = "Step Van",
         source = SOURCE,
         size = {w = 4, h = 5},
@@ -561,10 +695,10 @@ local function registerRooms()
         }
     })
 
-    -- Beer Truck -- floor 3x4, 10 slots, room def 'beergarden'.
+    -- Step Van - Beer -- floor 3x4, 10 slots, room def 'beergarden'.
     -- Stamped at 89,46 row 3.
-    Core.registerRoom("phun.room.StepVan_Beer_3x4", {
-        label = "Beer Truck",
+    Core.registerRoom("phun.room.Step_Van_Beer", {
+        label = "Step Van - Beer",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -585,10 +719,10 @@ local function registerRooms()
         }
     })
 
-    -- Blacksmith Truck -- floor 3x4, 10 slots, room def 'blacksmith'.
+    -- Step Van - Blacksmith -- floor 3x4, 10 slots, room def 'blacksmith'.
     -- Stamped at 89,46 row 4.
-    Core.registerRoom("phun.room.StepVan_Blacksmith_3x4", {
-        label = "Blacksmith Truck",
+    Core.registerRoom("phun.room.Step_Van_Blacksmith", {
+        label = "Step Van - Blacksmith",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -609,10 +743,10 @@ local function registerRooms()
         }
     })
 
-    -- Book Truck -- floor 3x4, 10 slots, room def 'bookstore'.
+    -- Step Van - Book -- floor 3x4, 10 slots, room def 'bookstore'.
     -- Stamped at 89,46 row 5.
-    Core.registerRoom("phun.room.StepVan_Book_3x4", {
-        label = "Book Truck",
+    Core.registerRoom("phun.room.Step_Van_Book", {
+        label = "Step Van - Book",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -633,10 +767,10 @@ local function registerRooms()
         }
     })
 
-    -- Butcher Truck -- floor 3x4, 10 slots, room def 'butcher'.
+    -- Step Van - Butcher -- floor 3x4, 10 slots, room def 'butcher'.
     -- Stamped at 89,46 row 6.
-    Core.registerRoom("phun.room.StepVan_Butcher_3x4", {
-        label = "Butcher Truck",
+    Core.registerRoom("phun.room.Step_Van_Butcher", {
+        label = "Step Van - Butcher",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -657,10 +791,10 @@ local function registerRooms()
         }
     })
 
-    -- Carpentry Truck -- floor 3x4, 10 slots, room def 'carpentryworkshop'.
+    -- Step Van - Carpentry -- floor 3x4, 10 slots, room def 'carpentryworkshop'.
     -- Stamped at 89,47 row 1.
-    Core.registerRoom("phun.room.StepVan_Carpentry_3x4", {
-        label = "Carpentry Truck",
+    Core.registerRoom("phun.room.Step_Van_Carpentry", {
+        label = "Step Van - Carpentry",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -681,10 +815,10 @@ local function registerRooms()
         }
     })
 
-    -- Catering Truck -- floor 3x4, 10 slots, room def 'cafeteriakitchen'.
+    -- Step Van - Catering -- floor 3x4, 10 slots, room def 'cafeteriakitchen'.
     -- Stamped at 89,47 row 2.
-    Core.registerRoom("phun.room.StepVan_Catering_3x4", {
-        label = "Catering Truck",
+    Core.registerRoom("phun.room.Step_Van_Catering", {
+        label = "Step Van - Catering",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -705,10 +839,10 @@ local function registerRooms()
         }
     })
 
-    -- Citr8 Truck -- floor 3x4, 10 slots, room def 'conveniencestore'.
+    -- Step Van - Citr8 -- floor 3x4, 10 slots, room def 'conveniencestore'.
     -- Stamped at 89,47 row 3.
-    Core.registerRoom("phun.room.StepVan_Citr8_3x4", {
-        label = "Citr8 Truck",
+    Core.registerRoom("phun.room.Step_Van_Citr8", {
+        label = "Step Van - Citr8",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -729,10 +863,10 @@ local function registerRooms()
         }
     })
 
-    -- Fish Truck -- floor 3x4, 10 slots, room def 'catfish_dining'.
+    -- Step Van - Fish -- floor 3x4, 10 slots, room def 'catfish_dining'.
     -- Stamped at 89,47 row 4.
-    Core.registerRoom("phun.room.StepVan_Fish_3x4", {
-        label = "Fish Truck",
+    Core.registerRoom("phun.room.Step_Van_Fish", {
+        label = "Step Van - Fish",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -753,10 +887,10 @@ local function registerRooms()
         }
     })
 
-    -- Florist Truck -- floor 3x4, 10 slots, room def 'florist'.
+    -- Step Van - Florist -- floor 3x4, 10 slots, room def 'florist'.
     -- Stamped at 89,47 row 5.
-    Core.registerRoom("phun.room.StepVan_Florist_3x4", {
-        label = "Florist Truck",
+    Core.registerRoom("phun.room.Step_Van_Florist", {
+        label = "Step Van - Florist",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -777,10 +911,10 @@ local function registerRooms()
         }
     })
 
-    -- Glass Truck -- floor 3x4, 10 slots, room def 'glassmakingworkshop'.
+    -- Step Van - Glass -- floor 3x4, 10 slots, room def 'glassmakingworkshop'.
     -- Stamped at 89,47 row 6.
-    Core.registerRoom("phun.room.StepVan_Glass_3x4", {
-        label = "Glass Truck",
+    Core.registerRoom("phun.room.Step_Van_Glass", {
+        label = "Step Van - Glass",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -801,10 +935,10 @@ local function registerRooms()
         }
     })
 
-    -- Groceries Truck -- floor 3x4, 10 slots, room def 'grocerystorage'.
+    -- Step Van - Groceries -- floor 3x4, 10 slots, room def 'grocerystorage'.
     -- Stamped at 89,48 row 1.
-    Core.registerRoom("phun.room.StepVan_Groceries_3x4", {
-        label = "Groceries Truck",
+    Core.registerRoom("phun.room.Step_Van_Groceries", {
+        label = "Step Van - Groceries",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -825,10 +959,10 @@ local function registerRooms()
         }
     })
 
-    -- Laundry Truck -- floor 3x4, 10 slots, room def 'laundry'.
+    -- Step Van - Laundry -- floor 3x4, 10 slots, room def 'laundry'.
     -- Stamped at 89,48 row 2.
-    Core.registerRoom("phun.room.StepVan_Laundry_3x4", {
-        label = "Laundry Truck",
+    Core.registerRoom("phun.room.Step_Van_Laundry", {
+        label = "Step Van - Laundry",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -849,10 +983,10 @@ local function registerRooms()
         }
     })
 
-    -- Logistics Truck -- floor 3x4, 10 slots, room def 'poststorage'.
+    -- Step Van - Logistics -- floor 3x4, 10 slots, room def 'poststorage'.
     -- Stamped at 89,48 row 3.
-    Core.registerRoom("phun.room.StepVan_Logistics_3x4", {
-        label = "Logistics Truck",
+    Core.registerRoom("phun.room.Step_Van_Logistics", {
+        label = "Step Van - Logistics",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -873,10 +1007,10 @@ local function registerRooms()
         }
     })
 
-    -- Mail Truck -- floor 3x4, 10 slots, room def 'captainoffice'.
+    -- Step Van - Mail -- floor 3x4, 10 slots, room def 'captainoffice'.
     -- Stamped at 89,48 row 4.
-    Core.registerRoom("phun.room.StepVan_Mail_3x4", {
-        label = "Mail Truck",
+    Core.registerRoom("phun.room.Step_Van_Mail", {
+        label = "Step Van - Mail",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -897,10 +1031,10 @@ local function registerRooms()
         }
     })
 
-    -- Masonry Truck -- floor 3x4, 10 slots, room def 'masonrystore'.
+    -- Step Van - Masonry -- floor 3x4, 10 slots, room def 'masonrystore'.
     -- Stamped at 89,48 row 5.
-    Core.registerRoom("phun.room.StepVan_Masonry_3x4", {
-        label = "Masonry Truck",
+    Core.registerRoom("phun.room.Step_Van_Masonry", {
+        label = "Step Van - Masonry",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 3},
@@ -921,10 +1055,10 @@ local function registerRooms()
         }
     })
 
-    -- Mechanic Truck -- floor 3x4, 10 slots, room def 'mechanic'.
+    -- Step Van - Mechanic -- floor 3x4, 10 slots, room def 'mechanic'.
     -- Stamped at 89,48 row 6.
-    Core.registerRoom("phun.room.StepVan_Mechanic_3x4", {
-        label = "Mechanic Truck",
+    Core.registerRoom("phun.room.Step_Van_Mechanic", {
+        label = "Step Van - Mechanic",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -945,10 +1079,10 @@ local function registerRooms()
         }
     })
 
-    -- News Truck -- floor 3x4, 10 slots, room def 'newspaperprint_herald'.
+    -- Step Van - News -- floor 3x4, 10 slots, room def 'newspaperprint_herald'.
     -- Stamped at 89,49 row 1.
-    Core.registerRoom("phun.room.StepVan_News_3x4", {
-        label = "News Truck",
+    Core.registerRoom("phun.room.Step_Van_News", {
+        label = "Step Van - News",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -969,10 +1103,10 @@ local function registerRooms()
         }
     })
 
-    -- Paint Truck -- floor 3x4, 10 slots, room def 'paintershop'.
+    -- Step Van - Paint -- floor 3x4, 10 slots, room def 'paintershop'.
     -- Stamped at 89,49 row 2.
-    Core.registerRoom("phun.room.StepVan_Paint_3x4", {
-        label = "Paint Truck",
+    Core.registerRoom("phun.room.Step_Van_Paint", {
+        label = "Step Van - Paint",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -993,10 +1127,10 @@ local function registerRooms()
         }
     })
 
-    -- Plants Truck -- floor 3x4, 10 slots, room def 'greenhouse'.
+    -- Step Van - Plants -- floor 3x4, 10 slots, room def 'greenhouse'.
     -- Stamped at 89,49 row 3.
-    Core.registerRoom("phun.room.StepVan_Plants_3x4", {
-        label = "Plants Truck",
+    Core.registerRoom("phun.room.Step_Van_Plants", {
+        label = "Step Van - Plants",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -1017,10 +1151,10 @@ local function registerRooms()
         }
     })
 
-    -- Plonkies Truck -- floor 3x4, 10 slots, room def 'gas2go'.
+    -- Step Van - Plonkies -- floor 3x4, 10 slots, room def 'gas2go'.
     -- Stamped at 89,49 row 4.
-    Core.registerRoom("phun.room.StepVan_Plonkies_3x4", {
-        label = "Plonkies Truck",
+    Core.registerRoom("phun.room.Step_Van_Plonkies", {
+        label = "Step Van - Plonkies",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -1041,10 +1175,10 @@ local function registerRooms()
         }
     })
 
-    -- Propane Truck -- floor 3x4, 10 slots, room def 'gasstorage'.
+    -- Step Van - Propane -- floor 3x4, 10 slots, room def 'gasstorage'.
     -- Stamped at 89,49 row 5.
-    Core.registerRoom("phun.room.StepVan_Propane_3x4", {
-        label = "Propane Truck",
+    Core.registerRoom("phun.room.Step_Van_Propane", {
+        label = "Step Van - Propane",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -1065,10 +1199,10 @@ local function registerRooms()
         }
     })
 
-    -- Repair Truck -- floor 3x4, 10 slots, room def 'toolstore'.
+    -- Step Van - Repair -- floor 3x4, 10 slots, room def 'toolstore'.
     -- Stamped at 89,49 row 6.
-    Core.registerRoom("phun.room.StepVan_Repair_3x4", {
-        label = "Repair Truck",
+    Core.registerRoom("phun.room.Step_Van_Repair", {
+        label = "Step Van - Repair",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -1089,10 +1223,10 @@ local function registerRooms()
         }
     })
 
-    -- Swat Truck -- floor 3x4, 10 slots, room def 'policeswat'.
+    -- Step Van - SWAT -- floor 3x4, 10 slots, room def 'policeswat'.
     -- Stamped at 90,46 row 1.
-    Core.registerRoom("phun.room.StepVan_Swat_3x4", {
-        label = "Swat Truck",
+    Core.registerRoom("phun.room.Step_Van_SWAT", {
+        label = "Step Van - SWAT",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -1113,10 +1247,10 @@ local function registerRooms()
         }
     })
 
-    -- Tailoring Truck -- floor 3x4, 10 slots, room def 'tailoringstore'.
+    -- Step Van - Tailoring -- floor 3x4, 10 slots, room def 'tailoringstore'.
     -- Stamped at 90,46 row 2.
-    Core.registerRoom("phun.room.StepVan_Tailoring_3x4", {
-        label = "Tailoring Truck",
+    Core.registerRoom("phun.room.Step_Van_Tailoring", {
+        label = "Step Van - Tailoring",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -1137,10 +1271,10 @@ local function registerRooms()
         }
     })
 
-    -- Whiskey Truck -- floor 3x4, 10 slots, room def 'whiskeybottling'.
+    -- Step Van - Whiskey -- floor 3x4, 10 slots, room def 'whiskeybottling'.
     -- Stamped at 90,46 row 3.
-    Core.registerRoom("phun.room.StepVan_Whiskey_3x4", {
-        label = "Whiskey Truck",
+    Core.registerRoom("phun.room.Step_Van_Whiskey", {
+        label = "Step Van - Whiskey",
         source = SOURCE,
         size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
@@ -1163,7 +1297,7 @@ local function registerRooms()
 
     -- Tent -- floor 2x3, 10 slots, room def 'empty'.
     -- Stamped at 91,46 row 5.
-    Core.registerRoom("phun.room.Tent_2x3", {
+    Core.registerRoom("phun.room.Tent", {
         label = "Tent",
         source = SOURCE,
         size = {w = 3, h = 4},
@@ -1185,108 +1319,42 @@ local function registerRooms()
         }
     })
 
-    -- Semi Trailer 2 -- floor 3x13, 20 slots, room def 'factorystorage'.
-    -- Stamped at 90,47 row 3, 90,47 row 4.
-    Core.registerRoom("phun.room.Trailer_2_3x13", {
-        label = "Semi Trailer 2",
+    -- Trailer - Livestock -- floor 3x4, 20 slots, room def 'barn'.
+    -- Stamped at 90,49 row 3, 90,49 row 4.
+    Core.registerRoom("phun.room.Trailer_Livestock", {
+        label = "Trailer - Livestock",
         source = SOURCE,
-        size = {w = 4, h = 14},
+        size = {w = 4, h = 5},
         spawn = {x = 1, y = 1},
         front = "south",
         generator = {x = 1, y = 17, z = 0},
         locations = {
-            [0] = {23055, 12121, 0},
-            [1] = {23080, 12121, 0},
-            [2] = {23105, 12121, 0},
-            [3] = {23130, 12121, 0},
-            [4] = {23155, 12121, 0},
-            [5] = {23180, 12121, 0},
-            [6] = {23205, 12121, 0},
-            [7] = {23230, 12121, 0},
-            [8] = {23255, 12121, 0},
-            [9] = {23280, 12121, 0},
-            [10] = {23055, 12163, 0},
-            [11] = {23080, 12163, 0},
-            [12] = {23105, 12163, 0},
-            [13] = {23130, 12163, 0},
-            [14] = {23155, 12163, 0},
-            [15] = {23180, 12163, 0},
-            [16] = {23205, 12163, 0},
-            [17] = {23230, 12163, 0},
-            [18] = {23255, 12163, 0},
-            [19] = {23280, 12163, 0}
-        }
-    })
-
-    -- Semi Trailer 3 -- floor 3x13, 20 slots, room def 'waterstorage'.
-    -- Stamped at 90,47 row 5, 90,47 row 6.
-    Core.registerRoom("phun.room.Trailer_3_3x13", {
-        label = "Semi Trailer 3",
-        source = SOURCE,
-        size = {w = 4, h = 14},
-        spawn = {x = 1, y = 1},
-        front = "south",
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {23055, 12205, 0},
-            [1] = {23080, 12205, 0},
-            [2] = {23105, 12205, 0},
-            [3] = {23130, 12205, 0},
-            [4] = {23155, 12205, 0},
-            [5] = {23180, 12205, 0},
-            [6] = {23205, 12205, 0},
-            [7] = {23230, 12205, 0},
-            [8] = {23255, 12205, 0},
-            [9] = {23280, 12205, 0},
-            [10] = {23055, 12247, 0},
-            [11] = {23080, 12247, 0},
-            [12] = {23105, 12247, 0},
-            [13] = {23130, 12247, 0},
-            [14] = {23155, 12247, 0},
-            [15] = {23180, 12247, 0},
-            [16] = {23205, 12247, 0},
-            [17] = {23230, 12247, 0},
-            [18] = {23255, 12247, 0},
-            [19] = {23280, 12247, 0}
-        }
-    })
-
-    -- Semi Trailer 1 -- floor 3x13, 20 slots, room def 'warehouse'.
-    -- Stamped at 90,47 row 1, 90,47 row 2.
-    Core.registerRoom("phun.room.Trailer_3x13", {
-        label = "Semi Trailer 1",
-        source = SOURCE,
-        size = {w = 4, h = 14},
-        spawn = {x = 1, y = 1},
-        front = "south",
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {23055, 12037, 0},
-            [1] = {23080, 12037, 0},
-            [2] = {23105, 12037, 0},
-            [3] = {23130, 12037, 0},
-            [4] = {23155, 12037, 0},
-            [5] = {23180, 12037, 0},
-            [6] = {23205, 12037, 0},
-            [7] = {23230, 12037, 0},
-            [8] = {23255, 12037, 0},
-            [9] = {23280, 12037, 0},
-            [10] = {23055, 12079, 0},
-            [11] = {23080, 12079, 0},
-            [12] = {23105, 12079, 0},
-            [13] = {23130, 12079, 0},
-            [14] = {23155, 12079, 0},
-            [15] = {23180, 12079, 0},
-            [16] = {23205, 12079, 0},
-            [17] = {23230, 12079, 0},
-            [18] = {23255, 12079, 0},
-            [19] = {23280, 12079, 0}
+            [0] = {23055, 12633, 0},
+            [1] = {23080, 12633, 0},
+            [2] = {23105, 12633, 0},
+            [3] = {23130, 12633, 0},
+            [4] = {23155, 12633, 0},
+            [5] = {23180, 12633, 0},
+            [6] = {23205, 12633, 0},
+            [7] = {23230, 12633, 0},
+            [8] = {23255, 12633, 0},
+            [9] = {23280, 12633, 0},
+            [10] = {23055, 12675, 0},
+            [11] = {23080, 12675, 0},
+            [12] = {23105, 12675, 0},
+            [13] = {23130, 12675, 0},
+            [14] = {23155, 12675, 0},
+            [15] = {23180, 12675, 0},
+            [16] = {23205, 12675, 0},
+            [17] = {23230, 12675, 0},
+            [18] = {23255, 12675, 0},
+            [19] = {23280, 12675, 0}
         }
     })
 
     -- Trailer - Medium -- floor 3x9, 20 slots, room def 'storage'.
     -- Stamped at 90,49 row 1, 90,49 row 2.
-    Core.registerRoom("phun.room.Trailer_3x9", {
+    Core.registerRoom("phun.room.Trailer_Medium", {
         label = "Trailer - Medium",
         source = SOURCE,
         size = {w = 4, h = 10},
@@ -1317,43 +1385,10 @@ local function registerRooms()
         }
     })
 
-    -- Livestock Trailer -- floor 3x4, 20 slots, room def 'barn'.
-    -- Stamped at 90,49 row 3, 90,49 row 4.
-    Core.registerRoom("phun.room.Trailer_Livestock_3x4", {
-        label = "Livestock Trailer",
-        source = SOURCE,
-        size = {w = 4, h = 5},
-        spawn = {x = 1, y = 1},
-        front = "south",
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {23055, 12633, 0},
-            [1] = {23080, 12633, 0},
-            [2] = {23105, 12633, 0},
-            [3] = {23130, 12633, 0},
-            [4] = {23155, 12633, 0},
-            [5] = {23180, 12633, 0},
-            [6] = {23205, 12633, 0},
-            [7] = {23230, 12633, 0},
-            [8] = {23255, 12633, 0},
-            [9] = {23280, 12633, 0},
-            [10] = {23055, 12675, 0},
-            [11] = {23080, 12675, 0},
-            [12] = {23105, 12675, 0},
-            [13] = {23130, 12675, 0},
-            [14] = {23155, 12675, 0},
-            [15] = {23180, 12675, 0},
-            [16] = {23205, 12675, 0},
-            [17] = {23230, 12675, 0},
-            [18] = {23255, 12675, 0},
-            [19] = {23280, 12675, 0}
-        }
-    })
-
-    -- Military Trailer -- floor 3x9, 20 slots, room def 'armystorage'.
+    -- Trailer - Military -- floor 3x9, 20 slots, room def 'armystorage'.
     -- Stamped at 90,49 row 5, 90,49 row 6.
-    Core.registerRoom("phun.room.Trailer_Military_3x9", {
-        label = "Military Trailer",
+    Core.registerRoom("phun.room.Trailer_Military", {
+        label = "Trailer - Military",
         source = SOURCE,
         size = {w = 4, h = 10},
         spawn = {x = 1, y = 1},
@@ -1383,9 +1418,55 @@ local function registerRooms()
         }
     })
 
+    -- Truck - Armored -- floor 2x4, 10 slots, room def 'jewelrystorage'.
+    -- Stamped at 87,46 row 4.
+    Core.registerRoom("phun.room.Truck_Armored", {
+        label = "Truck - Armored",
+        source = SOURCE,
+        size = {w = 3, h = 5},
+        spawn = {x = 1, y = 1},
+        front = "south",
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {22287, 11907, 0},
+            [1] = {22312, 11907, 0},
+            [2] = {22337, 11907, 0},
+            [3] = {22362, 11907, 0},
+            [4] = {22387, 11907, 0},
+            [5] = {22412, 11907, 0},
+            [6] = {22437, 11907, 0},
+            [7] = {22462, 11907, 0},
+            [8] = {22487, 11907, 0},
+            [9] = {22512, 11907, 0}
+        }
+    })
+
+    -- Truck - Furniture -- floor 3x6, 10 slots, room def 'furniturestore'.
+    -- Stamped at 87,48 row 4.
+    Core.registerRoom("phun.room.Truck_Furniture", {
+        label = "Truck - Furniture",
+        source = SOURCE,
+        size = {w = 4, h = 7},
+        spawn = {x = 1, y = 1},
+        front = "south",
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {22287, 12419, 0},
+            [1] = {22312, 12419, 0},
+            [2] = {22337, 12419, 0},
+            [3] = {22362, 12419, 0},
+            [4] = {22387, 12419, 0},
+            [5] = {22412, 12419, 0},
+            [6] = {22437, 12419, 0},
+            [7] = {22462, 12419, 0},
+            [8] = {22487, 12419, 0},
+            [9] = {22512, 12419, 0}
+        }
+    })
+
     -- Van -- floor 2x3, 20 slots, room def 'shed'.
     -- Stamped at 87,46 row 1, 87,46 row 2.
-    Core.registerRoom("phun.room.Van_2x3", {
+    Core.registerRoom("phun.room.Van", {
         label = "Van",
         source = SOURCE,
         size = {w = 3, h = 4},
@@ -1416,79 +1497,10 @@ local function registerRooms()
         }
     })
 
-    -- Ambulance -- floor 2x3, 10 slots, room def 'medical'.
-    -- Stamped at 87,46 row 3.
-    Core.registerRoom("phun.room.Van_Ambulance_2x3", {
-        label = "Ambulance",
-        source = SOURCE,
-        size = {w = 3, h = 4},
-        spawn = {x = 0, y = 1},
-        front = "south",
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {22287, 11865, 0},
-            [1] = {22312, 11865, 0},
-            [2] = {22337, 11865, 0},
-            [3] = {22362, 11865, 0},
-            [4] = {22387, 11865, 0},
-            [5] = {22412, 11865, 0},
-            [6] = {22437, 11865, 0},
-            [7] = {22462, 11865, 0},
-            [8] = {22487, 11865, 0},
-            [9] = {22512, 11865, 0}
-        }
-    })
-
-    -- Armored Truck -- floor 2x4, 10 slots, room def 'jewelrystorage'.
-    -- Stamped at 87,46 row 4.
-    Core.registerRoom("phun.room.Van_Armored_2x4", {
-        label = "Armored Truck",
-        source = SOURCE,
-        size = {w = 3, h = 5},
-        spawn = {x = 1, y = 1},
-        front = "south",
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {22287, 11907, 0},
-            [1] = {22312, 11907, 0},
-            [2] = {22337, 11907, 0},
-            [3] = {22362, 11907, 0},
-            [4] = {22387, 11907, 0},
-            [5] = {22412, 11907, 0},
-            [6] = {22437, 11907, 0},
-            [7] = {22462, 11907, 0},
-            [8] = {22487, 11907, 0},
-            [9] = {22512, 11907, 0}
-        }
-    })
-
-    -- Art Supply Van -- floor 2x3, 10 slots, room def 'artstore'.
-    -- Stamped at 87,46 row 5.
-    Core.registerRoom("phun.room.Van_ArtSupply_2x3", {
-        label = "Art Supply Van",
-        source = SOURCE,
-        size = {w = 3, h = 4},
-        spawn = {x = 1, y = 1},
-        front = "south",
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {22287, 11949, 0},
-            [1] = {22312, 11949, 0},
-            [2] = {22337, 11949, 0},
-            [3] = {22362, 11949, 0},
-            [4] = {22387, 11949, 0},
-            [5] = {22412, 11949, 0},
-            [6] = {22437, 11949, 0},
-            [7] = {22462, 11949, 0},
-            [8] = {22487, 11949, 0},
-            [9] = {22512, 11949, 0}
-        }
-    })
-
-    -- Alcohol Van -- floor 2x3, 10 slots, room def 'bar'.
+    -- Van - Alcohol -- floor 2x3, 10 slots, room def 'bar'.
     -- Stamped at 87,46 row 6.
-    Core.registerRoom("phun.room.Van_Bar_2x3", {
-        label = "Alcohol Van",
+    Core.registerRoom("phun.room.Van_Alcohol", {
+        label = "Van - Alcohol",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 1},
@@ -1508,10 +1520,56 @@ local function registerRooms()
         }
     })
 
-    -- Blacksmith Van -- floor 2x3, 10 slots, room def 'blacksmith'.
+    -- Van - Ambulance -- floor 2x3, 10 slots, room def 'medical'.
+    -- Stamped at 87,46 row 3.
+    Core.registerRoom("phun.room.Van_Ambulance", {
+        label = "Van - Ambulance",
+        source = SOURCE,
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
+        front = "south",
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {22287, 11865, 0},
+            [1] = {22312, 11865, 0},
+            [2] = {22337, 11865, 0},
+            [3] = {22362, 11865, 0},
+            [4] = {22387, 11865, 0},
+            [5] = {22412, 11865, 0},
+            [6] = {22437, 11865, 0},
+            [7] = {22462, 11865, 0},
+            [8] = {22487, 11865, 0},
+            [9] = {22512, 11865, 0}
+        }
+    })
+
+    -- Van - Art Supply -- floor 2x3, 10 slots, room def 'artstore'.
+    -- Stamped at 87,46 row 5.
+    Core.registerRoom("phun.room.Van_Art_Supply", {
+        label = "Van - Art Supply",
+        source = SOURCE,
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
+        front = "south",
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {22287, 11949, 0},
+            [1] = {22312, 11949, 0},
+            [2] = {22337, 11949, 0},
+            [3] = {22362, 11949, 0},
+            [4] = {22387, 11949, 0},
+            [5] = {22412, 11949, 0},
+            [6] = {22437, 11949, 0},
+            [7] = {22462, 11949, 0},
+            [8] = {22487, 11949, 0},
+            [9] = {22512, 11949, 0}
+        }
+    })
+
+    -- Van - Blacksmith -- floor 2x3, 10 slots, room def 'blacksmith'.
     -- Stamped at 87,47 row 1.
-    Core.registerRoom("phun.room.Van_Blacksmith_2x3", {
-        label = "Blacksmith Van",
+    Core.registerRoom("phun.room.Van_Blacksmith", {
+        label = "Van - Blacksmith",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 1, y = 0},
@@ -1531,10 +1589,10 @@ local function registerRooms()
         }
     })
 
-    -- Butcher Van -- floor 2x3, 10 slots, room def 'butcher'.
+    -- Van - Butcher -- floor 2x3, 10 slots, room def 'butcher'.
     -- Stamped at 87,47 row 2.
-    Core.registerRoom("phun.room.Van_Butcher_2x3", {
-        label = "Butcher Van",
+    Core.registerRoom("phun.room.Van_Butcher", {
+        label = "Van - Butcher",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 1, y = 1},
@@ -1554,33 +1612,10 @@ local function registerRooms()
         }
     })
 
-    -- VW Camper Van -- floor 2x4, 10 slots, room def 'campingstorage'.
-    -- Stamped at 87,47 row 3.
-    Core.registerRoom("phun.room.Van_Camper_2x4", {
-        label = "VW Camper Van",
-        source = SOURCE,
-        size = {w = 3, h = 5},
-        spawn = {x = 1, y = 1},
-        front = "south",
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {22287, 12121, 0},
-            [1] = {22312, 12121, 0},
-            [2] = {22337, 12121, 0},
-            [3] = {22362, 12121, 0},
-            [4] = {22387, 12121, 0},
-            [5] = {22412, 12121, 0},
-            [6] = {22437, 12121, 0},
-            [7] = {22462, 12121, 0},
-            [8] = {22487, 12121, 0},
-            [9] = {22512, 12121, 0}
-        }
-    })
-
-    -- Carpenter Van -- floor 2x3, 10 slots, room def 'carpentryworkshop'.
+    -- Van - Carpenter -- floor 2x3, 10 slots, room def 'carpentryworkshop'.
     -- Stamped at 87,47 row 4.
-    Core.registerRoom("phun.room.Van_Carpenter_2x3", {
-        label = "Carpenter Van",
+    Core.registerRoom("phun.room.Van_Carpenter", {
+        label = "Van - Carpenter",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 1},
@@ -1600,10 +1635,10 @@ local function registerRooms()
         }
     })
 
-    -- Comms Van -- floor 2x3, 10 slots, room def 'radiostorage'.
+    -- Van - Comms -- floor 2x3, 10 slots, room def 'radiostorage'.
     -- Stamped at 87,47 row 5.
-    Core.registerRoom("phun.room.Van_Comms_2x3", {
-        label = "Comms Van",
+    Core.registerRoom("phun.room.Van_Comms", {
+        label = "Van - Comms",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 1},
@@ -1623,10 +1658,10 @@ local function registerRooms()
         }
     })
 
-    -- Construction Van -- floor 2x3, 10 slots, room def 'construction'.
+    -- Van - Construction -- floor 2x3, 10 slots, room def 'construction'.
     -- Stamped at 87,47 row 6.
-    Core.registerRoom("phun.room.Van_Construction_2x3", {
-        label = "Construction Van",
+    Core.registerRoom("phun.room.Van_Construction", {
+        label = "Van - Construction",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 1, y = 1},
@@ -1646,10 +1681,10 @@ local function registerRooms()
         }
     })
 
-    -- Electrical Van -- floor 2x3, 10 slots, room def 'electronicsstorage'.
+    -- Van - Electrical -- floor 2x3, 10 slots, room def 'electronicsstorage'.
     -- Stamped at 87,48 row 1.
-    Core.registerRoom("phun.room.Van_Electrical_2x3", {
-        label = "Electrical Van",
+    Core.registerRoom("phun.room.Van_Electrical", {
+        label = "Van - Electrical",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 1},
@@ -1669,10 +1704,10 @@ local function registerRooms()
         }
     })
 
-    -- Farm Van -- floor 2x3, 10 slots, room def 'farmstorage'.
+    -- Van - Farm -- floor 2x3, 10 slots, room def 'farmstorage'.
     -- Stamped at 87,48 row 2.
-    Core.registerRoom("phun.room.Van_Farms_2x3", {
-        label = "Farm Van",
+    Core.registerRoom("phun.room.Van_Farm", {
+        label = "Van - Farm",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 1, y = 1},
@@ -1692,10 +1727,10 @@ local function registerRooms()
         }
     })
 
-    -- Fossil Van -- floor 2x3, 10 slots, room def 'fossoil'.
+    -- Van - Fossil -- floor 2x3, 10 slots, room def 'fossoil'.
     -- Stamped at 87,48 row 3.
-    Core.registerRoom("phun.room.Van_Fossil_2x3", {
-        label = "Fossil Van",
+    Core.registerRoom("phun.room.Van_Fossil", {
+        label = "Van - Fossil",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 1},
@@ -1715,33 +1750,10 @@ local function registerRooms()
         }
     })
 
-    -- Furniture Truck -- floor 3x6, 10 slots, room def 'furniturestore'.
-    -- Stamped at 87,48 row 4.
-    Core.registerRoom("phun.room.Van_Furniture_3x6", {
-        label = "Furniture Truck",
-        source = SOURCE,
-        size = {w = 4, h = 7},
-        spawn = {x = 1, y = 1},
-        front = "south",
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {22287, 12419, 0},
-            [1] = {22312, 12419, 0},
-            [2] = {22337, 12419, 0},
-            [3] = {22362, 12419, 0},
-            [4] = {22387, 12419, 0},
-            [5] = {22412, 12419, 0},
-            [6] = {22437, 12419, 0},
-            [7] = {22462, 12419, 0},
-            [8] = {22487, 12419, 0},
-            [9] = {22512, 12419, 0}
-        }
-    })
-
-    -- Gardening Van -- floor 2x3, 10 slots, room def 'gardenstore'.
+    -- Van - Gardening -- floor 2x3, 10 slots, room def 'gardenstore'.
     -- Stamped at 87,48 row 5.
-    Core.registerRoom("phun.room.Van_Gardener_2x3", {
-        label = "Gardening Van",
+    Core.registerRoom("phun.room.Van_Gardening", {
+        label = "Van - Gardening",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 1},
@@ -1761,10 +1773,10 @@ local function registerRooms()
         }
     })
 
-    -- Gas and Electric Van -- floor 2x3, 10 slots, room def 'gasstore'.
+    -- Van - Gas and Electric -- floor 2x3, 10 slots, room def 'gasstore'.
     -- Stamped at 87,48 row 6.
-    Core.registerRoom("phun.room.Van_GasElect_2x3", {
-        label = "Gas and Electric Van",
+    Core.registerRoom("phun.room.Van_Gas_and_Electric", {
+        label = "Van - Gas and Electric",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 1},
@@ -1784,10 +1796,10 @@ local function registerRooms()
         }
     })
 
-    -- Glass Van -- floor 2x3, 10 slots, room def 'glassesstore'.
+    -- Van - Glass -- floor 2x3, 10 slots, room def 'glassesstore'.
     -- Stamped at 88,46 row 1.
-    Core.registerRoom("phun.room.Van_Glass_2x3", {
-        label = "Glass Van",
+    Core.registerRoom("phun.room.Van_Glass", {
+        label = "Van - Glass",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 1, y = 1},
@@ -1807,10 +1819,10 @@ local function registerRooms()
         }
     })
 
-    -- Greens Van -- floor 2x3, 10 slots, room def 'grocers'.
+    -- Van - Greens -- floor 2x3, 10 slots, room def 'grocers'.
     -- Stamped at 88,46 row 2.
-    Core.registerRoom("phun.room.Van_Greens_2x3", {
-        label = "Greens Van",
+    Core.registerRoom("phun.room.Van_Greens", {
+        label = "Van - Greens",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 1, y = 0},
@@ -1830,10 +1842,10 @@ local function registerRooms()
         }
     })
 
-    -- Leather Van -- floor 2x3, 10 slots, room def 'leatherworkshop'.
+    -- Van - Leather -- floor 2x3, 10 slots, room def 'leatherworkshop'.
     -- Stamped at 88,46 row 3.
-    Core.registerRoom("phun.room.Van_Leather_2x3", {
-        label = "Leather Van",
+    Core.registerRoom("phun.room.Van_Leather", {
+        label = "Van - Leather",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 1},
@@ -1853,10 +1865,10 @@ local function registerRooms()
         }
     })
 
-    -- Love Van -- floor 2x3, 10 slots, room def 'stripclubvip'.
+    -- Van - Love -- floor 2x3, 10 slots, room def 'stripclubvip'.
     -- Stamped at 88,46 row 4.
-    Core.registerRoom("phun.room.Van_Love_2x3", {
-        label = "Love Van",
+    Core.registerRoom("phun.room.Van_Love", {
+        label = "Van - Love",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 1},
@@ -1876,10 +1888,10 @@ local function registerRooms()
         }
     })
 
-    -- Mail Van -- floor 2x3, 10 slots, room def 'post'.
+    -- Van - Mail -- floor 2x3, 10 slots, room def 'post'.
     -- Stamped at 88,46 row 5.
-    Core.registerRoom("phun.room.Van_Mail_2x3", {
-        label = "Mail Van",
+    Core.registerRoom("phun.room.Van_Mail", {
+        label = "Van - Mail",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 1, y = 1},
@@ -1899,10 +1911,10 @@ local function registerRooms()
         }
     })
 
-    -- Masonry Van -- floor 2x3, 10 slots, room def 'masonrystore'.
+    -- Van - Masonry -- floor 2x3, 10 slots, room def 'masonrystore'.
     -- Stamped at 88,46 row 6.
-    Core.registerRoom("phun.room.Van_Masonry_2x3", {
-        label = "Masonry Van",
+    Core.registerRoom("phun.room.Van_Masonry", {
+        label = "Van - Masonry",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 1},
@@ -1922,10 +1934,10 @@ local function registerRooms()
         }
     })
 
-    -- Mechanic Van -- floor 2x3, 10 slots, room def 'mechanic'.
+    -- Van - Mechanic -- floor 2x3, 10 slots, room def 'mechanic'.
     -- Stamped at 88,47 row 1.
-    Core.registerRoom("phun.room.Van_Mechanic_2x3", {
-        label = "Mechanic Van",
+    Core.registerRoom("phun.room.Van_Mechanic", {
+        label = "Van - Mechanic",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 1, y = 1},
@@ -1945,10 +1957,10 @@ local function registerRooms()
         }
     })
 
-    -- Plumbing Van -- floor 2x3, 10 slots, room def 'toolstore'.
+    -- Van - Plumbing -- floor 2x3, 10 slots, room def 'toolstore'.
     -- Stamped at 88,47 row 2.
-    Core.registerRoom("phun.room.Van_Plumbing_2x3", {
-        label = "Plumbing Van",
+    Core.registerRoom("phun.room.Van_Plumbing", {
+        label = "Van - Plumbing",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 1},
@@ -1968,10 +1980,10 @@ local function registerRooms()
         }
     })
 
-    -- Police Van -- floor 2x3, 10 slots, room def 'policestorage'.
+    -- Van - Police -- floor 2x3, 10 slots, room def 'policestorage'.
     -- Stamped at 88,47 row 3.
-    Core.registerRoom("phun.room.Van_Police_2x3", {
-        label = "Police Van",
+    Core.registerRoom("phun.room.Van_Police", {
+        label = "Van - Police",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 1, y = 1},
@@ -1991,10 +2003,10 @@ local function registerRooms()
         }
     })
 
-    -- Prison Van -- floor 2x3, 10 slots, room def 'prisoncells'.
+    -- Van - Prison -- floor 2x3, 10 slots, room def 'prisoncells'.
     -- Stamped at 88,47 row 4.
-    Core.registerRoom("phun.room.Van_Prison_2x3", {
-        label = "Prison Van",
+    Core.registerRoom("phun.room.Van_Prison", {
+        label = "Van - Prison",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 1, y = 2},
@@ -2014,10 +2026,10 @@ local function registerRooms()
         }
     })
 
-    -- Seats Van -- floor 2x3, 20 slots, room def 'empty'.
+    -- Van - Seats -- floor 2x3, 20 slots, room def 'empty'.
     -- Stamped at 88,47 row 5, 88,47 row 6.
-    Core.registerRoom("phun.room.Van_Seats_2x3", {
-        label = "Seats Van",
+    Core.registerRoom("phun.room.Van_Seats", {
+        label = "Van - Seats",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 1, y = 2},
@@ -2047,10 +2059,10 @@ local function registerRooms()
         }
     })
 
-    -- Spiffo Van -- floor 2x3, 10 slots, room def 'spiffoskitchen'.
+    -- Van - Spiffo -- floor 2x3, 10 slots, room def 'spiffoskitchen'.
     -- Stamped at 88,48 row 1.
-    Core.registerRoom("phun.room.Van_Spiffo_2x3", {
-        label = "Spiffo Van",
+    Core.registerRoom("phun.room.Van_Spiffo", {
+        label = "Van - Spiffo",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 0},
@@ -2070,10 +2082,10 @@ local function registerRooms()
         }
     })
 
-    -- Tailor Van -- floor 2x3, 10 slots, room def 'tailoringworkshop'.
+    -- Van - Tailor -- floor 2x3, 10 slots, room def 'tailoringworkshop'.
     -- Stamped at 88,48 row 2.
-    Core.registerRoom("phun.room.Van_Tailor_2x3", {
-        label = "Tailor Van",
+    Core.registerRoom("phun.room.Van_Tailor", {
+        label = "Van - Tailor",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 0, y = 1},
@@ -2093,10 +2105,33 @@ local function registerRooms()
         }
     })
 
-    -- Welding Van -- floor 2x3, 10 slots, room def 'weldingstorage'.
+    -- Van - VW Camper -- floor 2x4, 10 slots, room def 'campingstorage'.
+    -- Stamped at 87,47 row 3.
+    Core.registerRoom("phun.room.Van_VW_Camper", {
+        label = "Van - VW Camper",
+        source = SOURCE,
+        size = {w = 3, h = 5},
+        spawn = {x = 1, y = 1},
+        front = "south",
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {22287, 12121, 0},
+            [1] = {22312, 12121, 0},
+            [2] = {22337, 12121, 0},
+            [3] = {22362, 12121, 0},
+            [4] = {22387, 12121, 0},
+            [5] = {22412, 12121, 0},
+            [6] = {22437, 12121, 0},
+            [7] = {22462, 12121, 0},
+            [8] = {22487, 12121, 0},
+            [9] = {22512, 12121, 0}
+        }
+    })
+
+    -- Van - Welding -- floor 2x3, 10 slots, room def 'weldingstorage'.
     -- Stamped at 88,48 row 3.
-    Core.registerRoom("phun.room.Van_Welding_2x3", {
-        label = "Welding Van",
+    Core.registerRoom("phun.room.Van_Welding", {
+        label = "Van - Welding",
         source = SOURCE,
         size = {w = 3, h = 4},
         spawn = {x = 1, y = 0},
@@ -2115,681 +2150,648 @@ local function registerRooms()
             [9] = {22768, 12377, 0}
         }
     })
-
-    -- Winnebago -- floor 3x9, 20 slots, room def 'camping'.
-    -- Stamped at 90,48 row 1, 90,48 row 2.
-    Core.registerRoom("phun.room.Winnebago_3x9", {
-        label = "Winnebago",
-        source = SOURCE,
-        size = {w = 4, h = 10},
-        spawn = {x = 1, y = 1},
-        front = "south",
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {23055, 12293, 0},
-            [1] = {23080, 12293, 0},
-            [2] = {23105, 12293, 0},
-            [3] = {23130, 12293, 0},
-            [4] = {23155, 12293, 0},
-            [5] = {23180, 12293, 0},
-            [6] = {23205, 12293, 0},
-            [7] = {23230, 12293, 0},
-            [8] = {23255, 12293, 0},
-            [9] = {23280, 12293, 0},
-            [10] = {23055, 12335, 0},
-            [11] = {23080, 12335, 0},
-            [12] = {23105, 12335, 0},
-            [13] = {23130, 12335, 0},
-            [14] = {23155, 12335, 0},
-            [15] = {23180, 12335, 0},
-            [16] = {23205, 12335, 0},
-            [17] = {23230, 12335, 0},
-            [18] = {23255, 12335, 0},
-            [19] = {23280, 12335, 0}
-        }
-    })
 end
 
 local function registerVehicles()
 
     -- Ambulance Bay: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Ambulance_3x3",
+        id = "phun.vehicles.Ambulance_Bay",
         source = SOURCE,
-        rooms = {"phun.room.Ambulance_3x3"},
+        rooms = {"phun.room.Ambulance_Bay"},
         scripts = {"Base.90fordF350ambulance"}
     })
 
     -- Bus: 0 bound directly, 3 more overflowing in.
     Core.registerVehicles({
-        id = "phun.vehicles.Bus_3x9",
+        id = "phun.vehicles.Bus",
         source = SOURCE,
-        rooms = {"phun.room.Bus_3x9"},
+        rooms = {"phun.room.Bus"},
         scripts = {"Base.87fordB700military", "Base.87fordB700prison", "Base.87fordB700school"}
     })
 
     -- Bus - Military: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Bus_Military_3x9",
+        id = "phun.vehicles.Bus_Military",
         source = SOURCE,
-        rooms = {"phun.room.Bus_Military_3x9"},
+        rooms = {"phun.room.Bus_Military"},
         scripts = {"Base.87fordB700military"}
     })
 
     -- Bus - Prison: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Bus_Prison_3x9",
+        id = "phun.vehicles.Bus_Prison",
         source = SOURCE,
-        rooms = {"phun.room.Bus_Prison_3x9"},
+        rooms = {"phun.room.Bus_Prison"},
         scripts = {"Base.87fordB700prison"}
     })
 
     -- Bus - School: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Bus_School_3x9",
+        id = "phun.vehicles.Bus_School",
         source = SOURCE,
-        rooms = {"phun.room.Bus_School_3x9"},
+        rooms = {"phun.room.Bus_School"},
         scripts = {"Base.87fordB700school"}
     })
 
-    -- Caravan - Mini: 1 bound directly.
+    -- Camper - Dasher: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Caravan_2x3",
+        id = "phun.vehicles.Camper_Dasher",
         source = SOURCE,
-        rooms = {"phun.room.Caravan_2x3"},
-        scripts = {"Base.Trailer87Scamp13"}
-    })
-
-    -- Caravan - Small: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.Caravan_2x4",
-        source = SOURCE,
-        rooms = {"phun.room.Caravan_2x4"},
-        scripts = {"Base.Trailer87Scamp16"}
-    })
-
-    -- Caravan - Medium: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.Caravan_3x5",
-        source = SOURCE,
-        rooms = {"phun.room.Caravan_3x5"},
-        scripts = {"Base.Trailer61Bambi16"}
-    })
-
-    -- Caravan - Large: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.Caravan_3x9",
-        source = SOURCE,
-        rooms = {"phun.room.Caravan_3x9"},
-        scripts = {"Base.Trailer54FlyingCloud22"}
-    })
-
-    -- Caravan - Dasher: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.Caravan_Dasher_2x4",
-        source = SOURCE,
-        rooms = {"phun.room.Caravan_Dasher_2x4"},
+        rooms = {"phun.room.Camper_Dasher"},
         scripts = {"Base.DashRoamer"}
     })
 
-    -- Winnebago - Small: 1 bound directly.
+    -- Camper - Large: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Caravan_WB_3x5",
+        id = "phun.vehicles.Camper_Large",
         source = SOURCE,
-        rooms = {"phun.room.Caravan_WB_3x5"},
-        scripts = {"Base.WhennyagoInitiative"}
+        rooms = {"phun.room.Camper_Large"},
+        scripts = {"Base.Trailer54FlyingCloud22"}
     })
 
-    -- Container 2: 2 bound directly.
+    -- Camper - Medium: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Container2_3x6",
+        id = "phun.vehicles.Camper_Medium",
         source = SOURCE,
-        rooms = {"phun.room.Container2_3x6"},
+        rooms = {"phun.room.Camper_Medium"},
+        scripts = {"Base.Trailer61Bambi16"}
+    })
+
+    -- Camper - Mini: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Camper_Mini",
+        source = SOURCE,
+        rooms = {"phun.room.Camper_Mini"},
+        scripts = {"Base.Trailer87Scamp13"}
+    })
+
+    -- Camper - Small: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Camper_Small",
+        source = SOURCE,
+        rooms = {"phun.room.Camper_Small"},
+        scripts = {"Base.Trailer87Scamp16"}
+    })
+
+    -- Container - Factory: 2 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Container_Factory",
+        source = SOURCE,
+        rooms = {"phun.room.Container_Factory"},
         scripts = {"Base.TrailerM747lowbed", "Base.isoContainer4"}
     })
 
-    -- Container 3: 2 bound directly.
+    -- Container - Storage: 2 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Container3_3x6",
+        id = "phun.vehicles.Container_Storage",
         source = SOURCE,
-        rooms = {"phun.room.Container3_3x6"},
+        rooms = {"phun.room.Container_Storage"},
         scripts = {"Base.TrailerM747lowbed", "Base.isoContainer5"}
     })
 
-    -- Container: 2 bound directly.
+    -- Container - Warehouse: 2 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Container_3x6",
+        id = "phun.vehicles.Container_Warehouse",
         source = SOURCE,
-        rooms = {"phun.room.Container_3x6"},
+        rooms = {"phun.room.Container_Warehouse"},
         scripts = {"Base.TrailerM747lowbed", "Base.isoContainer2"}
     })
 
     -- GAGE K15: 3 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.K15_GAGE_4x5",
+        id = "phun.vehicles.GAGE_K15",
         source = SOURCE,
-        rooms = {"phun.room.K15_GAGE_4x5"},
+        rooms = {"phun.room.GAGE_K15"},
         scripts = {"Base.84gageV300apc", "Base.84gageV300fsv", "Base.lockMartM577"}
     })
 
     -- Military Box: 2 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Military_4x4",
+        id = "phun.vehicles.Military_Box",
         source = SOURCE,
-        rooms = {"phun.room.Military_4x4"},
+        rooms = {"phun.room.Military_Box"},
         scripts = {"Base.86chevyM1010", "Base.86chevyM1031"}
     })
 
-    -- RV 2: NOTHING REACHES IT. No vehicle is
-    -- bound to phun.room.RV2_3x9 and no room overflows into it, so its 10
+    -- RV - Large: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.RV_Large",
+        source = SOURCE,
+        rooms = {"phun.room.RV_Large"},
+        scripts = {"Base.RollingRefuge"}
+    })
+
+    -- RV - Small: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.RV_Small",
+        source = SOURCE,
+        rooms = {"phun.room.RV_Small"},
+        scripts = {"Base.WhennyagoInitiative"}
+    })
+
+    -- RV - Spare 1: NOTHING REACHES IT. No vehicle is
+    -- bound to phun.room.RV_Spare_1 and no room overflows into it, so its 10
     -- slots stand empty.
 
-    -- RV: NOTHING REACHES IT. No vehicle is
-    -- bound to phun.room.RV_3x9 and no room overflows into it, so its 10
+    -- RV - Spare 2: NOTHING REACHES IT. No vehicle is
+    -- bound to phun.room.RV_Spare_2 and no room overflows into it, so its 10
     -- slots stand empty.
 
-    -- Step Van: 1 bound directly, 30 more overflowing in.
+    -- Semi Trailer - Factory: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.StepVan_3x4",
+        id = "phun.vehicles.Semi_Trailer_Factory",
         source = SOURCE,
-        rooms = {"phun.room.StepVan_3x4"},
-        scripts = {"Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan", "Base.StepVanAirportCatering", "Base.StepVanMail", "Base.StepVan_Blacksmith", "Base.StepVan_Butchers", "Base.StepVan_Cereal", "Base.StepVan_Citr8", "Base.StepVan_CompleteRepairShop", "Base.StepVan_Florist", "Base.StepVan_Genuine_Beer", "Base.StepVan_Glass", "Base.StepVan_Heralds", "Base.StepVan_HuangsLaundry", "Base.StepVan_Jorgensen", "Base.StepVan_LouisvilleMotorShop", "Base.StepVan_LouisvilleSWAT", "Base.StepVan_MarineBites", "Base.StepVan_Masonry", "Base.StepVan_Mechanic", "Base.StepVan_MobileLibrary", "Base.StepVan_Plonkies", "Base.StepVan_Propane", "Base.StepVan_RandisPlants", "Base.StepVan_Scarlet", "Base.StepVan_SmartKut", "Base.StepVan_SouthEasternHosp", "Base.StepVan_SouthEasternPaint", "Base.StepVan_USL", "Base.StepVan_Zippee"}
-    })
-
-    -- Beer Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Beer_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Beer_3x4"},
-        scripts = {"Base.StepVan_Genuine_Beer"}
-    })
-
-    -- Blacksmith Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Blacksmith_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Blacksmith_3x4"},
-        scripts = {"Base.StepVan_Blacksmith"}
-    })
-
-    -- Book Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Book_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Book_3x4"},
-        scripts = {"Base.StepVan_MobileLibrary"}
-    })
-
-    -- Butcher Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Butcher_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Butcher_3x4"},
-        scripts = {"Base.StepVan_Butchers"}
-    })
-
-    -- Carpentry Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Carpentry_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Carpentry_3x4"},
-        scripts = {"Base.StepVan_Jorgensen"}
-    })
-
-    -- Catering Truck: 2 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Catering_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Catering_3x4"},
-        scripts = {"Base.StepVanAirportCatering", "Base.StepVan_SouthEasternHosp"}
-    })
-
-    -- Citr8 Truck: 2 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Citr8_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Citr8_3x4"},
-        scripts = {"Base.StepVan_Citr8", "Base.StepVan_Zippee"}
-    })
-
-    -- Fish Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Fish_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Fish_3x4"},
-        scripts = {"Base.StepVan_MarineBites"}
-    })
-
-    -- Florist Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Florist_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Florist_3x4"},
-        scripts = {"Base.StepVan_Florist"}
-    })
-
-    -- Glass Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Glass_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Glass_3x4"},
-        scripts = {"Base.StepVan_Glass"}
-    })
-
-    -- Groceries Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Groceries_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Groceries_3x4"},
-        scripts = {"Base.StepVan_Cereal"}
-    })
-
-    -- Laundry Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Laundry_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Laundry_3x4"},
-        scripts = {"Base.StepVan_HuangsLaundry"}
-    })
-
-    -- Logistics Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Logistics_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Logistics_3x4"},
-        scripts = {"Base.StepVan_USL"}
-    })
-
-    -- Mail Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Mail_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Mail_3x4"},
-        scripts = {"Base.StepVanMail"}
-    })
-
-    -- Masonry Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Masonry_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Masonry_3x4"},
-        scripts = {"Base.StepVan_Masonry"}
-    })
-
-    -- Mechanic Truck: 2 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Mechanic_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Mechanic_3x4"},
-        scripts = {"Base.StepVan_LouisvilleMotorShop", "Base.StepVan_Mechanic"}
-    })
-
-    -- News Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_News_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_News_3x4"},
-        scripts = {"Base.StepVan_Heralds"}
-    })
-
-    -- Paint Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Paint_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Paint_3x4"},
-        scripts = {"Base.StepVan_SouthEasternPaint"}
-    })
-
-    -- Plants Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Plants_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Plants_3x4"},
-        scripts = {"Base.StepVan_RandisPlants"}
-    })
-
-    -- Plonkies Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Plonkies_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Plonkies_3x4"},
-        scripts = {"Base.StepVan_Plonkies"}
-    })
-
-    -- Propane Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Propane_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Propane_3x4"},
-        scripts = {"Base.StepVan_Propane"}
-    })
-
-    -- Repair Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Repair_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Repair_3x4"},
-        scripts = {"Base.StepVan_CompleteRepairShop"}
-    })
-
-    -- Swat Truck: 3 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Swat_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Swat_3x4"},
-        scripts = {"Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan_LouisvilleSWAT"}
-    })
-
-    -- Tailoring Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Tailoring_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Tailoring_3x4"},
-        scripts = {"Base.StepVan_SmartKut"}
-    })
-
-    -- Whiskey Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.StepVan_Whiskey_3x4",
-        source = SOURCE,
-        rooms = {"phun.room.StepVan_Whiskey_3x4"},
-        scripts = {"Base.StepVan_Scarlet"}
-    })
-
-    -- Semi Trailer 2: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.Trailer_2_3x13",
-        source = SOURCE,
-        rooms = {"phun.room.Trailer_2_3x13"},
+        rooms = {"phun.room.Semi_Trailer_Factory"},
         scripts = {"Base.SemiTrailerVanCattle"}
     })
 
-    -- Semi Trailer 3: 1 bound directly, 3 more overflowing in.
+    -- Semi Trailer - Warehouse: 2 bound directly, 2 more overflowing in.
     Core.registerVehicles({
-        id = "phun.vehicles.Trailer_3_3x13",
+        id = "phun.vehicles.Semi_Trailer_Warehouse",
         source = SOURCE,
-        rooms = {"phun.room.Trailer_3_3x13"},
+        rooms = {"phun.room.Semi_Trailer_Warehouse"},
         scripts = {"Base.SemiTrailerVan", "Base.SemiTrailerVanCattle", "Base.SemiTrailerVan_mil", "Base.W900_Container"}
     })
 
-    -- Semi Trailer 1: 2 bound directly, 2 more overflowing in.
+    -- Semi Trailer - Water: 1 bound directly, 3 more overflowing in.
     Core.registerVehicles({
-        id = "phun.vehicles.Trailer_3x13",
+        id = "phun.vehicles.Semi_Trailer_Water",
         source = SOURCE,
-        rooms = {"phun.room.Trailer_3x13"},
+        rooms = {"phun.room.Semi_Trailer_Water"},
         scripts = {"Base.SemiTrailerVan", "Base.SemiTrailerVanCattle", "Base.SemiTrailerVan_mil", "Base.W900_Container"}
+    })
+
+    -- Step Van: 1 bound directly, 30 more overflowing in.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van"},
+        scripts = {"Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan", "Base.StepVanAirportCatering", "Base.StepVanMail", "Base.StepVan_Blacksmith", "Base.StepVan_Butchers", "Base.StepVan_Cereal", "Base.StepVan_Citr8", "Base.StepVan_CompleteRepairShop", "Base.StepVan_Florist", "Base.StepVan_Genuine_Beer", "Base.StepVan_Glass", "Base.StepVan_Heralds", "Base.StepVan_HuangsLaundry", "Base.StepVan_Jorgensen", "Base.StepVan_LouisvilleMotorShop", "Base.StepVan_LouisvilleSWAT", "Base.StepVan_MarineBites", "Base.StepVan_Masonry", "Base.StepVan_Mechanic", "Base.StepVan_MobileLibrary", "Base.StepVan_Plonkies", "Base.StepVan_Propane", "Base.StepVan_RandisPlants", "Base.StepVan_Scarlet", "Base.StepVan_SmartKut", "Base.StepVan_SouthEasternHosp", "Base.StepVan_SouthEasternPaint", "Base.StepVan_USL", "Base.StepVan_Zippee"}
+    })
+
+    -- Step Van - Beer: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Beer",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Beer"},
+        scripts = {"Base.StepVan_Genuine_Beer"}
+    })
+
+    -- Step Van - Blacksmith: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Blacksmith",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Blacksmith"},
+        scripts = {"Base.StepVan_Blacksmith"}
+    })
+
+    -- Step Van - Book: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Book",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Book"},
+        scripts = {"Base.StepVan_MobileLibrary"}
+    })
+
+    -- Step Van - Butcher: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Butcher",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Butcher"},
+        scripts = {"Base.StepVan_Butchers"}
+    })
+
+    -- Step Van - Carpentry: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Carpentry",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Carpentry"},
+        scripts = {"Base.StepVan_Jorgensen"}
+    })
+
+    -- Step Van - Catering: 2 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Catering",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Catering"},
+        scripts = {"Base.StepVanAirportCatering", "Base.StepVan_SouthEasternHosp"}
+    })
+
+    -- Step Van - Citr8: 2 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Citr8",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Citr8"},
+        scripts = {"Base.StepVan_Citr8", "Base.StepVan_Zippee"}
+    })
+
+    -- Step Van - Fish: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Fish",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Fish"},
+        scripts = {"Base.StepVan_MarineBites"}
+    })
+
+    -- Step Van - Florist: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Florist",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Florist"},
+        scripts = {"Base.StepVan_Florist"}
+    })
+
+    -- Step Van - Glass: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Glass",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Glass"},
+        scripts = {"Base.StepVan_Glass"}
+    })
+
+    -- Step Van - Groceries: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Groceries",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Groceries"},
+        scripts = {"Base.StepVan_Cereal"}
+    })
+
+    -- Step Van - Laundry: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Laundry",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Laundry"},
+        scripts = {"Base.StepVan_HuangsLaundry"}
+    })
+
+    -- Step Van - Logistics: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Logistics",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Logistics"},
+        scripts = {"Base.StepVan_USL"}
+    })
+
+    -- Step Van - Mail: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Mail",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Mail"},
+        scripts = {"Base.StepVanMail"}
+    })
+
+    -- Step Van - Masonry: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Masonry",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Masonry"},
+        scripts = {"Base.StepVan_Masonry"}
+    })
+
+    -- Step Van - Mechanic: 2 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Mechanic",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Mechanic"},
+        scripts = {"Base.StepVan_LouisvilleMotorShop", "Base.StepVan_Mechanic"}
+    })
+
+    -- Step Van - News: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_News",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_News"},
+        scripts = {"Base.StepVan_Heralds"}
+    })
+
+    -- Step Van - Paint: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Paint",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Paint"},
+        scripts = {"Base.StepVan_SouthEasternPaint"}
+    })
+
+    -- Step Van - Plants: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Plants",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Plants"},
+        scripts = {"Base.StepVan_RandisPlants"}
+    })
+
+    -- Step Van - Plonkies: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Plonkies",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Plonkies"},
+        scripts = {"Base.StepVan_Plonkies"}
+    })
+
+    -- Step Van - Propane: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Propane",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Propane"},
+        scripts = {"Base.StepVan_Propane"}
+    })
+
+    -- Step Van - Repair: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Repair",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Repair"},
+        scripts = {"Base.StepVan_CompleteRepairShop"}
+    })
+
+    -- Step Van - SWAT: 3 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_SWAT",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_SWAT"},
+        scripts = {"Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan_LouisvilleSWAT"}
+    })
+
+    -- Step Van - Tailoring: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Tailoring",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Tailoring"},
+        scripts = {"Base.StepVan_SmartKut"}
+    })
+
+    -- Step Van - Whiskey: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Step_Van_Whiskey",
+        source = SOURCE,
+        rooms = {"phun.room.Step_Van_Whiskey"},
+        scripts = {"Base.StepVan_Scarlet"}
+    })
+
+    -- Trailer - Livestock: 2 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Trailer_Livestock",
+        source = SOURCE,
+        rooms = {"phun.room.Trailer_Livestock"},
+        scripts = {"Base.Trailer_Horsebox", "Base.Trailer_Livestock"}
     })
 
     -- Trailer - Medium: 2 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Trailer_3x9",
+        id = "phun.vehicles.Trailer_Medium",
         source = SOURCE,
-        rooms = {"phun.room.Trailer_3x9"},
+        rooms = {"phun.room.Trailer_Medium"},
         scripts = {"Base.SemiTruckBox", "Base.SemiTruckBox_mil"}
     })
 
-    -- Livestock Trailer: 2 bound directly.
+    -- Trailer - Military: 2 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Trailer_Livestock_3x4",
+        id = "phun.vehicles.Trailer_Military",
         source = SOURCE,
-        rooms = {"phun.room.Trailer_Livestock_3x4"},
-        scripts = {"Base.Trailer_Horsebox", "Base.Trailer_Livestock"}
+        rooms = {"phun.room.Trailer_Military"},
+        scripts = {"Base.TrailerM128van", "Base.TrailerM129van"}
     })
 
-    -- Military Trailer: 2 bound directly.
+    -- Truck - Armored: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Trailer_Military_3x9",
+        id = "phun.vehicles.Truck_Armored",
         source = SOURCE,
-        rooms = {"phun.room.Trailer_Military_3x9"},
-        scripts = {"Base.TrailerM128van", "Base.TrailerM129van"}
+        rooms = {"phun.room.Truck_Armored"},
+        scripts = {"Base.87fordF700bank"}
+    })
+
+    -- Truck - Furniture: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Truck_Furniture",
+        source = SOURCE,
+        rooms = {"phun.room.Truck_Furniture"},
+        scripts = {"Base.87fordF700box"}
     })
 
     -- Van: 9 bound directly, 93 more overflowing in.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_2x3",
+        id = "phun.vehicles.Van",
         source = SOURCE,
-        rooms = {"phun.room.Van_2x3"},
+        rooms = {"phun.room.Van"},
         scripts = {"Base.63Type2Van", "Base.63Type2VanApocalypse", "Base.63Type2VanHippie", "Base.63Type2VanMilitary", "Base.87fordF700bank", "Base.87fordF700box", "Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan", "Base.StepVanAirportCatering", "Base.StepVanMail", "Base.StepVan_Blacksmith", "Base.StepVan_Butchers", "Base.StepVan_Cereal", "Base.StepVan_Citr8", "Base.StepVan_CompleteRepairShop", "Base.StepVan_Florist", "Base.StepVan_Genuine_Beer", "Base.StepVan_Glass", "Base.StepVan_Heralds", "Base.StepVan_HuangsLaundry", "Base.StepVan_Jorgensen", "Base.StepVan_LouisvilleMotorShop", "Base.StepVan_LouisvilleSWAT", "Base.StepVan_MarineBites", "Base.StepVan_Masonry", "Base.StepVan_Mechanic", "Base.StepVan_MobileLibrary", "Base.StepVan_Plonkies", "Base.StepVan_Propane", "Base.StepVan_RandisPlants", "Base.StepVan_Scarlet", "Base.StepVan_SmartKut", "Base.StepVan_SouthEasternHosp", "Base.StepVan_SouthEasternPaint", "Base.StepVan_USL", "Base.StepVan_Zippee", "Base.Van", "Base.VanBeckmans", "Base.VanBrewsterHarbin", "Base.VanBuilder", "Base.VanCarpenter", "Base.VanCoastToCoast", "Base.VanDeerValley", "Base.VanFossoil", "Base.VanGardenGods", "Base.VanGardener", "Base.VanGreenes", "Base.VanJohnMcCoy", "Base.VanJonesFabrication", "Base.VanKerrHomes", "Base.VanKnobCreekGas", "Base.VanKnoxCom", "Base.VanKorshunovs", "Base.VanLouisvilleLandscaping", "Base.VanMail", "Base.VanMccoy", "Base.VanMechanic", "Base.VanMeltingPointMetal", "Base.VanMetalheads", "Base.VanMicheles", "Base.VanMobileMechanics", "Base.VanMooreMechanics", "Base.VanOldMill", "Base.VanOvoFarm", "Base.VanPennSHam", "Base.VanPlattAuto", "Base.VanPluggedInElectrics", "Base.VanRadio", "Base.VanRadio_3N", "Base.VanRiversideFabrication", "Base.VanRosewoodworking", "Base.VanSchwabSheetMetal", "Base.VanSeats", "Base.VanSeatsAirportShuttle", "Base.VanSeats_Creature", "Base.VanSeats_LadyDelighter", "Base.VanSeats_Mural", "Base.VanSeats_Prison", "Base.VanSeats_Space", "Base.VanSeats_Trippy", "Base.VanSeats_Valkyrie", "Base.VanSpiffo", "Base.VanTreyBaines", "Base.VanUncloggers", "Base.VanUtility", "Base.VanWPCarpentry", "Base.Van_Blacksmith", "Base.Van_BugWipers", "Base.Van_Charlemange_Beer", "Base.Van_CraftSupplies", "Base.Van_Glass", "Base.Van_HeritageTailors", "Base.Van_KnoxDisti", "Base.Van_Leather", "Base.Van_LectroMax", "Base.Van_Locksmith", "Base.Van_Masonry", "Base.Van_MassGenFac", "Base.Van_Perfick_Potato", "Base.Van_Transit", "Base.Van_VoltMojo"}
     })
 
-    -- Ambulance: 1 bound directly, 1 more overflowing in.
+    -- Van - Alcohol: 2 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Ambulance_2x3",
+        id = "phun.vehicles.Van_Alcohol",
         source = SOURCE,
-        rooms = {"phun.room.Van_Ambulance_2x3"},
-        scripts = {"Base.90fordF350ambulance", "Base.VanAmbulance"}
-    })
-
-    -- Armored Truck: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.Van_Armored_2x4",
-        source = SOURCE,
-        rooms = {"phun.room.Van_Armored_2x4"},
-        scripts = {"Base.87fordF700bank"}
-    })
-
-    -- Art Supply Van: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.Van_ArtSupply_2x3",
-        source = SOURCE,
-        rooms = {"phun.room.Van_ArtSupply_2x3"},
-        scripts = {"Base.Van_CraftSupplies"}
-    })
-
-    -- Alcohol Van: 2 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.Van_Bar_2x3",
-        source = SOURCE,
-        rooms = {"phun.room.Van_Bar_2x3"},
+        rooms = {"phun.room.Van_Alcohol"},
         scripts = {"Base.Van_Charlemange_Beer", "Base.Van_KnoxDisti"}
     })
 
-    -- Blacksmith Van: 1 bound directly.
+    -- Van - Ambulance: 1 bound directly, 1 more overflowing in.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Blacksmith_2x3",
+        id = "phun.vehicles.Van_Ambulance",
         source = SOURCE,
-        rooms = {"phun.room.Van_Blacksmith_2x3"},
+        rooms = {"phun.room.Van_Ambulance"},
+        scripts = {"Base.90fordF350ambulance", "Base.VanAmbulance"}
+    })
+
+    -- Van - Art Supply: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Van_Art_Supply",
+        source = SOURCE,
+        rooms = {"phun.room.Van_Art_Supply"},
+        scripts = {"Base.Van_CraftSupplies"}
+    })
+
+    -- Van - Blacksmith: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Van_Blacksmith",
+        source = SOURCE,
+        rooms = {"phun.room.Van_Blacksmith"},
         scripts = {"Base.Van_Blacksmith"}
     })
 
-    -- Butcher Van: NOTHING REACHES IT. No vehicle is
-    -- bound to phun.room.Van_Butcher_2x3 and no room overflows into it, so its 10
+    -- Van - Butcher: NOTHING REACHES IT. No vehicle is
+    -- bound to phun.room.Van_Butcher and no room overflows into it, so its 10
     -- slots stand empty.
 
-    -- VW Camper Van: 4 bound directly.
+    -- Van - Carpenter: 6 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Camper_2x4",
+        id = "phun.vehicles.Van_Carpenter",
         source = SOURCE,
-        rooms = {"phun.room.Van_Camper_2x4"},
-        scripts = {"Base.63Type2Van", "Base.63Type2VanApocalypse", "Base.63Type2VanHippie", "Base.63Type2VanMilitary"}
-    })
-
-    -- Carpenter Van: 6 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.Van_Carpenter_2x3",
-        source = SOURCE,
-        rooms = {"phun.room.Van_Carpenter_2x3"},
+        rooms = {"phun.room.Van_Carpenter"},
         scripts = {"Base.VanCarpenter", "Base.VanJohnMcCoy", "Base.VanMccoy", "Base.VanMicheles", "Base.VanRosewoodworking", "Base.VanWPCarpentry"}
     })
 
-    -- Comms Van: 3 bound directly.
+    -- Van - Comms: 3 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Comms_2x3",
+        id = "phun.vehicles.Van_Comms",
         source = SOURCE,
-        rooms = {"phun.room.Van_Comms_2x3"},
+        rooms = {"phun.room.Van_Comms"},
         scripts = {"Base.VanKnoxCom", "Base.VanRadio", "Base.VanRadio_3N"}
     })
 
-    -- Construction Van: 5 bound directly.
+    -- Van - Construction: 5 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Construction_2x3",
+        id = "phun.vehicles.Van_Construction",
         source = SOURCE,
-        rooms = {"phun.room.Van_Construction_2x3"},
+        rooms = {"phun.room.Van_Construction"},
         scripts = {"Base.VanBeckmans", "Base.VanBuilder", "Base.VanCoastToCoast", "Base.VanKerrHomes", "Base.VanPennSHam"}
     })
 
-    -- Electrical Van: 3 bound directly.
+    -- Van - Electrical: 3 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Electrical_2x3",
+        id = "phun.vehicles.Van_Electrical",
         source = SOURCE,
-        rooms = {"phun.room.Van_Electrical_2x3"},
+        rooms = {"phun.room.Van_Electrical"},
         scripts = {"Base.VanPluggedInElectrics", "Base.Van_LectroMax", "Base.Van_VoltMojo"}
     })
 
-    -- Farm Van: 1 bound directly.
+    -- Van - Farm: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Farms_2x3",
+        id = "phun.vehicles.Van_Farm",
         source = SOURCE,
-        rooms = {"phun.room.Van_Farms_2x3"},
+        rooms = {"phun.room.Van_Farm"},
         scripts = {"Base.VanOvoFarm"}
     })
 
-    -- Fossil Van: 1 bound directly.
+    -- Van - Fossil: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Fossil_2x3",
+        id = "phun.vehicles.Van_Fossil",
         source = SOURCE,
-        rooms = {"phun.room.Van_Fossil_2x3"},
+        rooms = {"phun.room.Van_Fossil"},
         scripts = {"Base.VanFossoil"}
     })
 
-    -- Furniture Truck: 1 bound directly.
+    -- Van - Gardening: 5 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Furniture_3x6",
+        id = "phun.vehicles.Van_Gardening",
         source = SOURCE,
-        rooms = {"phun.room.Van_Furniture_3x6"},
-        scripts = {"Base.87fordF700box"}
-    })
-
-    -- Gardening Van: 5 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.Van_Gardener_2x3",
-        source = SOURCE,
-        rooms = {"phun.room.Van_Gardener_2x3"},
+        rooms = {"phun.room.Van_Gardening"},
         scripts = {"Base.VanGardenGods", "Base.VanGardener", "Base.VanLouisvilleLandscaping", "Base.VanMooreMechanics", "Base.VanTreyBaines"}
     })
 
-    -- Gas and Electric Van: 2 bound directly.
+    -- Van - Gas and Electric: 2 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_GasElect_2x3",
+        id = "phun.vehicles.Van_Gas_and_Electric",
         source = SOURCE,
-        rooms = {"phun.room.Van_GasElect_2x3"},
+        rooms = {"phun.room.Van_Gas_and_Electric"},
         scripts = {"Base.VanKnobCreekGas", "Base.VanUtility"}
     })
 
-    -- Glass Van: 1 bound directly.
+    -- Van - Glass: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Glass_2x3",
+        id = "phun.vehicles.Van_Glass",
         source = SOURCE,
-        rooms = {"phun.room.Van_Glass_2x3"},
+        rooms = {"phun.room.Van_Glass"},
         scripts = {"Base.Van_Glass"}
     })
 
-    -- Greens Van: 2 bound directly.
+    -- Van - Greens: 2 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Greens_2x3",
+        id = "phun.vehicles.Van_Greens",
         source = SOURCE,
-        rooms = {"phun.room.Van_Greens_2x3"},
+        rooms = {"phun.room.Van_Greens"},
         scripts = {"Base.VanGreenes", "Base.Van_Perfick_Potato"}
     })
 
-    -- Leather Van: 1 bound directly.
+    -- Van - Leather: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Leather_2x3",
+        id = "phun.vehicles.Van_Leather",
         source = SOURCE,
-        rooms = {"phun.room.Van_Leather_2x3"},
+        rooms = {"phun.room.Van_Leather"},
         scripts = {"Base.Van_Leather"}
     })
 
-    -- Love Van: 5 bound directly.
+    -- Van - Love: 5 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Love_2x3",
+        id = "phun.vehicles.Van_Love",
         source = SOURCE,
-        rooms = {"phun.room.Van_Love_2x3"},
+        rooms = {"phun.room.Van_Love"},
         scripts = {"Base.VanSeats_LadyDelighter", "Base.VanSeats_Mural", "Base.VanSeats_Space", "Base.VanSeats_Trippy", "Base.Van_Transit"}
     })
 
-    -- Mail Van: 1 bound directly.
+    -- Van - Mail: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Mail_2x3",
+        id = "phun.vehicles.Van_Mail",
         source = SOURCE,
-        rooms = {"phun.room.Van_Mail_2x3"},
+        rooms = {"phun.room.Van_Mail"},
         scripts = {"Base.VanMail"}
     })
 
-    -- Masonry Van: 1 bound directly.
+    -- Van - Masonry: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Masonry_2x3",
+        id = "phun.vehicles.Van_Masonry",
         source = SOURCE,
-        rooms = {"phun.room.Van_Masonry_2x3"},
+        rooms = {"phun.room.Van_Masonry"},
         scripts = {"Base.Van_Masonry"}
     })
 
-    -- Mechanic Van: 5 bound directly.
+    -- Van - Mechanic: 5 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Mechanic_2x3",
+        id = "phun.vehicles.Van_Mechanic",
         source = SOURCE,
-        rooms = {"phun.room.Van_Mechanic_2x3"},
+        rooms = {"phun.room.Van_Mechanic"},
         scripts = {"Base.VanBrewsterHarbin", "Base.VanKorshunovs", "Base.VanMechanic", "Base.VanMobileMechanics", "Base.VanPlattAuto"}
     })
 
-    -- Plumbing Van: 1 bound directly.
+    -- Van - Plumbing: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Plumbing_2x3",
+        id = "phun.vehicles.Van_Plumbing",
         source = SOURCE,
-        rooms = {"phun.room.Van_Plumbing_2x3"},
+        rooms = {"phun.room.Van_Plumbing"},
         scripts = {"Base.VanUncloggers"}
     })
 
-    -- Police Van: NOTHING REACHES IT. No vehicle is
-    -- bound to phun.room.Van_Police_2x3 and no room overflows into it, so its 10
+    -- Van - Police: NOTHING REACHES IT. No vehicle is
+    -- bound to phun.room.Van_Police and no room overflows into it, so its 10
     -- slots stand empty.
 
-    -- Prison Van: 1 bound directly.
+    -- Van - Prison: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Prison_2x3",
+        id = "phun.vehicles.Van_Prison",
         source = SOURCE,
-        rooms = {"phun.room.Van_Prison_2x3"},
+        rooms = {"phun.room.Van_Prison"},
         scripts = {"Base.VanSeats_Prison"}
     })
 
-    -- Seats Van: 3 bound directly.
+    -- Van - Seats: 3 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Seats_2x3",
+        id = "phun.vehicles.Van_Seats",
         source = SOURCE,
-        rooms = {"phun.room.Van_Seats_2x3"},
+        rooms = {"phun.room.Van_Seats"},
         scripts = {"Base.VanSeats", "Base.VanSeatsAirportShuttle", "Base.VanSeats_Creature"}
     })
 
-    -- Spiffo Van: 1 bound directly.
+    -- Van - Spiffo: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Spiffo_2x3",
+        id = "phun.vehicles.Van_Spiffo",
         source = SOURCE,
-        rooms = {"phun.room.Van_Spiffo_2x3"},
+        rooms = {"phun.room.Van_Spiffo"},
         scripts = {"Base.VanSpiffo"}
     })
 
-    -- Tailor Van: 1 bound directly.
+    -- Van - Tailor: 1 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Tailor_2x3",
+        id = "phun.vehicles.Van_Tailor",
         source = SOURCE,
-        rooms = {"phun.room.Van_Tailor_2x3"},
+        rooms = {"phun.room.Van_Tailor"},
         scripts = {"Base.Van_HeritageTailors"}
     })
 
-    -- Welding Van: 3 bound directly.
+    -- Van - VW Camper: 4 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Van_Welding_2x3",
+        id = "phun.vehicles.Van_VW_Camper",
         source = SOURCE,
-        rooms = {"phun.room.Van_Welding_2x3"},
-        scripts = {"Base.VanMeltingPointMetal", "Base.VanSchwabSheetMetal", "Base.Van_MassGenFac"}
+        rooms = {"phun.room.Van_VW_Camper"},
+        scripts = {"Base.63Type2Van", "Base.63Type2VanApocalypse", "Base.63Type2VanHippie", "Base.63Type2VanMilitary"}
     })
 
-    -- Winnebago: 1 bound directly.
+    -- Van - Welding: 3 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.Winnebago_3x9",
+        id = "phun.vehicles.Van_Welding",
         source = SOURCE,
-        rooms = {"phun.room.Winnebago_3x9"},
-        scripts = {"Base.RollingRefuge"}
+        rooms = {"phun.room.Van_Welding"},
+        scripts = {"Base.VanMeltingPointMetal", "Base.VanSchwabSheetMetal", "Base.Van_MassGenFac"}
     })
 end
 
@@ -2805,9 +2807,9 @@ end
 -- ---------------------------------------------------------------------------
 local function registerObjectHolders()
     Core.registerObjects({
-        id = "phun.objects.Tent_2x3",
+        id = "phun.objects.Tent",
         source = SOURCE,
-        rooms = {"phun.room.Tent_2x3"},
+        rooms = {"phun.room.Tent"},
         items = {"Base.TentBlue", "Base.TentBrown", "Base.TentGreen", "Base.TentYellow"}
     })
 end

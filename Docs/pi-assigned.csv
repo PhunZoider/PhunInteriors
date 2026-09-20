@@ -1,84 +1,84 @@
 ﻿id,label,floor-w,floor-h,spawn-x,spawn-y,front,cab,gen-x,gen-y,gen-z,selfPowered,plumable,roomdef,fallback
-Van_2x3,Van,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,shed,
-Van_Ambulance_2x3,Ambulance,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,medical,
-Ambulance_3x3,Ambulance Bay,3,3,1,1,south,TRUE,1,17,0,FALSE,TRUE,medical,Van_Ambulance_2x3
-Van_Armored_2x4,Armored Truck,2,4,1,1,south,FALSE,1,17,0,FALSE,TRUE,jewelrystorage,Van_2x3
-Van_ArtSupply_2x3,Art Supply Van,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,artstore,Van_2x3
-Van_Bar_2x3,Alcohol Van,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,bar,Van_2x3
-Van_Blacksmith_2x3,Blacksmith Van,2,3,1,0,south,FALSE,1,17,0,FALSE,TRUE,blacksmith,Van_2x3
-Van_Butcher_2x3,Butcher Van,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,butcher,Van_2x3
-Van_Camper_2x4,VW Camper Van,2,4,1,1,south,FALSE,1,17,0,FALSE,TRUE,campingstorage,Van_2x3
-Van_Carpenter_2x3,Carpenter Van,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,carpentryworkshop,Van_2x3
-Van_Comms_2x3,Comms Van,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,radiostorage,Van_2x3
-Van_Construction_2x3,Construction Van,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,construction,Van_2x3
-Van_Electrical_2x3,Electrical Van,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,electronicsstorage,Van_2x3
-Van_Farms_2x3,Farm Van,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,farmstorage,Van_2x3
-Van_Fossil_2x3,Fossil Van,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,fossoil,Van_2x3
-Van_Furniture_3x6,Furniture Truck,3,6,1,1,south,FALSE,1,17,0,FALSE,TRUE,furniturestore,Van_2x3
-Van_Gardener_2x3,Gardening Van,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,gardenstore,Van_2x3
-Van_GasElect_2x3,Gas and Electric Van,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,gasstore,Van_2x3
-Van_Glass_2x3,Glass Van,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,glassesstore,Van_2x3
-Van_Greens_2x3,Greens Van,2,3,1,0,south,FALSE,1,17,0,FALSE,TRUE,grocers,Van_2x3
-Van_Leather_2x3,Leather Van,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,leatherworkshop,Van_2x3
-Van_Love_2x3,Love Van,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,stripclubvip,Van_2x3
-Van_Mail_2x3,Mail Van,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,post,Van_2x3
-Van_Masonry_2x3,Masonry Van,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,masonrystore,Van_2x3
-Van_Mechanic_2x3,Mechanic Van,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,mechanic,Van_2x3
-Van_Plumbing_2x3,Plumbing Van,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,toolstore,Van_2x3
-Van_Police_2x3,Police Van,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,policestorage,Van_2x3
-Van_Prison_2x3,Prison Van,2,3,1,2,south,FALSE,1,17,0,FALSE,TRUE,prisoncells,Van_2x3
-Van_Seats_2x3,Seats Van,2,3,1,2,south,FALSE,1,17,0,FALSE,TRUE,empty,Van_2x3
-Van_Spiffo_2x3,Spiffo Van,2,3,0,0,south,FALSE,1,17,0,FALSE,TRUE,spiffoskitchen,Van_2x3
-Van_Tailor_2x3,Tailor Van,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,tailoringworkshop,Van_2x3
-Van_Welding_2x3,Welding Van,2,3,1,0,south,FALSE,1,17,0,FALSE,TRUE,weldingstorage,Van_2x3
-StepVan_3x4,Step Van,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,storage,Van_2x3
-StepVan_Beer_3x4,Beer Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,beergarden,StepVan_3x4
-StepVan_Blacksmith_3x4,Blacksmith Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,blacksmith,StepVan_3x4
-StepVan_Book_3x4,Book Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,bookstore,StepVan_3x4
-StepVan_Butcher_3x4,Butcher Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,butcher,StepVan_3x4
-StepVan_Carpentry_3x4,Carpentry Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,carpentryworkshop,StepVan_3x4
-StepVan_Catering_3x4,Catering Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,cafeteriakitchen,StepVan_3x4
-StepVan_Citr8_3x4,Citr8 Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,conveniencestore,StepVan_3x4
-StepVan_Fish_3x4,Fish Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,catfish_dining,StepVan_3x4
-StepVan_Florist_3x4,Florist Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,florist,StepVan_3x4
-StepVan_Glass_3x4,Glass Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,glassmakingworkshop,StepVan_3x4
-StepVan_Groceries_3x4,Groceries Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,grocerystorage,StepVan_3x4
-StepVan_Laundry_3x4,Laundry Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,laundry,StepVan_3x4
-StepVan_Logistics_3x4,Logistics Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,poststorage,StepVan_3x4
-StepVan_Mail_3x4,Mail Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,captainoffice,StepVan_3x4
-StepVan_Masonry_3x4,Masonry Truck,3,4,1,3,south,TRUE,1,17,0,FALSE,TRUE,masonrystore,StepVan_3x4
-StepVan_Mechanic_3x4,Mechanic Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,mechanic,StepVan_3x4
-StepVan_News_3x4,News Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,newspaperprint_herald,StepVan_3x4
-StepVan_Paint_3x4,Paint Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,paintershop,StepVan_3x4
-StepVan_Plants_3x4,Plants Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,greenhouse,StepVan_3x4
-StepVan_Plonkies_3x4,Plonkies Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,gas2go,StepVan_3x4
-StepVan_Propane_3x4,Propane Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,gasstorage,StepVan_3x4
-StepVan_Repair_3x4,Repair Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,toolstore,StepVan_3x4
-StepVan_Swat_3x4,Swat Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,policeswat,StepVan_3x4
-StepVan_Tailoring_3x4,Tailoring Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,tailoringstore,StepVan_3x4
-StepVan_Whiskey_3x4,Whiskey Truck,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,whiskeybottling,StepVan_3x4
-Trailer_3x13,Semi Trailer 1,3,13,1,1,south,FALSE,1,17,0,FALSE,TRUE,warehouse,Trailer_3_3x13
-Trailer_2_3x13,Semi Trailer 2,3,13,1,1,south,FALSE,1,17,0,FALSE,TRUE,factorystorage,Trailer_3_3x13
-Trailer_3_3x13,Semi Trailer 3,3,13,1,1,south,FALSE,1,17,0,FALSE,TRUE,waterstorage,Trailer_3x13
-Winnebago_3x9,Winnebago,3,9,1,1,south,FALSE,1,17,0,FALSE,TRUE,camping,
-Caravan_3x9,Caravan - Large,3,9,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
-Caravan_3x5,Caravan - Medium,3,5,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
-Trailer_3x9,Trailer - Medium,3,9,1,1,south,FALSE,1,17,0,FALSE,TRUE,storage,
-Trailer_Livestock_3x4,Livestock Trailer,3,4,1,1,south,FALSE,1,17,0,FALSE,TRUE,barn,
-Trailer_Military_3x9,Military Trailer,3,9,1,1,south,FALSE,1,17,0,FALSE,TRUE,armystorage,
-Caravan_2x3,Caravan - Mini,2,3,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
-Caravan_2x4,Caravan - Small,2,4,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
-Caravan_Dasher_2x4,Caravan - Dasher,2,4,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
-Caravan_WB_3x5,Winnebago - Small,3,5,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
-Tent_2x3,Tent,2,3,1,1,north,FALSE,1,17,0,FALSE,FALSE,empty,
-Military_4x4,Military Box,4,4,1,1,south,FALSE,1,17,0,FALSE,TRUE,armytent,
-K15_GAGE_4x5,GAGE K15,4,5,1,1,south,TRUE,1,17,0,FALSE,TRUE,armysurplus,
-RV_3x9,RV,3,9,1,1,south,TRUE,1,17,0,FALSE,TRUE,camping,
-RV2_3x9,RV 2,3,9,1,1,south,TRUE,1,17,0,FALSE,TRUE,camping,
-Container_3x6,Container,3,6,1,1,south,FALSE,1,17,0,FALSE,TRUE,warehouse,
-Container2_3x6,Container 2,3,6,1,1,south,FALSE,1,17,0,FALSE,TRUE,factorystorage,
-Container3_3x6,Container 3,3,6,1,1,south,FALSE,1,17,0,FALSE,TRUE,storageunit,
-Bus_Military_3x9,Bus - Military,3,9,0,1,south,TRUE,1,17,0,FALSE,TRUE,oldarmy,Bus_3x9
-Bus_Prison_3x9,Bus - Prison,3,9,0,1,south,FALSE,1,17,0,FALSE,TRUE,prisoncells,Bus_3x9
-Bus_School_3x9,Bus - School,3,9,0,1,south,TRUE,1,17,0,FALSE,TRUE,elementaryschool,Bus_3x9
-Bus_3x9,Bus,3,9,0,1,south,FALSE,1,17,0,FALSE,TRUE,shed,
+Van,Van,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,shed,
+Van_Ambulance,Van - Ambulance,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,medical,
+Ambulance_Bay,Ambulance Bay,3,3,1,1,south,TRUE,1,17,0,FALSE,TRUE,medical,Van_Ambulance
+Truck_Armored,Truck - Armored,2,4,1,1,south,FALSE,1,17,0,FALSE,TRUE,jewelrystorage,Van
+Van_Art_Supply,Van - Art Supply,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,artstore,Van
+Van_Alcohol,Van - Alcohol,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,bar,Van
+Van_Blacksmith,Van - Blacksmith,2,3,1,0,south,FALSE,1,17,0,FALSE,TRUE,blacksmith,Van
+Van_Butcher,Van - Butcher,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,butcher,Van
+Van_VW_Camper,Van - VW Camper,2,4,1,1,south,FALSE,1,17,0,FALSE,TRUE,campingstorage,Van
+Van_Carpenter,Van - Carpenter,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,carpentryworkshop,Van
+Van_Comms,Van - Comms,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,radiostorage,Van
+Van_Construction,Van - Construction,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,construction,Van
+Van_Electrical,Van - Electrical,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,electronicsstorage,Van
+Van_Farm,Van - Farm,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,farmstorage,Van
+Van_Fossil,Van - Fossil,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,fossoil,Van
+Truck_Furniture,Truck - Furniture,3,6,1,1,south,FALSE,1,17,0,FALSE,TRUE,furniturestore,Van
+Van_Gardening,Van - Gardening,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,gardenstore,Van
+Van_Gas_and_Electric,Van - Gas and Electric,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,gasstore,Van
+Van_Glass,Van - Glass,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,glassesstore,Van
+Van_Greens,Van - Greens,2,3,1,0,south,FALSE,1,17,0,FALSE,TRUE,grocers,Van
+Van_Leather,Van - Leather,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,leatherworkshop,Van
+Van_Love,Van - Love,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,stripclubvip,Van
+Van_Mail,Van - Mail,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,post,Van
+Van_Masonry,Van - Masonry,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,masonrystore,Van
+Van_Mechanic,Van - Mechanic,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,mechanic,Van
+Van_Plumbing,Van - Plumbing,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,toolstore,Van
+Van_Police,Van - Police,2,3,1,1,south,FALSE,1,17,0,FALSE,TRUE,policestorage,Van
+Van_Prison,Van - Prison,2,3,1,2,south,FALSE,1,17,0,FALSE,TRUE,prisoncells,Van
+Van_Seats,Van - Seats,2,3,1,2,south,FALSE,1,17,0,FALSE,TRUE,empty,Van
+Van_Spiffo,Van - Spiffo,2,3,0,0,south,FALSE,1,17,0,FALSE,TRUE,spiffoskitchen,Van
+Van_Tailor,Van - Tailor,2,3,0,1,south,FALSE,1,17,0,FALSE,TRUE,tailoringworkshop,Van
+Van_Welding,Van - Welding,2,3,1,0,south,FALSE,1,17,0,FALSE,TRUE,weldingstorage,Van
+Step_Van,Step Van,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,storage,Van
+Step_Van_Beer,Step Van - Beer,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,beergarden,Step_Van
+Step_Van_Blacksmith,Step Van - Blacksmith,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,blacksmith,Step_Van
+Step_Van_Book,Step Van - Book,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,bookstore,Step_Van
+Step_Van_Butcher,Step Van - Butcher,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,butcher,Step_Van
+Step_Van_Carpentry,Step Van - Carpentry,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,carpentryworkshop,Step_Van
+Step_Van_Catering,Step Van - Catering,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,cafeteriakitchen,Step_Van
+Step_Van_Citr8,Step Van - Citr8,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,conveniencestore,Step_Van
+Step_Van_Fish,Step Van - Fish,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,catfish_dining,Step_Van
+Step_Van_Florist,Step Van - Florist,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,florist,Step_Van
+Step_Van_Glass,Step Van - Glass,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,glassmakingworkshop,Step_Van
+Step_Van_Groceries,Step Van - Groceries,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,grocerystorage,Step_Van
+Step_Van_Laundry,Step Van - Laundry,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,laundry,Step_Van
+Step_Van_Logistics,Step Van - Logistics,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,poststorage,Step_Van
+Step_Van_Mail,Step Van - Mail,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,captainoffice,Step_Van
+Step_Van_Masonry,Step Van - Masonry,3,4,1,3,south,TRUE,1,17,0,FALSE,TRUE,masonrystore,Step_Van
+Step_Van_Mechanic,Step Van - Mechanic,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,mechanic,Step_Van
+Step_Van_News,Step Van - News,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,newspaperprint_herald,Step_Van
+Step_Van_Paint,Step Van - Paint,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,paintershop,Step_Van
+Step_Van_Plants,Step Van - Plants,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,greenhouse,Step_Van
+Step_Van_Plonkies,Step Van - Plonkies,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,gas2go,Step_Van
+Step_Van_Propane,Step Van - Propane,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,gasstorage,Step_Van
+Step_Van_Repair,Step Van - Repair,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,toolstore,Step_Van
+Step_Van_SWAT,Step Van - SWAT,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,policeswat,Step_Van
+Step_Van_Tailoring,Step Van - Tailoring,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,tailoringstore,Step_Van
+Step_Van_Whiskey,Step Van - Whiskey,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,whiskeybottling,Step_Van
+Semi_Trailer_Warehouse,Semi Trailer - Warehouse,3,13,1,1,south,FALSE,1,17,0,FALSE,TRUE,warehouse,Semi_Trailer_Water
+Semi_Trailer_Factory,Semi Trailer - Factory,3,13,1,1,south,FALSE,1,17,0,FALSE,TRUE,factorystorage,Semi_Trailer_Water
+Semi_Trailer_Water,Semi Trailer - Water,3,13,1,1,south,FALSE,1,17,0,FALSE,TRUE,waterstorage,Semi_Trailer_Warehouse
+RV_Large,RV - Large,3,9,1,1,south,TRUE,1,17,0,FALSE,TRUE,camping,
+Camper_Large,Camper - Large,3,9,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
+Camper_Medium,Camper - Medium,3,5,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
+Trailer_Medium,Trailer - Medium,3,9,1,1,south,FALSE,1,17,0,FALSE,TRUE,storage,
+Trailer_Livestock,Trailer - Livestock,3,4,1,1,south,FALSE,1,17,0,FALSE,TRUE,barn,
+Trailer_Military,Trailer - Military,3,9,1,1,south,FALSE,1,17,0,FALSE,TRUE,armystorage,
+Camper_Mini,Camper - Mini,2,3,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
+Camper_Small,Camper - Small,2,4,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
+Camper_Dasher,Camper - Dasher,2,4,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
+RV_Small,RV - Small,3,5,1,1,north,TRUE,1,17,0,FALSE,TRUE,camping,
+Tent,Tent,2,3,1,1,north,FALSE,1,17,0,FALSE,FALSE,empty,
+Military_Box,Military Box,4,4,1,1,south,FALSE,1,17,0,FALSE,TRUE,armytent,
+GAGE_K15,GAGE K15,4,5,1,1,south,TRUE,1,17,0,FALSE,TRUE,armysurplus,
+RV_Spare_1,RV - Spare 1,3,9,1,1,south,TRUE,1,17,0,FALSE,TRUE,camping,
+RV_Spare_2,RV - Spare 2,3,9,1,1,south,TRUE,1,17,0,FALSE,TRUE,camping,
+Container_Warehouse,Container - Warehouse,3,6,1,1,south,FALSE,1,17,0,FALSE,TRUE,warehouse,
+Container_Factory,Container - Factory,3,6,1,1,south,FALSE,1,17,0,FALSE,TRUE,factorystorage,
+Container_Storage,Container - Storage,3,6,1,1,south,FALSE,1,17,0,FALSE,TRUE,storageunit,
+Bus_Military,Bus - Military,3,9,0,1,south,TRUE,1,17,0,FALSE,TRUE,oldarmy,Bus
+Bus_Prison,Bus - Prison,3,9,0,1,south,FALSE,1,17,0,FALSE,TRUE,prisoncells,Bus
+Bus_School,Bus - School,3,9,0,1,south,TRUE,1,17,0,FALSE,TRUE,elementaryschool,Bus
+Bus,Bus,3,9,0,1,south,FALSE,1,17,0,FALSE,TRUE,shed,

@@ -611,8 +611,8 @@ end
 --- Does this room row match a lowercased filter string?
 ---
 --- Shared between the console list and the window so the two cannot disagree
---- about what "bar" finds. Substring rather than prefix: a room id is
---- `phun.room.2x3_bar` and nobody types the prefix.
+--- about what "mechanic" finds. Substring rather than prefix: a room id is
+--- `phun.room.Van_Mechanic` and nobody types the prefix.
 function Admin.roomMatches(room, filter)
     if not filter or filter == "" then
         return true
