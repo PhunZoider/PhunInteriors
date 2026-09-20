@@ -65,9 +65,16 @@ local function notifyThrottled(player, occupancy, textKey)
     notify(player, textKey, true)
 end
 
---- Count zombies near a point. Used for both the entry gate and the exit tax.
-local function zombiesNear(x, y, z, radius)
-    local count = 0
+--- Every live zombie within `radius` of a point.
+--
+-- Collected into a table rather than visited in place, because the caller that
+-- acts on the answer MOVES them, and a zombie leaving a square rearranges the
+-- list this sweep is walking. That is the same shape of bug as removing an
+-- event handler during dispatch: it does not throw, it silently skips the next
+-- one, and here it would leave somebody standing in a bubble that reported
+-- itself cleared.
+local function zombiesWithin(x, y, z, radius)
+    local found = {}
     local cell = getCell()
     for ix = math.floor(x - radius), math.floor(x + radius) do
         for iy = math.floor(y - radius), math.floor(y + radius) do
@@ -78,16 +85,160 @@ local function zombiesNear(x, y, z, radius)
                     for i = 0, moving:size() - 1 do
                         local object = moving:get(i)
                         if object and instanceof(object, "IsoZombie") and not object:isDead() then
-                            count = count + 1
+                            found[#found + 1] = object
                         end
                     end
                 end
             end
         end
     end
-    return count
+    return found
+end
+
+--- Count zombies near a point. Used for both the entry gate and the exit tax.
+local function zombiesNear(x, y, z, radius)
+    return #zombiesWithin(x, y, z, radius)
 end
 Transit.zombiesNear = zombiesNear
+
+-- ---------------------------------------------------------------------------
+-- Clearing the ground somebody is about to be standing on.
+--
+-- Coming out is a teleport, so a tenant cannot see where they are landing and
+-- cannot decline to land there. Materialising on top of a crowd is not a risk
+-- they took; it is one the mechanic took on their behalf, and no amount of
+-- skill answers it. So whatever is standing inside a bubble around the landing
+-- point is shoved to the edge of it.
+--
+-- Deliberately a shove and not a despawn. The crowd is still there, it is
+-- still coming, and it is still bigger than the one they left, because the
+-- exit tax says so. What the bubble buys is the second or two of warning that
+-- somebody walking round the corner on foot would have had.
+--
+-- Server side, with the rest of the zombie code, for the reason the leash is:
+-- the server is the authority, and a client that simply declines to run this
+-- must still have it run.
+-- ---------------------------------------------------------------------------
+
+--- May a character be put on this square, arriving from `from`?
+--
+-- isBlockedTo is the wall, window, door and stair test between two ADJACENT
+-- squares, which is why the walk below steps one square at a time rather than
+-- jumping to the destination: a shove should stop a zombie against a wall, not
+-- post it through one.
+--
+-- isOurSpace is the other refusal, and it is not decoration. An exit inside
+-- the interior block -- an admin port, or a vehicle somebody drove onto it --
+-- would otherwise shove the neighbourhood into a leased room.
+local function shovable(square, from)
+    if not square then
+        return false
+    end
+    if square:isSolid() or square:isSolidTrans() then
+        return false
+    end
+    if not square:getFloor() then
+        return false
+    end
+    if from and from:isBlockedTo(square) then
+        return false
+    end
+    if Core.isOurSpace(square:getX(), square:getY(), square:getZ()) then
+        return false
+    end
+    return true
+end
+
+--- Move one zombie out to the edge of the bubble, as far as it can get.
+local function shoveOne(zombie, cx, cy, radius, spread)
+    -- Floored, because the teleportTo overloads are (float, float, INT) and
+    -- (int, int, int): handing a float level to a call that wants an int is how
+    -- a Kahlua overload resolves to something nobody meant.
+    local zz = math.floor(zombie:getZ())
+    local dx, dy = zombie:getX() - cx, zombie:getY() - cy
+    local length = math.sqrt(dx * dx + dy * dy)
+    if length < 0.01 then
+        -- Standing on the very square we landed on, so it has no outward
+        -- direction of its own to read. Fan them round the compass by index
+        -- rather than stacking a whole pile on one bearing.
+        local angle = (spread % 8) * math.pi / 4
+        dx, dy, length = math.cos(angle), math.sin(angle), 1
+    end
+    dx, dy = dx / length, dy / length
+
+    local cell = getCell()
+    local tx = math.floor(cx + dx * (radius + 1))
+    local ty = math.floor(cy + dy * (radius + 1))
+    local x, y = math.floor(zombie:getX()), math.floor(zombie:getY())
+    local square = cell:getGridSquare(x, y, zz)
+    local moved = false
+
+    -- The Manhattan distance from inside a circle to a point on its edge is at
+    -- most twice the radius, and every step below closes it, so this cannot
+    -- spin however the geometry comes out.
+    for _ = 1, 2 * radius + 4 do
+        if x == tx and y == ty then
+            break
+        end
+        -- One cardinal step, longer axis first. Cardinal rather than diagonal
+        -- because isBlockedTo asks about a shared edge, and two squares that
+        -- meet at a corner do not have one.
+        local sx, sy = x, y
+        if math.abs(tx - x) >= math.abs(ty - y) then
+            sx = x + (tx > x and 1 or -1)
+        else
+            sy = y + (ty > y and 1 or -1)
+        end
+        local step = cell:getGridSquare(sx, sy, zz)
+        if not shovable(step, square) then
+            break
+        end
+        x, y, square = sx, sy, step
+        moved = true
+    end
+
+    if not moved then
+        return false
+    end
+
+    -- The same call and the same half tile the player teleport uses, so both
+    -- ends of a port land the same way. teleportTo floors it either way; the
+    -- offset is there so it stays centred should that ever change.
+    zombie:teleportTo(x + 0.5, y + 0.5, zz)
+    return true
+end
+
+--- Clear a bubble of `radius` squares around a point. Returns how many moved.
+--
+-- A zombie with nowhere to go is left where it is, which is the honest answer:
+-- the bubble is a best effort and never a guarantee. Boxed in on every side,
+-- there is nowhere to put it that is not a worse lie than leaving it.
+function Transit.shoveZombies(x, y, z, radius)
+    radius = tonumber(radius) or 0
+    if radius <= 0 then
+        -- The sandbox option turned off. One place decides that, and it is
+        -- here, so no caller has to remember to ask first.
+        return 0
+    end
+    z = math.floor(z)
+
+    local crowd = zombiesWithin(x, y, z, radius)
+    local moved = 0
+    for index, zombie in ipairs(crowd) do
+        if shoveOne(zombie, x, y, radius, index) then
+            moved = moved + 1
+        end
+    end
+
+    -- Silent when there was nothing to do, which on an ordinary exit is most
+    -- of the time. A line that fires when nothing happened is how a log
+    -- becomes something nobody reads.
+    if #crowd > 0 then
+        Core.debugLn(string.format("shove: %d of %d zombie(s) cleared from %d squares around %d,%d,%d", moved, #crowd,
+            radius, math.floor(x), math.floor(y), math.floor(z)))
+    end
+    return moved
+end
 
 --- Can this player enter this vehicle right now?
 -- Returns true, or false plus a translation key.
@@ -1156,6 +1307,17 @@ function Transit.arrived(player, handle, seated)
         return false
     end
     pendingArrivals[key] = nil
+
+    -- Clear the ground first, before anything below decides to send them back
+    -- inside or to tell them their vehicle is gone.
+    --
+    -- Here rather than in Transit.leave, and this is the same split the weight
+    -- and the power ledger already live on: when leave ran, the destination
+    -- chunk was unloaded, so there were no zombies there to move -- there were
+    -- no zombies there at all, because a zombie only exists as an object in a
+    -- loaded chunk. The player arriving is what loads it, and this report is
+    -- the first moment the server knows they have.
+    Transit.shoveZombies(player:getX(), player:getY(), player:getZ(), Core.settings.ExitShoveRadius)
 
     -- A world object holder. Nothing was driven here, nothing is owed against
     -- a battery and there is no seat to be refused, so the whole report is

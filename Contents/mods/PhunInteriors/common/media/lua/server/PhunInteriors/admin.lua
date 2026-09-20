@@ -742,6 +742,29 @@ actions.scrub = function(args)
     return {"scrubbed " .. done .. " quarantined slot(s)"}
 end
 
+-- The exit shove, on demand and from wherever you are standing.
+--
+-- It exists for the same reason admin("reclaim") does: the real trigger needs
+-- a set of circumstances that are tedious to arrange. Here that is a crowd
+-- standing where a leased vehicle is parked at the moment somebody walks out
+-- of its room, and the whole point of the mechanic is that it is over before
+-- the player can look at it. This puts the same call in front of a zombie
+-- horde an admin can spawn and watch.
+--
+-- Deliberately the same Transit.shoveZombies the exit calls, rather than its
+-- own copy: a test that exercises a second implementation tests nothing.
+actions.shove = function(args, player)
+    if not player then
+        return {"shove needs a player to centre on"}
+    end
+    local radius = tonumber(args.radius) or Core.settings.ExitShoveRadius or 0
+    if radius <= 0 then
+        return {"shove radius is 0, so nothing would move; pass {radius = 6} to try it anyway"}
+    end
+    local moved = Transit.shoveZombies(player:getX(), player:getY(), player:getZ(), radius)
+    return {string.format("shoved %d zombie(s) out of %d squares", moved, radius)}
+end
+
 actions.evict = function(args)
     local username = args.username
     if not username then
@@ -1017,7 +1040,8 @@ function Admin.registerChatCommands()
                 vehicleId = parts[2],
                 room = parts[2],
                 index = parts[3],
-                username = parts[2]
+                username = parts[2],
+                radius = parts[2]
             }, player)
             for _, line in ipairs(result) do
                 Core.logLn(line)

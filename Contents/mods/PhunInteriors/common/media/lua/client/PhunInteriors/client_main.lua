@@ -198,17 +198,40 @@ local function bearing(vehicle, toward)
     if not ok or not forward then
         return nil
     end
-    local fx, fy = forward:x(), forward:y()
+    -- x() and z(), not x() and y(). getForwardVector hands back column 2 of
+    -- the physics basis, which is a BULLET space vector, and bullet's y is UP.
+    -- BaseVehicle.getWorldPos settles it from the bytecode: it builds a world
+    -- position as origin.x -> world x, origin.z -> world y, origin.y -> height.
+    -- So the map plane is (x, z), and reading y() sampled the vertical axis.
+    --
+    -- On level ground that component is ~0, so the length test below failed and
+    -- this returned nil for every vehicle pointing north or south -- which is
+    -- most parked ones. The geometric route then fell through to the nearest
+    -- door, and a caravan declares the SAME outside position for all six of its
+    -- passengers, so all four ways out landed on one fixed spot on one side.
+    -- That is the "sometimes relative to the exit, sometimes not".
+    --
+    -- A vehicle facing east or west survived it, because there the component
+    -- being read happens to be the forward one, so front and rear came out
+    -- right and left and right came out a quarter turn off. A fault that is
+    -- correct on two headings of four is why it read as inconsistent rather
+    -- than as broken.
+    local fx, fy = forward:x(), forward:z()
     local length = math.sqrt(fx * fx + fy * fy)
     if length < 0.1 then
         return nil
     end
     fx, fy = fx / length, fy / length
-    -- Rotate anticlockwise `turn` quarter turns. Written out rather than done
-    -- with sin and cos, because at multiples of 90 degrees those only
-    -- introduce floating point fuzz around zero.
+    -- Rotate LEFT `turn` quarter turns. In a y-up frame left is (-fy, fx); PZ's
+    -- map y increases SOUTHWARD, so the same formula turns the other way and
+    -- left here is (fy, -fx). Check it on a compass rather than by eye: facing
+    -- north is (0, -1), and the left hand of somebody facing north points west,
+    -- which is (-1, 0).
+    --
+    -- Written out rather than done with sin and cos, because at multiples of 90
+    -- degrees those only introduce floating point fuzz around zero.
     for _ = 1, turn do
-        fx, fy = -fy, fx
+        fx, fy = fy, -fx
     end
     return fx, fy
 end
@@ -234,21 +257,32 @@ end
 --
 -- Nil when nothing resolves and when nothing clear turns up within STEP_LIMIT,
 -- whereupon the caller uses the door position the exit has always used.
-local STEP_LIMIT = 6
+--
+-- Eight rather than six because the walk starts at the vehicle's middle, so it
+-- has to cross half the bodywork before it can clear it, and a semi trailer is
+-- ten squares long.
+local STEP_LIMIT = 8
 
 function Client.groundBeside(vehicle, toward)
-    local ax, ay, dx, dy
+    -- The vehicle's own middle, ALWAYS, with the area used for nothing but the
+    -- direction. It used to start the walk at the area centre, which made the
+    -- landing distance a property of where the script author happened to put
+    -- that rectangle: the FlyingCloud's TruckBed sits 3.4 out on a hull half
+    -- 2.9 deep, so the walk began already clear of the vehicle and returned at
+    -- once, a square further back than every other way out. Stepping from the
+    -- middle gives one rule -- the first square past the bodywork -- and it is
+    -- the same rule whichever direction is asked for.
+    local cx, cy = vehicle:getX(), vehicle:getY()
+    local dx, dy
 
     for _, area in ipairs(AREAS_FOR[toward] or {}) do
         local centre = vehicle:getAreaCenter(area)
         if centre then
-            local cx, cy = centre:getX(), centre:getY()
-            local ox, oy = cx - vehicle:getX(), cy - vehicle:getY()
+            local ox, oy = centre:getX() - cx, centre:getY() - cy
             local length = math.sqrt(ox * ox + oy * oy)
             -- An area centred on the vehicle gives no direction at all, so it
             -- is no better than not having declared one.
             if length >= 0.1 then
-                ax, ay = cx, cy
                 dx, dy = ox / length, oy / length
                 break
             end
@@ -257,9 +291,8 @@ function Client.groundBeside(vehicle, toward)
 
     if not dx then
         -- No area spoke for this direction. Ask the vehicle which way it is
-        -- pointing instead, and start from its middle.
+        -- pointing instead.
         dx, dy = bearing(vehicle, toward)
-        ax, ay = vehicle:getX(), vehicle:getY()
     end
 
     if not dx then
@@ -269,10 +302,14 @@ function Client.groundBeside(vehicle, toward)
     end
 
     local z = vehicle:getZ()
-    for step = 0, STEP_LIMIT do
-        local tx, ty = ax + dx * step, ay + dy * step
+    for step = 1, STEP_LIMIT do
+        -- Tile centres, not the raw float. Everything else in this file lands
+        -- on a +0.5, and a fractional position is how a player ends up half
+        -- inside the bodywork the square test just called clear.
+        local tx = math.floor(cx + dx * step) + 0.5
+        local ty = math.floor(cy + dy * step) + 0.5
         local square = getSquare(tx, ty, z)
-        if square and not square:getVehicleContainer() then
+        if square and not square:getVehicleContainer() and not square:isSolid() then
             return tx, ty
         end
     end
@@ -581,6 +618,7 @@ end
 --     PhunInteriors.admin("reclaim")  -- or {room = "..."}; what a full pool would take
 --     PhunInteriors.admin("reload")   -- after changing a sandbox option
 --     PhunInteriors.admin("weight")
+--     PhunInteriors.admin("shove")   -- or {radius = 6}; clears the ground round you
 --     PhunInteriors.admin("evict", {username = "..."})
 --
 -- Results come back through Core.commands.adminResult and print to the log,

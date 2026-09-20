@@ -70,6 +70,13 @@ normally; that is intended.
 **So every mechanic in v1 is now proven in game except power binding**, which
 is new and has never run. It needs a map with a generator sprite in the room.
 
+**And except the exit shove**, which is newer still. `Transit.shoveZombies`
+clears a bubble of ground around a tenant on the way out, because coming out
+is a teleport and nobody can decline to land in a crowd they cannot see. It
+runs off the arrival report, so it covers every tenant exit and no admin port.
+Known gaps #14 says what to watch, and the multiplayer half of it is the
+zombie authority row in the API table.
+
 A reclaim is reachable without waiting out the sandbox or filling 1200 rooms:
 `PhunInteriors.admin("age", {vehicleId = ..., days = 99})` then
 `admin("reclaim")`, which picks with the same function allocation uses. Do not
@@ -431,7 +438,27 @@ the old table told.
 Lua**, which by this file's own rule is a reason to probe rather than trust. It
 is `pcall`'d and nil-checked, and every caller already falls back to the nearest
 door, so nothing depends on it working. `Vector3f.new()` is proven reachable
-from Lua — `client_main.lua` already uses one.
+from Lua -- `client_main.lua` already uses one.
+
+**And the probe found the thing the nil check could not.** It answers in
+**bullet space, where y is up**, so the map plane is `x()` and `z()`; reading
+`x(), y()` sampled the vertical, which on level ground is zero. The vector then
+read as zero length for every vehicle pointing north or south and `bearing`
+returned nil, so the geometric route never ran and every exit fell through to
+the nearest door -- which on a caravan is one fixed spot, because all six of the
+FlyingCloud's passengers declare the same outside position. An east or west
+facing vehicle answered normally, with left and right a quarter turn out,
+because PZ's map y increases southward and a left turn there is `(fy, -fx)`.
+Correct on two headings of four is why it was reported as inconsistent rather
+than as broken. See the API table.
+
+The walk out from the vehicle also starts at the vehicle's **middle**, with the
+area centre used for nothing but the direction. It used to start at the area
+centre, which made the landing distance a property of where a script author put
+that rectangle: the FlyingCloud's `TruckBed` sits 3.4 out on a hull half 2.9
+deep, so a rear exit began already clear and landed a square further back than
+any other way out. One rule -- the first square past the bodywork -- reads the
+same whichever direction is asked for.
 
 A landing is a preference, not a position. There is no default front, for the
 reason `generator` has no default — a room whose long axis ran east-west would
@@ -608,6 +635,53 @@ owed; the client moves them, because vanilla only ever seats a character from a
 client timed action; then the client reports what it found, which is the first
 moment anybody can tell an unloaded vehicle from a destroyed one. Weight is
 applied on that report rather than by a poll — same moment, one less timer.
+
+**And the arrival report is also where the ground gets cleared.** Coming out is
+a teleport, so a tenant cannot see what they are landing in and cannot decline
+to land there: materialising on top of a crowd is not a risk they took, it is
+one the mechanic took for them, and no amount of skill answers it. So
+`Transit.shoveZombies` moves anything standing within `ExitShoveRadius` of the
+landing point out to the edge of that bubble.
+
+A **shove**, never a despawn. The crowd is still there, it is still coming, and
+the exit tax means it is bigger than the one they went in past. What the bubble
+buys is the second or two of warning somebody walking round a corner on foot
+would have had, which is the thing the teleport took away.
+
+**On the arrival report rather than in `Transit.leave`**, and it is the same
+split the weight and the power ledger already sit on. When `leave` runs the
+destination chunk is unloaded, and an unloaded chunk does not merely hide its
+zombies -- they do not exist as objects at all until the population manager
+realises them, which the arriving player is what triggers. So the report is the
+first moment there is anything there to push.
+
+The consequence is that it covers every tenant exit and **not an admin port**,
+which deliberately files no arrival paperwork, nor `rescueStranded`. Both land
+somebody somewhere they chose or came from, so neither is the failure this
+exists for. `admin("shove")` runs the same call from where you are standing,
+for the same reason `admin("reclaim")` exists: the real trigger is hard to
+arrange and impossible to watch.
+
+**One number, and zero means off.** No separate tick beside it, for the reason
+`RoomProtectedDays` has none: a tick and a threshold are two controls for one
+decision and they can disagree.
+
+**The walk out is one cardinal square at a time**, refusing a square that is
+solid, floorless, blocked from the one before it by `isBlockedTo`, or inside
+one of our own slots. Cardinal because `isBlockedTo` asks about a shared edge
+and two squares meeting at a corner do not have one; a square at a time because
+a shove should stop a zombie against a wall rather than post it through one.
+A zombie with nowhere to go stays where it is, which is the honest answer: the
+bubble is a best effort and never a guarantee.
+
+The slot refusal is not decoration. An exit inside the interior block -- an
+admin port, or a vehicle somebody drove onto it -- would otherwise shove the
+neighbourhood into a leased room.
+
+**Server side, with the rest of the zombie code**, for the reason the leash is:
+the server is the authority, and a client that simply declines to run this must
+still have it run. See the zombie authority row in the API table for what that
+costs in multiplayer.
 
 **A seat and the interior are the same vehicle.** Moving between them is an
 internal move and is allowed at any speed. Only the boundary between the
@@ -1545,6 +1619,9 @@ B41 tutorial applies.
 | **Safehouse claims are a global list, and the overlap test is half open.** `SafeHouse` (`zombie/iso/areas`) declares static `getSafehouseOverlapping(int, int, int, int)`; from the bytecode it walks `safehouseList` and returns the first house where `arg0 < house.x + w`, `arg2 > house.x`, `arg1 < house.y + h` and `arg3 > house.y` — so the arguments are corners `x1, y1, x2, y2` with the far edge **exclusive**, which is how vanilla's zone editor passes them. `getX2()` is `x + w`. It reads no square, so it answers for an unloaded chunk. `SafeHouse.getSafeHouse(square)` also exists but needs a loaded square. | `Slots.safehouseOn` passes `Core.slotBounds`, whose far edges are inclusive, as `x1, y1, x2 + 1, y2 + 1`. Passing them unadjusted misses a claim covering only the footprint's last row or column — which is where the south and east walls stand. A claimed slot is never scrubbed (`Scrub.slot`), reclaimed (`isReclaimable`) or handed to a vehicle that does not hold it (`Slots.acquire`, and `acquireIn`'s own pick). |
 | **Nothing in the engine keeps a player OFF a claimed safehouse square.** The whole enforcement surface is one method — `SafeHouse.isPlayerAllowedOnSquare(IsoPlayer, IsoGridSquare)` — which reads `ServerOptions.safehouseAllowTrepass` (PZ's own spelling) and otherwise asks `SafeHouse.isSafeHouse(square, username, true)`. Across the entire jar exactly two classes reference it: `SafeHouse` itself, and `BaseVehicle`, from **`isExitBlocked2`** — "can you get out of this seat onto that square". There is no movement gate, no periodic sweep and no ejection anywhere. | So a claim protects a safehouse from being *driven into and stepped out of*, and from nothing else. Teleporting a player onto a claimed square is not undone by the engine, so **porting a tenant into a room somebody else has claimed just works** — they stand in it and the leash contains them there normally. It does not self-correct into an eviction, which was the hope. If a claim should gate ENTRY as well as protect the room, that is ours to build in `Transit.canEnter`, and it needs an answer for a refusal that has to be explained in terms of a vehicle the player is standing next to rather than a building they can see. |
 | `BaseVehicle` declares `getCurrentSpeedKmHour`, `getSpeed2D`, `getDriver`, `getDriverRegardlessOfTow`, `getVehicleTowing`, `getTowingPartner`, `isSeatInstalled`, `isDriver`. `OnSwitchVehicleSeat` is **not** an engine event — vanilla registers it from `ISVehicleDashboard.lua:716`. | Rule 5 gates on speed, not on `getDriver()`, because a towed vehicle moves with nobody at its wheel. The tracker installs in the deferred setup, like the destroy guards, or the seat hook silently does nothing. |
+| **Zombies are authorized to a client, not simulated by the server alone.** `zombie/popman/NetworkZombieManager` declares `getZombieAuth(UdpConnection, ZombieListPacket)`, `getAuthorizedZombieCount(UdpConnection)`, `getUnauthorizedZombieCount()`, `moveZombie(IsoZombie, UdpConnection, IsoPlayer)` and `recheck(IConnection)`, and `IsoZombie` carries `getOwner()`/`setOwner(UdpConnection)`, `getOwnerPlayer()` and `isRemoteZombie()`. Vanilla lua never touches any of it: **removing** zombies from a client is `SendCommandToServer("/removezombies ...")` in `ISSpawnHordeUI:onRemoveZombies`, with the direct `removeFromWorld()` + `removeFromSquare()` pair reserved for single player. | So a zombie near a player is simulated by **that player's client**, and a position written on any other side is overwritten by the owner's next update. `Transit.shoveZombies` is server side anyway, on the same reasoning as the leash, and the case it is written for is the one where the server is the owner: nobody has been near that vehicle, so the zombies were realised into a chunk the arriving player has only just loaded and `recheck` has not handed them over yet. Unproven on a dedicated server, and the tell if it is wrong is a shove that visibly snaps back. |
+| `IsoGridSquare.isBlockedTo(IsoGridSquare)` is `isWallTo` OR `isWindowBlockedTo` OR `isDoorBlockedTo` OR `isStairBlockedTo` — a question about the edge two **adjacent** squares share, so it means nothing between two that meet only at a corner. `isFree(true)` also refuses a square with any moving object on it; `isFree(false)` is solidity alone. `IsoGameCharacter.teleportTo` has four overloads, `(FF)`, `(FFI)`, `(II)` and `(III)`, and the float ones `PZMath.fastfloor` both coordinates straight into the int one — so **every teleport lands on a tile corner** and the `+ 0.5` this codebase passes is discarded. The int one clamps z and then does `setX/setY/setZ` plus `setLastX/setLastY` and `ensureOnTile()`. | Any shove has to walk cardinally and ask `isBlockedTo` per step, or it posts a zombie through a wall. And the third argument is an **int** in every overload: passing a float level, which `getZ()` returns, is how a Kahlua overload resolves to something nobody meant, so `Transit.shoveZombies` floors it. |
+| **`getForwardVector` answers in BULLET space, where y is UP.** It is one line -- `jniTransform.basis.getColumn(2, out)` -- so it hands back the chassis's local Z axis in the physics frame, not a map direction. `BaseVehicle.getWorldPos` settles which component is which: it builds a world position as `origin.x` -> world x, `origin.z` -> world y, `origin.y` -> height. So the map plane is **`x()` and `z()`**, and `y()` is the vertical. | Reading `x(), y()` looks right and fails in the most expensive way available: on level ground the vertical component is ~0, so the vector reads as zero length for every vehicle pointing **north or south** and the caller silently takes its fallback, while an east or west facing one answers normally. Two headings of four correct reads as "inconsistent", not as "broken". `Client.groundBeside` ate a session on this. Note also that PZ's map y increases **southward**, so a quarter turn to the left is `(fy, -fx)`, not the `(-fy, fx)` a y-up frame wants. |
 | Moving a player is `IsoGameCharacter:teleportTo(x, y, z)` (overloads `(FFI)`, `(III)`, `(FF)`, `(II)`). `setX`/`setLastX` also works — PhunZones2 ports players that way. | `Client.teleport` uses `teleportTo`, `+ 0.5` to centre on the tile, as vanilla's `StreamMapWindow` does. |
 | **One teleport call is not enough across the map.** The player moves, but the destination chunk is not loaded, and the engine restores anyone on a square that does not exist. It reads as "the teleport silently did nothing" — the position log shows the move landing and then being undone. | `Client.teleport` re-asserts the position every tick until `getGridSquare` at the destination is non-nil (`HOLD_TICKS`). Applies leaving a room too: the vehicle's chunk unloads while the player is inside. The leash `graceUntil` **must** outlast that window. |
 | `ISEnterVehicle:new(character, vehicle, seat)` is the only sanctioned way into a seat, and its `start()` silently returns without entering if the character is more than 2 tiles from `getPassengerPosition(seat, "outside")`. `isValid` then fails and the queue drops it, so a failed re-seat degrades to standing there rather than hanging — **this happens by default**, because the only position the server can send is the vehicle centre, which is further than 2 tiles on anything van sized. Teleport to the outside position first (`getWorldPos(pos:getOffset(), Vector3f)`, as vanilla does). `getBestSeat`, `isSeatOccupied`, `getMaxPassengers`, `getCharacter` all exist on `BaseVehicle`. | Re-seating on exit is a client action in `Client.teleport`'s second phase, run only once the destination chunk has streamed in. |
@@ -2806,6 +2883,61 @@ cells are actually towns.
       taken, so a bounced player's entrance becomes the kerb beside the van.
       That is correct rather than incidental -- it is where they went back in
       from -- but nothing has watched it happen.
+
+14. **The exit shove has never run in game, and nothing tests it.**
+    `Transit.shoveZombies`, `zombiesWithin`, the `ExitShoveRadius` option and
+    `admin("shove")` are new. There is no spec and deliberately so: every line
+    of it needs a real `IsoGridSquare` and a real `IsoZombie`, which is the
+    boundary `Tests/lua` is not allowed to cross. So this is tested in game or
+    not at all, and `admin("shove")` exists to make that one console line:
+    spawn a horde on yourself, run it, watch the ring.
+
+    In rough order of risk:
+    - **Whether a server side move sticks on a dedicated server.** Zombies near
+      a player are authorized to that player's client, which then owns their
+      position -- see the zombie authority row in the API table. The case this
+      is written for should be server owned, because nobody has been near that
+      vehicle and `recheck` has not handed the freshly realised zombies over
+      yet, but that is reasoning rather than evidence. The tell is a shove that
+      visibly snaps back.
+    - **Whether there is anything there to shove at the moment it runs.** A
+      chunk's zombies are realised by the population manager when the chunk
+      loads, and the arrival report is sent the moment the client has a square.
+      If realisation lags that by a beat, the sweep finds an empty street and
+      the crowd fades in afterwards. Visible as a debug log that says nothing
+      on an exit into a crowd. The answer if so is a short window rather than
+      one pass, driven by something other than the leash -- which gates on
+      occupancy, and a player who just left has none.
+    - **`teleportTo` on a zombie.** It is `IsoGameCharacter`'s and every caller
+      in this codebase and in vanilla uses it on a player. It calls
+      `ensureNotInVehicle()` and `ensureOnTile()` and sets `last` alongside
+      `current`, so there should be no interpolation streak across the map, but
+      nothing has watched one move.
+    - **The panic button, which the entry gate already answers.** Reaching the
+      shove means getting IN first, and the two entry options are what make
+      that impossible mid fight. `EntryBlockedByZombies` refuses while anything
+      is within `EntryZombieRadius`, and it is evaluated **when the entry
+      action completes rather than when it starts** -- `Client.beginEnter`
+      tests only the motion rule, and the zombie test is in `Transit.canEnter`,
+      reached from the request `perform()` sends. So you cannot begin clear and
+      finish surrounded. `EntryDelay` then makes that fifteen seconds of
+      standing still, interruptible on walk, run and aim. Anybody who has had
+      that did not need rescuing.
+      So the case the shove actually fires in is the one it was built for: you
+      went in clear and the street repopulated while you could not see it.
+      One edge survives, and it is the only one: the shove radius is **6**
+      against an entry radius of **4**. Equal radii would be a clean invariant
+      -- the shove could never clear more ground than entry already required to
+      be clear -- and the two square difference is ground it clears that entry
+      never demanded. It needs a zombie to walk into that ring during the
+      second or two of a round trip, so it is small; matching the numbers is
+      the fix if it ever matters, and a server that turns the entry gate off
+      loses the whole argument at once.
+    - **An admin port and `rescueStranded` get no shove**, because neither
+      files arrival paperwork. That is a real hole rather than an oversight:
+      closing it means a fourth arrival shape, or a second command meaning
+      nothing but "I have landed", and neither is worth it for two paths that
+      put somebody where they already chose to be.
 
 ## v2, deliberately not in v1
 

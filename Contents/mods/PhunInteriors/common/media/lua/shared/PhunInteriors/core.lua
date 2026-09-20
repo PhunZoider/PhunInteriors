@@ -201,6 +201,7 @@ Core.defaults = {
     EntryDelay = 15,
     EntryBlockedByZombies = true,
     EntryZombieRadius = 4,
+    ExitShoveRadius = 6,
     RoomProtectedDays = 14,
     ScrubKeepsLoot = false,
     HardenShell = true,

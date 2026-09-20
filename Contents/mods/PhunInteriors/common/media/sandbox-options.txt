@@ -64,6 +64,16 @@ option PhunInteriors.EntryZombieRadius
     translation = PhunInteriors_EntryZombieRadius,
 }
 
+option PhunInteriors.ExitShoveRadius
+{
+    type = integer,
+    default = 6,
+    min = 0,
+    max = 30,
+    page = PhunInteriors,
+    translation = PhunInteriors_ExitShoveRadius,
+}
+
 option PhunInteriors.RoomProtectedDays
 {
     type = integer,

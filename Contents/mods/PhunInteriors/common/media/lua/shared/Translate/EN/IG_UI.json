@@ -22,7 +22,7 @@
     "IGUI_PhunInteriors_ReservoirNoRoof": "There is no roof here to put barrels on",
     "IGUI_PhunInteriors_ReservoirNotInside": "You need to be inside your room",
     "IGUI_PhunInteriors_ReservoirNoKit": "You need a rain reservoir kit",
-    "IGUI_PhunInteriors_AdminUsage": "/interiors rooms | list | enter <room> [index] | release <room> <index> | free <vehicleId> | scrub [room index] | power [room index] | evict <username> | remanifest <room> <index>",
+    "IGUI_PhunInteriors_AdminUsage": "/interiors rooms | list | enter <room> [index] | release <room> <index> | free <vehicleId> | scrub [room index] | power [room index] | evict <username> | shove [radius] | remanifest <room> <index>",
 
     "IGUI_PhunInteriors_Rooms_Title": "Interior Rooms",
     "IGUI_PhunInteriors_Rooms_NotAdmin": "That is an admin tool",
