@@ -39,7 +39,7 @@ option PhunInteriors.ExitTaxGrowth
 option PhunInteriors.EntryDelay
 {
     type = integer,
-    default = 15,
+    default = 1,
     min = 0,
     max = 120,
     page = PhunInteriors,
@@ -57,7 +57,7 @@ option PhunInteriors.EntryBlockedByZombies
 option PhunInteriors.EntryZombieRadius
 {
     type = integer,
-    default = 4,
+    default = 10,
     min = 1,
     max = 30,
     page = PhunInteriors,
