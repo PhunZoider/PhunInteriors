@@ -463,7 +463,7 @@ local function registerRooms()
         source = SOURCE,
         size = {w = 4, h = 10},
         spawn = {x = 1, y = 1},
-        front = "south",
+        front = "north",
         cab = true,
         generator = {x = 1, y = 17, z = 0},
         locations = {

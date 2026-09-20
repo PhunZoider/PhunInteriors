@@ -60,7 +60,7 @@ Step_Van_Whiskey,Step Van - Whiskey,3,4,1,1,south,TRUE,1,17,0,FALSE,TRUE,whiskey
 Semi_Trailer_Warehouse,Semi Trailer - Warehouse,3,13,1,1,south,FALSE,1,17,0,FALSE,TRUE,warehouse,Semi_Trailer_Water
 Semi_Trailer_Factory,Semi Trailer - Factory,3,13,1,1,south,FALSE,1,17,0,FALSE,TRUE,factorystorage,Semi_Trailer_Water
 Semi_Trailer_Water,Semi Trailer - Water,3,13,1,1,south,FALSE,1,17,0,FALSE,TRUE,waterstorage,Semi_Trailer_Warehouse
-RV_Large,RV - Large,3,9,1,1,south,TRUE,1,17,0,FALSE,TRUE,camping,
+RV_Large,RV - Large,3,9,1,1,north,TRUE,1,17,0,FALSE,TRUE,camping,
 Camper_Large,Camper - Large,3,9,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
 Camper_Medium,Camper - Medium,3,5,1,1,north,FALSE,1,17,0,FALSE,TRUE,camping,
 Trailer_Medium,Trailer - Medium,3,9,1,1,south,FALSE,1,17,0,FALSE,TRUE,storage,
