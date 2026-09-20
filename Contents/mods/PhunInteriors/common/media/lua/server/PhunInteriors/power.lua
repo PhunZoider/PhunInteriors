@@ -100,12 +100,6 @@ function Power.batteryPart(vehicle)
     return nil, nil
 end
 
---- The battery item feeding this vehicle, or nil.
-function Power.battery(vehicle)
-    local part = Power.batteryPart(vehicle)
-    return part and part:getInventoryItem() or nil
-end
-
 -- Reading and writing a battery's charge.
 --
 -- getCurrentUsesFloat / setCurrentUsesFloat, both declared on InventoryItem
@@ -127,14 +121,6 @@ local function writeCharge(battery, charge)
     battery:setCurrentUsesFloat(math.max(0, math.min(1, charge)))
 end
 
---- Charge as 0..1. A vehicle with no battery reads flat, which is the truth.
-function Power.charge(vehicle)
-    local battery = Power.battery(vehicle)
-    if not battery then
-        return 0
-    end
-    return readCharge(battery)
-end
 
 --- The real IsoGenerator on a square, if there is one.
 local function generatorOn(square)
@@ -181,18 +167,24 @@ end
 -- that, because a fresh one starts empty and the ledger must not read the
 -- difference as fuel somebody burned.
 --
--- Position is fixed data: set.power, from the authoring tool, emitted into the
--- blueprint. It does not move. What can change is whether the generator still
+-- Position is fixed data: the room's 'generator' offset, from the authoring
+-- tool, emitted into the blueprint. It does not move. What can change is
+-- whether the generator still
 -- exists -- it caught fire, it blew up, a scrub left an inert copy -- and a
 -- room whose lights never come back because of that is worse than one that
 -- quietly repairs itself.
-function Power.ensureGenerator(roomSetId, index)
-    local set = Core.roomSets[roomSetId]
-    if not set or not set.powered then
+function Power.ensureGenerator(roomId, index)
+    local room = Core.rooms[roomId]
+    -- slotPower is nil for a room with no 'generator', which is a room that is
+    -- meant to have no power -- a tent -- rather than one whose position we
+    -- failed to find. There is no default position to fall back on, which is
+    -- the whole point: a wrong one fails silently and self-heals into looking
+    -- deliberate.
+    local at = room and Core.slotPower(room, index)
+    if not at then
         return nil, false
     end
 
-    local at = Core.slotPower(set, index)
     local square = getCell():getGridSquare(at.x, at.y, at.z)
     if not square then
         -- Chunk is not loaded. Not a failure, just not now.
@@ -208,7 +200,7 @@ function Power.ensureGenerator(roomSetId, index)
     if impostor then
         square:transmitRemoveItemFromSquare(impostor)
         Core.debugLn(string.format("%s#%s had a generator-shaped object that was not one; removed it",
-            tostring(roomSetId), tostring(index)))
+            tostring(roomId), tostring(index)))
     end
 
     -- Vanilla's own recipe, from MOGenerator.lua.
@@ -226,7 +218,7 @@ function Power.ensureGenerator(roomSetId, index)
     generator:transmitCompleteItemToClients()
 
     Core.logLn(string.format("%s#%s had no generator at %d,%d,%d; placed one",
-        tostring(roomSetId), tostring(index), at.x, at.y, at.z))
+        tostring(roomId), tostring(index), at.x, at.y, at.z))
     return generator, true
 end
 
@@ -253,12 +245,12 @@ Power.projectedCharge = projectedCharge
 -- Called while the room is loaded, which is the only time any of this is
 -- readable. Safe to call repeatedly: it measures a difference, so a second
 -- call a moment later banks nothing.
-function Power.syncRoom(roomSetId, index, vehicleId)
+function Power.syncRoom(roomId, index, vehicleId)
     if not Core.settings.PowerBinding then
         return
     end
-    local set = Core.roomSets[roomSetId]
-    if not set or not set.powered then
+    local room = Core.rooms[roomId]
+    if not room or not room.generator then
         return
     end
     local assignment = vehicleId and Slots.find(vehicleId)
@@ -266,7 +258,7 @@ function Power.syncRoom(roomSetId, index, vehicleId)
         return
     end
 
-    local generator, created = Power.ensureGenerator(roomSetId, index)
+    local generator, created = Power.ensureGenerator(roomId, index)
     if not generator then
         return
     end
@@ -287,22 +279,36 @@ function Power.syncRoom(roomSetId, index, vehicleId)
     -- What it burned since we last looked. A generator we have only just
     -- placed starts empty and owes nothing -- reading its zero as a full
     -- tank's worth of consumption would bill the tenant for our own repair.
-    if not created and assignment.fuelLast then
+    --
+    -- Skipped entirely for a selfPowered room. There is no other end to this
+    -- ledger, so banking a debt nothing will ever settle would send the
+    -- projected charge negative and darken a room that is meant never to go
+    -- out -- which is the same fault the admin port hit, and why it resets
+    -- fuelOwed on every visit.
+    if not room.selfPowered and not created and assignment.fuelLast then
         local burnt = math.max(0, assignment.fuelLast - now)
         if burnt > 0 then
             assignment.fuelOwed = (tonumber(assignment.fuelOwed) or 0) + burnt
             Core.debugLn(string.format("%s#%s burned %.1f fuel; %.1f owed",
-                tostring(roomSetId), tostring(index), burnt, assignment.fuelOwed))
+                tostring(roomId), tostring(index), burnt, assignment.fuelOwed))
         end
     end
 
     -- Fill it if there is anything left to draw on. Full, not proportional:
     -- the battery is the limiting resource, the tank is only a buffer.
+    --
+    -- A selfPowered room always has something to draw on, by definition. Note
+    -- it still needs the generator above: haveElectricity() is only ever a real
+    -- activated IsoGenerator in the chunk, so the flag buys free fuel and not
+    -- free power.
     local fuel = now
-    if projectedCharge(assignment) > 0 then
+    if room.selfPowered or projectedCharge(assignment) > 0 then
         fuel = maxFuel
     else
         fuel = 0
+    end
+    if room.selfPowered then
+        assignment.fuelOwed = 0
     end
     generator:setFuel(fuel)
     -- setActivated does the rest itself: registers the position with the

@@ -33,12 +33,12 @@ function Harden.sweepFire()
     local seen = {}
 
     for _, occupancy in pairs(Core.occupants) do
-        local key = occupancy.roomSet .. "#" .. occupancy.index
+        local key = occupancy.room .. "#" .. occupancy.index
         if not seen[key] then
             seen[key] = true
-            local set = Core.roomSets[occupancy.roomSet]
-            if set then
-                local bounds = Core.slotBounds(set, occupancy.index)
+            local room = Core.rooms[occupancy.room]
+            local bounds = room and Core.slotBounds(room, occupancy.index)
+            if bounds then
                 -- Both levels, like every other sweep over a slot. Fire
                 -- spreads upward, and the power square lives at z+1.
                 for z = bounds.z, bounds.z + 1 do

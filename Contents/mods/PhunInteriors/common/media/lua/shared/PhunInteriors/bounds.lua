@@ -7,40 +7,34 @@ local Core = PhunInteriors
 -- Needed on both sides: the server uses it to sweep fire, the client uses it
 -- to refuse destruction actions. Shared so there is one answer.
 --
--- This is a cheap arithmetic test against each room set rather than a lookup
--- over leased slots, because it has to work on the client, which does not
--- know who leases what.
+-- This is a lookup over registered slots rather than over leased ones, because
+-- it has to work on the client, which does not know who leases what.
+--
+-- It used to recover the slot index by dividing the offset from the set origin
+-- by the pitch, which was two arithmetic ops and free. Placement is an
+-- explicit list now, so there is no division to do: Core.slotCandidates buckets
+-- the slots by 64 squares and hands back the short list that could contain the
+-- point. That matters because this runs on the leash at 4Hz and again on every
+-- destroy action the client guards.
 -- ---------------------------------------------------------------------------
 
 --- Which slot, if any, contains this point.
--- Returns roomSetId, index, or nil.
+-- Returns roomId, index, or nil.
 function Core.slotAt(x, y, z)
     x, y, z = math.floor(x), math.floor(y), math.floor(z)
 
-    for id, set in pairs(Core.roomSets) do
+    local candidates = Core.slotCandidates(x, y)
+    if not candidates then
+        return nil
+    end
+
+    for _, candidate in ipairs(candidates) do
+        local b = candidate.bounds
         -- allow z+1 so the roof counts as ours for hardening purposes, even
         -- though it is outside the leash
-        if z >= set.origin.z and z <= set.origin.z + 1 then
-            local dx = x - set.origin.x
-            local dy = y - set.origin.y
-
-            local index
-            if set.pitch.x ~= 0 then
-                index = math.floor(dx / set.pitch.x)
-            elseif set.pitch.y ~= 0 then
-                index = math.floor(dy / set.pitch.y)
-            else
-                index = 0
-            end
-
-            if index >= 0 and index <= set.count then
-                local bounds = Core.slotBounds(set, index)
-                -- deliberately ignores z here; bounds.z is the floor and we
-                -- already accepted the roof above
-                if x >= bounds.x1 and x <= bounds.x2 and y >= bounds.y1 and y <= bounds.y2 then
-                    return id, index
-                end
-            end
+        if z >= b.z and z <= b.z + 1 and
+            x >= b.x1 and x <= b.x2 and y >= b.y1 and y <= b.y2 then
+            return candidate.id, candidate.index
         end
     end
 

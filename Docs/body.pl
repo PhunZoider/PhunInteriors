@@ -41,14 +41,35 @@ for (my $i = 1; $i < $cpCount; $i++) {
     else { $cp[$i] = [u2(), u2()] }
 }
 
-# Class / Fieldref / Methodref / NameAndType resolution
-sub cls  { my $i = shift; my $n = $cp[$cp[$i][0]]; $n =~ s{.*/}{}; return $n }
+# Class / Fieldref / Methodref / NameAndType resolution.
+#
+# Defensive because tag 17/18 (Dynamic / InvokeDynamic) put a *bootstrap
+# method* index where a Fieldref or Methodref puts a Class index, so resolving
+# one as a class reaches a Utf8 and dies. It used to take the whole
+# disassembly with it, silently: the output simply stopped at the first lambda
+# with the rest of the method unprinted, which is exactly the shape of a
+# method that ends there. Cost a real answer -- the tail of
+# IsoMetaGrid$MetaGridLoaderThread.loadCell, past a stream().map(lambda) --
+# so unresolvable operands now print as a placeholder and decoding carries on.
+sub cls  {
+    my $i = shift;
+    return "?" unless $i && $cp[$i] && ref($cp[$i]) eq "ARRAY";
+    my $n = $cp[$cp[$i][0]];
+    return "?" unless defined $n && !ref($n);
+    $n =~ s{.*/}{};
+    return $n;
+}
 sub ref_ {
     my $i = shift;
-    return "?" unless $cp[$i] && @{$cp[$i]} == 2;
+    return "?" unless $i && $cp[$i] && ref($cp[$i]) eq "ARRAY" && @{$cp[$i]} == 2;
     my ($ci, $nti) = @{$cp[$i]};
+    return "?" unless $nti && $cp[$nti] && ref($cp[$nti]) eq "ARRAY" && @{$cp[$nti]} == 2;
     my ($ni, $di) = @{$cp[$nti]};
-    return cls($ci) . "." . $cp[$ni] . " " . $cp[$di];
+    my $name = (defined $ni && defined $cp[$ni] && !ref($cp[$ni])) ? $cp[$ni] : "?";
+    my $desc = (defined $di && defined $cp[$di] && !ref($cp[$di])) ? $cp[$di] : "?";
+    # tag 18 is InvokeDynamic: $ci is a bootstrap index, not a class
+    my $owner = ($tag[$i] && ($tag[$i] == 17 || $tag[$i] == 18)) ? "dynamic" : cls($ci);
+    return $owner . "." . $name . " " . $desc;
 }
 
 u2(); u2(); u2();

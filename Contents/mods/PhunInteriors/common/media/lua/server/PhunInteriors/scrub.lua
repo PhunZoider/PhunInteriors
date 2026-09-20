@@ -202,6 +202,16 @@ function Scrub.slot(roomId, index)
         return false, "unknown room"
     end
 
+    -- Never over somebody's safehouse -- see Slots.safehouseOn. This is the
+    -- one function every scrub goes through: the timer queue, the scrub on
+    -- entry, the one on arrival and the admin command. Returned as an ordinary
+    -- refusal, so the queue keeps the slot for later and the arrival scrub
+    -- gives up after its attempts rather than retrying forever.
+    local claim = Slots.safehouseOn(roomId, index)
+    if claim then
+        return false, "claimed as a safehouse by " .. tostring(claim:getOwner())
+    end
+
     -- THIS SLOT's blueprint, so a stamp the author decorated differently is
     -- restored to what it actually was. Which source it came from is logged,
     -- because a scrub falling through to a sibling is about to overwrite
@@ -221,14 +231,19 @@ function Scrub.slot(roomId, index)
     local salvage = keepLoot and {} or nil
     local touched = 0
 
-    -- Verify the whole slot is loaded before mutating any of it, so a scrub is
-    -- never left half applied.
-    for z = bounds.z, bounds.z + 1 do
-        for x = bounds.x1, bounds.x2 do
-            for y = bounds.y1, bounds.y2 do
-                if not getCell():getGridSquare(x, y, z) then
-                    return false, "chunk not loaded"
-                end
+    -- Verify the slot is loaded before mutating any of it, so a scrub is never
+    -- left half applied.
+    --
+    -- Only the room's OWN level has to be there, which is the correction
+    -- Manifest's scan needed first. A nil square above the room is empty air:
+    -- an unroofed room has no z + 1 squares at all, and a roofed one has none
+    -- over its south and east wall lines. Demanding them made every slot on
+    -- the shipped map refuse every scrub as "chunk not loaded" -- and the
+    -- scrub is also what takes an installed reservoir back down.
+    for x = bounds.x1, bounds.x2 do
+        for y = bounds.y1, bounds.y2 do
+            if not getCell():getGridSquare(x, y, bounds.z) then
+                return false, "chunk not loaded"
             end
         end
     end
@@ -237,12 +252,15 @@ function Scrub.slot(roomId, index)
         for x = bounds.x1, bounds.x2 do
             for y = bounds.y1, bounds.y2 do
                 local square = getCell():getGridSquare(x, y, z)
-                local key = (x - origin.x) .. "," .. (y - origin.y) .. "," .. (z - origin.z)
-                -- through the resolver, because a manifest may be either
-                -- format: v2 stores palette indices, v1 stored names. nil is
-                -- meaningful: the blueprint says this square holds nothing.
-                reconcileSquare(square, Manifest.spritesAt(manifest, key), keepLoot, salvage)
-                touched = touched + 1
+                if square then
+                    local key = (x - origin.x) .. "," .. (y - origin.y) .. "," .. (z - origin.z)
+                    -- through the resolver, because a manifest may be either
+                    -- format: v2 stores palette indices, v1 stored names. nil
+                    -- is meaningful: the blueprint says this square holds
+                    -- nothing.
+                    reconcileSquare(square, Manifest.spritesAt(manifest, key), keepLoot, salvage)
+                    touched = touched + 1
+                end
             end
         end
     end
@@ -252,8 +270,29 @@ function Scrub.slot(roomId, index)
     return true, salvage
 end
 
+--- Reasons a deferral is the NORMAL state of a quarantined slot rather than
+--- news. A released slot sits in the queue precisely because nobody is near
+--- it, so its chunk is unloaded and stays unloaded, and a slot that never got
+--- its one capture window has no blueprint and never will.
+---
+--- Both were logged on every pass, which is once per slot per ten minutes, for
+--- as long as the queue is non-empty -- so the log filled with "deferring
+--- scrub of ..." lines describing the system working exactly as designed.
+--- CLAUDE.md's own rule about warnings applies: a message that fires when
+--- nothing is wrong turns into noise nobody reads, and then the one that
+--- matters is in it.
+local EXPECTED = {
+    ["chunk not loaded"] = true,
+    ["no blueprint for this slot yet"] = true
+}
+
 --- Work the quarantine queue. Slots whose chunk is not loaded go back on the
 --- queue and are retried on the next pass.
+---
+--- Still on a timer, and still only as OPPORTUNISTIC cleanup -- the pool does
+--- not depend on it. A quarantined slot is scrubbed on arrival when it is next
+--- handed out, which is the first moment its chunk is guaranteed to exist;
+--- this catches the ones that happen to be loaded anyway.
 function Scrub.processQueue(limit)
     limit = limit or 1
     local done = 0
@@ -268,8 +307,12 @@ function Scrub.processQueue(limit)
         if ok then
             done = done + 1
         else
-            Core.debugLn("deferring scrub of " .. entry.room .. "#" .. entry.index ..
-                ": " .. tostring(reason))
+            if not EXPECTED[reason] then
+                -- Anything else IS news: an unknown room, a slot that is not
+                -- in its room any more, a safehouse claim standing over one.
+                Core.debugLn("deferring scrub of " .. entry.room .. "#" .. entry.index ..
+                    ": " .. tostring(reason))
+            end
             table.insert(deferred, entry)
             break
         end

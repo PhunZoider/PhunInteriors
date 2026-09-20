@@ -27,14 +27,23 @@ local Client = Core.client
 -- the slice. Vanilla only ever tests it at the *start* of the next call.
 -- ---------------------------------------------------------------------------
 
--- Our own icon does not exist yet (CLAUDE.md, known gaps #2). getTexture
--- returns nil for a missing file and addSlice hands that straight to Java, so
--- fall back to one the vanilla vehicle menu already uses.
-local ENTER_TEXTURE = "media/ui/PhunInteriors_enter.png"
+-- media/textures is the loose-png path a mod is loaded from, the same one item
+-- icons use; media/ui is vanilla's own and is served from a texture pack.
+-- getTexture returns nil for a missing file.
+local ICON_TEXTURE = "media/textures/phuninteriors_enter_icon.png"
 local FALLBACK_TEXTURE = "media/ui/vehicles/vehicle_changeseats.png"
 
+--- Our own icon, or nil if the png did not ship.
+local function modTexture()
+    return getTexture(ICON_TEXTURE)
+end
+
+-- A radial slice hands its texture straight to Java, so a nil there is not
+-- safe and we fall back to one the vanilla vehicle menu already uses. A
+-- context option is the other way round: ISContextMenu draws iconTexture only
+-- when it is non-nil, so the icon missing simply means no icon.
 local function enterTexture()
-    return getTexture(ENTER_TEXTURE) or getTexture(FALLBACK_TEXTURE)
+    return modTexture() or getTexture(FALLBACK_TEXTURE)
 end
 
 local function onEnter(playerObj, vehicle)
@@ -53,7 +62,7 @@ function ISVehicleMenu.showRadialMenu(playerObj, ...)
     -- Vanilla's own resolver: seat, then useable, then near. Stopping at
     -- useable misses the vehicle the rest of the menu is about.
     local vehicle = ISVehicleMenu.getVehicleToInteractWith(playerObj)
-    if not vehicle or not Core.classForVehicle(vehicle) then
+    if not vehicle or not Core.vehicleHasRooms(vehicle) then
         return
     end
 
@@ -65,20 +74,51 @@ function ISVehicleMenu.showRadialMenu(playerObj, ...)
     menu:addSlice(getText("ContextMenu_PhunInteriors_Enter"), enterTexture(), onEnter, playerObj, vehicle)
 end
 
+--- The bound object on the clicked square, if there is one.
+--
+-- Read client side purely to decide whether to draw the option; the server
+-- resolves it again off the square it is sent, and nothing the client decided
+-- here is taken on trust.
+local function boundObjectIn(worldObjects)
+    for _, object in ipairs(worldObjects or {}) do
+        if Core.objectHasRooms(object) then
+            return object
+        end
+    end
+    return nil
+end
+
 local function onFillWorldObjectContextMenu(playerNum, context, worldObjects, test)
     if test then
-        return
-    end
-    if not Client.inside then
         return
     end
     local player = getSpecificPlayer(playerNum)
     if not player then
         return
     end
-    context:addOption(getText("ContextMenu_PhunInteriors_Leave"), player, function()
+
+    -- Entering a world object is a context option rather than a radial slice,
+    -- because a tent is a thing on the ground and the radial menu is the
+    -- vehicle interaction. Only offered when the player is not already inside
+    -- somewhere -- the server refuses either way, but an option that can only
+    -- be refused should not be drawn.
+    if not Client.inside then
+        local object = boundObjectIn(worldObjects)
+        local square = object and object:getSquare()
+        if square then
+            context:addOption(getText("ContextMenu_PhunInteriors_EnterObject"), player, function()
+                Client.requestEnterObject(square)
+            end)
+        end
+        return
+    end
+    local leave = context:addOption(getText("ContextMenu_PhunInteriors_Leave"), player, function()
         Client.requestLeave()
     end)
+    leave.iconTexture = modTexture()
+    if Client.reservoirOption then
+        Client.reservoirOption(context, player)
+    end
 end
 
 Events.OnFillWorldObjectContextMenu.Add(onFillWorldObjectContextMenu)

@@ -1,4 +1,6 @@
 {
     "ContextMenu_PhunInteriors_Enter": "Go inside",
-    "ContextMenu_PhunInteriors_Leave": "Step outside"
+    "ContextMenu_PhunInteriors_EnterObject": "Go inside",
+    "ContextMenu_PhunInteriors_Leave": "Step outside",
+    "ContextMenu_PhunInteriors_InstallReservoir": "Install rain reservoir"
 }

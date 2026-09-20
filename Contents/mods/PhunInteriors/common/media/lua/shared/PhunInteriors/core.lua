@@ -4,17 +4,79 @@ PhunInteriors = {
         -- key we hang our own state off, on both vehicles and the global ModData
         modDataKey = "PhunInteriors",
         vehicleIdKey = "PhunInteriors_id",
-        massDeltaKey = "PhunInteriors_massDelta"
+        -- the same durable id for a world object holding a lease. It lives
+        -- inside modData.movableData rather than at the top level; holders.lua
+        -- says why, and the reason is that vanilla drops a top level key on
+        -- pickup for some classes and not others.
+        objectIdKey = "PhunInteriors_objectId",
+        -- Why a leased world object must not be packed away: "occupied" or
+        -- "contents", and absent when it may be. It lives beside the id, for
+        -- the same reason, and carries the same caveat: it is a HINT, read by
+        -- the client so a pickup can be refused pleasantly, and never the
+        -- authority. The authority is Slots.lockReason, server side, and a
+        -- stale flag heals itself the next time anybody enters or leaves.
+        objectLockKey = "PhunInteriors_objectLock",
+        -- set once a vehicle has held a room, so losing one can be reported
+        leasedKey = "PhunInteriors_leased",
+        massDeltaKey = "PhunInteriors_massDelta",
+        -- object modData flag on a rain barrel a kit put up, so capture can
+        -- tell it from a barrel the map author built
+        reservoirKey = "PhunInteriors_reservoir",
+        -- the item consumed by installing one
+        reservoirItem = "PhunInteriors.RainReservoirKit",
+        -- Where a tenant was standing when they went in, on the PLAYER.
+        --
+        -- The last resort of the three return positions, and the only one that
+        -- outlives the lease -- which is the whole reason it exists. A lease
+        -- says where the HOLDER is, and the tracker keeps that current because
+        -- a van moves; this says where THIS VISIT began. Different facts, and
+        -- this one is per player rather than per room: several tenants can be
+        -- in one room having walked in from somewhere else each, so there is
+        -- no single value of it a lease could ever have carried.
+        --
+        -- Player modData rather than our own store, and the asymmetry with the
+        -- vehicle row in CLAUDE.md is the point. IsoPlayer.save reaches
+        -- IsoMovingObject.save, which writes the modData KahluaTable into the
+        -- character record, so this survives a restart, a reclaim, and the
+        -- loss of global_mod_data.bin. A vehicle's modData survives none of
+        -- that and is not even transmitted.
+        entranceKey = "PhunInteriors_entrance"
     },
     data = {},
     commands = {
         playerSetup = "playerSetup",
         enter = "enter",
+        -- client -> server: "put me inside the thing standing here". Carries a
+        -- square and nothing else; the server reads the object off it, the
+        -- same way the vehicle path names a position rather than an identity.
+        enterObject = "enterObject",
         leave = "leave",
         teleport = "teleport",
         notify = "notify",
         admin = "admin",
         adminResult = "adminResult",
+        -- client -> server and back: the admin room list. Separate from
+        -- adminResult, which carries lines meant for a log, because this one
+        -- carries a structure meant for a window and nothing should have to
+        -- guess which it received.
+        rooms = "rooms",
+        roomsResult = "roomsResult",
+        -- One room's slots and its shipped values, fetched when a row is
+        -- selected rather than sent with the list.
+        --
+        -- The list used to carry every slot of every room, which was 120 slots
+        -- on a two room map and is 960 across 81 rooms now. That payload
+        -- crosses sendServerCommand on every refresh, and all but one room's
+        -- worth of it is drawn by nothing. Splitting it also means the form can
+        -- be given the SHIPPED values to show a field as customised, which
+        -- would have been another copy of every room in the list payload.
+        roomSlots = "roomSlots",
+        roomSlotsResult = "roomSlotsResult",
+        -- Editing. Each carries what changed and nothing else; the server
+        -- re-checks admin rights and re-validates every field, because the
+        -- window is an entry point and never a gate.
+        editRoom = "editRoom",
+        editBinding = "editBinding",
         author = "author",
         -- server -> client, so a reconnecting player learns they are inside
         state = "state",
@@ -23,18 +85,76 @@ PhunInteriors = {
         updatePosition = "updatePosition",
         -- client -> server: "I have landed back outside, and this is the id of
         -- the vehicle I found there". Closes the exit handshake.
-        arrived = "arrived"
+        arrived = "arrived",
+        -- client -> server: "an admin is about to remove the vehicle with this
+        -- id". A warning, not a claim; see Removal.watch.
+        vehicleRemoving = "vehicleRemoving",
+        -- client -> server: "put the reservoir from this kit on my roof".
+        -- Carries the kit's item id and nothing else; which room is read off
+        -- the occupancy.
+        installReservoir = "installReservoir"
     },
     events = {
+        -- Where third party mods register, in two phases: rooms first, then
+        -- the vehicles that may use them.
+        --
+        -- Events rather than a "is PhunInteriors loaded yet" test on their
+        -- side. If we are not installed they never fire and the registration
+        -- never runs, so nobody has to guess how far through booting we are.
+        --
+        -- The split is a convention, not a constraint -- registering anything
+        -- on either one works, because the indexes rebuild on first read. What
+        -- it buys is a point at which the room sets are known to be complete,
+        -- which is the only way to tell "that set has not registered yet" from
+        -- "the mod that owns it is not installed". Before the split those were
+        -- the same silence.
+        --
+        -- What it does NOT buy is load order independence. That comes from the
+        -- author declaring the event themselves before adding to it; see the
+        -- snippet in CLAUDE.md.
+        OnRegisterRooms = "PhunInteriorsOnRegisterRooms",
+        OnRegisterVehicles = "PhunInteriorsOnRegisterVehicles",
         OnReady = "PhunInteriorsOnReady",
         OnEnter = "PhunInteriorsOnEnter",
-        OnExit = "PhunInteriorsOnExit"
+        OnExit = "PhunInteriorsOnExit",
+        -- Client side: a fresh picture of the registry has arrived from the
+        -- server. Every open editor panel re-reads on it, so a change made in
+        -- one panel -- or by another admin, on a server -- shows up without
+        -- anybody reopening a window. The alternative is each panel refreshing
+        -- only what it thinks it changed, which is how two views of one
+        -- registry come to disagree.
+        OnRegistryChanged = "PhunInteriorsOnRegistryChanged"
     },
-    -- registry, populated by registry.lua and by other mods on OnReady
-    roomSets = {},
-    vehicleClasses = {},
-    -- shipped blueprints, keyed by room set id, registered by generated files
+    -- registry, populated by registry.lua and by other mods on the register events
+    -- rooms: id -> one room design and every place it is stamped
+    -- bindings: id -> which scripts may lease which rooms
+    rooms = {},
+    bindings = {},
+    -- optional shipped blueprints, keyed by room id. Nothing emits one by
+    -- default any more; runtime capture in manifest.lua is the normal source.
     blueprints = {},
+    -- What the admin editor has changed, read from PhunInteriors.json in the
+    -- game's Lua folder. Sparse: a room entry names only the fields that
+    -- differ from the registration, so a room the editor has never touched is
+    -- absent rather than present and identical. See overrides.lua.
+    overrides = {
+        rooms = {},
+        bindings = {}
+    },
+    -- Set by an edit, cleared by a write to disk. There is deliberately no
+    -- autosave: an edit applies to the live registry immediately, because that
+    -- is the loop the editor exists for, but it reaches the file only when
+    -- somebody says so. A mistake that is still in memory is undone by Revert
+    -- or by a restart; a mistake already on disk has to be undone by hand.
+    unsavedEdits = false,
+    -- The definition each room was FIRST registered with, deep copied before
+    -- any override is applied. This is what "revert" rebuilds from, and it is
+    -- the raw def rather than the built room because applying an override
+    -- re-runs registerRoom on a merged def -- which is how a locations edit
+    -- gets its slots, indices and count re-derived by the one piece of code
+    -- that knows how, instead of by a second copy of that arithmetic here.
+    roomDefs = {},
+    -- derived: lowercased script name -> {bindingId = true}, rebuilt lazily
     scriptLookup = {},
     -- server side only: username -> occupancy record
     occupants = {},
@@ -53,6 +173,24 @@ for _, event in pairs(Core.events) do
     end
 end
 
+--- Open registration: rooms, then the vehicles that may use them.
+--
+-- Guarded, because in single player both server_events and client_events load
+-- and each fires the boot sequence, so without this every handler -- ours and
+-- every third party's -- runs twice. That is mostly harmless, since the
+-- register calls replace rather than accumulate, but it logs "is being
+-- redefined" for every set on every SP boot, which makes a warning that ought
+-- to mean something into noise nobody reads.
+function Core.openRegistration()
+    if Core.registrationFired then
+        return false
+    end
+    Core.registrationFired = true
+    triggerEvent(Core.events.OnRegisterRooms, Core)
+    triggerEvent(Core.events.OnRegisterVehicles, Core)
+    return true
+end
+
 -- Every constraint this mod imposes is a switch, and the defaults are the
 -- balanced ones. An admin who wants the old power fantasy turns them off.
 Core.defaults = {
@@ -63,8 +201,7 @@ Core.defaults = {
     EntryDelay = 15,
     EntryBlockedByZombies = true,
     EntryZombieRadius = 4,
-    LeaseDays = 14,
-    LeaseWarningDays = 2,
+    RoomProtectedDays = 14,
     ScrubKeepsLoot = false,
     HardenShell = true,
     BreachEjects = true,
@@ -133,6 +270,25 @@ function Core.playerKey(player)
         return nil
     end
     return player:getUsername() or tostring(player:getOnlineID())
+end
+
+--- The lease key for an admin standing in a room without a vehicle.
+--
+-- Namespaced so it cannot collide with a vehicle's: every real one is a
+-- getRandomUUID string, and none of those contain a colon.
+--
+-- Here rather than on Transit, which is where both of these started, because
+-- Slots.release has to ask the question and transit.lua requires slots.lua.
+-- Reaching back the other way for a pure string test would have made the cycle
+-- real and load-order dependent for no gain. The key format belongs beside
+-- playerKey, which is what it is built from.
+function Core.adminKey(player)
+    return "admin:" .. tostring(Core.playerKey(player))
+end
+
+--- Is this lease an admin port rather than a vehicle's?
+function Core.isAdminLease(vehicleId)
+    return type(vehicleId) == "string" and string.sub(vehicleId, 1, 6) == "admin:"
 end
 
 -- Vehicles get a stable id of our own. getId() is not durable across restarts

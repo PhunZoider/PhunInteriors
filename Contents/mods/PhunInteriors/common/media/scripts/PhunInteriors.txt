@@ -1,0 +1,32 @@
+module PhunInteriors
+{
+    item RainReservoirKit
+    {
+        DisplayCategory = Material,
+        ItemType = base:normal,
+        Weight = 6.0,
+        Icon = TentMaterial,
+        WorldStaticModel = Tarp,
+    }
+
+    craftRecipe PhunInteriorsRainReservoirKit
+    {
+        timedAction = Making,
+        time = 400,
+        Tags = InHandCraft;CanBeDoneFromFloor,
+        category = Carpentry,
+        SkillRequired = Woodwork:5,
+        xpAward = Woodwork:40,
+        inputs
+        {
+            item 1 tags[base:hammer] mode:keep flags[Prop1;MayDegradeVeryLight],
+            item 8 [Base.Plank],
+            item 8 [Base.Nails],
+            item 2 [Base.Tarp],
+        }
+        outputs
+        {
+            item 1 PhunInteriors.RainReservoirKit,
+        }
+    }
+}

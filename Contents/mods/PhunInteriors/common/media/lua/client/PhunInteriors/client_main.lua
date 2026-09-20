@@ -59,6 +59,27 @@ local function resolveSeat(vehicle, wanted, player)
     return nil
 end
 
+--- Any seat that is fitted and empty, nearest the front first.
+--
+-- What a cab exit wants: the door said "put me up front", not "put me back
+-- where I was", so there is no preferred seat to honour. Counting up from 0
+-- gets the driver's seat first, then the passenger, which is the order
+-- somebody walking to the front of their own van would expect.
+--
+-- isSeatInstalled as well as isSeatOccupied, matching the server's freeSeat.
+-- A seat that was never fitted is not occupied either, so testing only the
+-- one would hand back a seat that is not there -- and ISEnterVehicle would
+-- then fail quietly, which is the failure mode this whole path exists to
+-- avoid.
+local function firstFreeSeat(vehicle)
+    for seat = 0, vehicle:getMaxPassengers() - 1 do
+        if vehicle:isSeatInstalled(seat) and not vehicle:isSeatOccupied(seat) then
+            return seat
+        end
+    end
+    return nil
+end
+
 -- Second phase, once the position has landed.
 --
 -- Vanilla only ever puts a character into a seat from a client timed action,
@@ -124,6 +145,143 @@ function Client.nearestDoor(vehicle, character)
     return best
 end
 
+-- Vehicle script areas that stand in for each relative direction, best first.
+--
+-- The room no longer names one of these -- it says which way its holder points
+-- and Core.relativeFor turns the crossed edge into "front"/"rear"/"left"/
+-- "right". This is the vehicle-side half of that: the only place in the mod
+-- that knows a vehicle part name, which is where such knowledge belongs.
+--
+-- A LIST rather than a name, because declaring an area is optional and widely
+-- skipped: the StepVan declares neither TruckBed nor Engine, and lockMartM577
+-- declares no TruckBed. A single name meant one undeclared area lost the
+-- landing entirely; several give it somewhere else to look first.
+--
+-- There is deliberately nothing for left and right. No vanilla script declares
+-- an area meaning "the flank", so listing a guess here would resolve to
+-- something that is not the side -- which is exactly the lie the old per-edge
+-- area name told. They fall through to the geometric route below, and failing
+-- that to the door.
+local AREAS_FOR = {
+    front = {"Engine", "Hood"},
+    rear = {"TruckBed", "TrunkDoor"},
+    left = {},
+    right = {}
+}
+
+-- Turning left from each relative direction, as a multiple of 90 degrees off
+-- the vehicle's forward vector.
+local TURN = {
+    front = 0,
+    left = 1,
+    rear = 2,
+    right = 3
+}
+
+--- A unit vector pointing away from the vehicle in a relative direction, or nil.
+--
+-- getForwardVector is public on BaseVehicle but has ZERO uses in vanilla lua,
+-- which by this project's own rule is a reason to probe rather than to trust.
+-- So it is pcall'd and nil-checked, and every caller already has a fallback:
+-- if it does not answer, the landing degrades to the nearest door exactly as it
+-- did before any of this existed. Nothing depends on it working.
+local FORWARD = Vector3f.new()
+
+local function bearing(vehicle, toward)
+    local turn = TURN[toward]
+    if not turn or not vehicle.getForwardVector then
+        return nil
+    end
+    local ok, forward = pcall(function()
+        return vehicle:getForwardVector(FORWARD)
+    end)
+    if not ok or not forward then
+        return nil
+    end
+    local fx, fy = forward:x(), forward:y()
+    local length = math.sqrt(fx * fx + fy * fy)
+    if length < 0.1 then
+        return nil
+    end
+    fx, fy = fx / length, fy / length
+    -- Rotate anticlockwise `turn` quarter turns. Written out rather than done
+    -- with sin and cos, because at multiples of 90 degrees those only
+    -- introduce floating point fuzz around zero.
+    for _ = 1, turn do
+        fx, fy = -fy, fx
+    end
+    return fx, fy
+end
+
+--- Standable ground just outside a part of the vehicle, or nil.
+--
+-- `toward` is relative -- "front", "rear", "left", "right" -- because a room is
+-- 4x5 and an ambulance is 2x5 and there is nothing proportional between them,
+-- but "you came out of the back" survives the translation.
+--
+-- An area centre is a point ON the vehicle, not a place to stand. TruckBed is
+-- the cargo volume, which for a van is inside the bodywork, and vanilla never
+-- stands anybody on one: every getAreaCenter in the base game feeds
+-- luautils.walkAdj, which walks ADJACENT to the square rather than onto it. A
+-- van has only two seats, both front, so falling back to the nearest door would
+-- put a tenant who left by the back of their room at the driver's window, which
+-- is the landing doing nothing at all.
+--
+-- So the centre is used as a DIRECTION rather than a destination: step out from
+-- the middle of the vehicle until the square is clear of it. That lands you on
+-- the ground immediately behind the van, in line with the part of it the room
+-- said you were leaving by.
+--
+-- Nil when nothing resolves and when nothing clear turns up within STEP_LIMIT,
+-- whereupon the caller uses the door position the exit has always used.
+local STEP_LIMIT = 6
+
+function Client.groundBeside(vehicle, toward)
+    local ax, ay, dx, dy
+
+    for _, area in ipairs(AREAS_FOR[toward] or {}) do
+        local centre = vehicle:getAreaCenter(area)
+        if centre then
+            local cx, cy = centre:getX(), centre:getY()
+            local ox, oy = cx - vehicle:getX(), cy - vehicle:getY()
+            local length = math.sqrt(ox * ox + oy * oy)
+            -- An area centred on the vehicle gives no direction at all, so it
+            -- is no better than not having declared one.
+            if length >= 0.1 then
+                ax, ay = cx, cy
+                dx, dy = ox / length, oy / length
+                break
+            end
+        end
+    end
+
+    if not dx then
+        -- No area spoke for this direction. Ask the vehicle which way it is
+        -- pointing instead, and start from its middle.
+        dx, dy = bearing(vehicle, toward)
+        ax, ay = vehicle:getX(), vehicle:getY()
+    end
+
+    if not dx then
+        Core.debugLn("rejoin: nothing resolves '" .. tostring(toward) ..
+                         "' on this vehicle; landing at the door instead")
+        return nil
+    end
+
+    local z = vehicle:getZ()
+    for step = 0, STEP_LIMIT do
+        local tx, ty = ax + dx * step, ay + dy * step
+        local square = getSquare(tx, ty, z)
+        if square and not square:getVehicleContainer() then
+            return tx, ty
+        end
+    end
+
+    Core.debugLn("rejoin: no clear ground within " .. STEP_LIMIT .. " of the '" ..
+                     tostring(toward) .. "' of this vehicle; landing at the door instead")
+    return nil
+end
+
 local function rejoinVehicle(player)
     local vehicle = findVehicle()
 
@@ -142,10 +300,20 @@ local function rejoinVehicle(player)
         return
     end
 
-    -- Only re-seat someone who was seated on the way in. A player who walked
-    -- up to the van on foot should come back out on foot.
+    -- A cab exit wants a seat, any seat, and has no preference to honour: the
+    -- door said "put me in the front", not "put me back where I was". Every
+    -- other exit only re-seats somebody who was seated on the way in, because
+    -- a player who walked up to the van on foot should come back out on foot.
     local seat = nil
-    if pending.seat and pending.seat >= 0 then
+    if pending.cab then
+        seat = firstFreeSeat(vehicle)
+        if not seat then
+            -- Reported rather than worked around. The server still holds the
+            -- lease, so it can put them back in the room, and standing them
+            -- next to a full van would be the cab exit silently doing nothing.
+            Core.debugLn("rejoin: cab exit, but every seat is taken")
+        end
+    elseif pending.seat and pending.seat >= 0 then
         seat = resolveSeat(vehicle, pending.seat, player)
         if not seat then
             Core.debugLn("rejoin: every seat is occupied, staying outside")
@@ -164,14 +332,30 @@ local function rejoinVehicle(player)
     -- The seat we are retaking, else the door we came in by, else whatever is
     -- nearest. Without the middle one every on-foot exit uses the same door,
     -- because getBestSeat is measured from the vehicle centre we land on.
-    local standAt = seat or pending.standSeat
-    if not standAt or standAt < 0 then
-        standAt = Client.nearestDoor(vehicle, player)
+    -- The part of the vehicle the room says this way out comes out at, if the
+    -- room said anything and this vehicle declares it.
+    --
+    -- Tried first, because when it resolves it is a better answer than any
+    -- seat door: it is where the room told the player they would end up.
+    -- getAreaCenter returns world coordinates with the vehicle's rotation
+    -- already applied, and nil for an area the script does not declare -- which
+    -- is not an edge case, the StepVan declares neither TruckBed nor Engine.
+    local x, y
+    if pending.toward and not seat then
+        x, y = Client.groundBeside(vehicle, pending.toward)
     end
-    if not standAt or standAt < 0 then
-        standAt = 0
+
+    if not x then
+        local standAt = seat or pending.standSeat
+        if not standAt or standAt < 0 then
+            standAt = Client.nearestDoor(vehicle, player)
+        end
+        if not standAt or standAt < 0 then
+            standAt = 0
+        end
+        x, y = outsidePosition(vehicle, standAt)
     end
-    local x, y = outsidePosition(vehicle, standAt)
+
     if x then
         player:teleportTo(x, y, player:getZ())
     end
@@ -187,7 +371,10 @@ local function rejoinVehicle(player)
     -- vanilla proves: clients send getId() up and servers resolve it with
     -- getVehicleById, roughly thirty times in VehicleCommands.lua.
     Core.dispatch(Core.commands.arrived, {
-        id = vehicle:getId()
+        id = vehicle:getId(),
+        -- Only meaningful for a cab exit, and the one thing the server cannot
+        -- work out for itself: it did not have a loaded vehicle to ask.
+        seated = seat ~= nil
     })
 
     stopHolding()
@@ -219,6 +406,13 @@ function holdTeleport()
             pending.arrived = true
             pending.seatTicks = 0
             return
+        end
+        -- No vehicle to climb back into, but the server still has something it
+        -- can only do while this chunk is loaded -- unlocking the tent that
+        -- was just left. Reported the moment the square exists rather than
+        -- after a second phase, because there is nothing to wait for.
+        if pending.report then
+            Core.dispatch(Core.commands.arrived, {})
         end
         stopHolding()
         return
@@ -290,7 +484,14 @@ function Client.teleport(data)
         arrived = false,
         -- Only set on the way out; nil going in, which skips the second phase.
         rejoin = data.rejoin and true or false,
+        -- "the server is waiting to hear that you landed", which a world
+        -- object exit owes and an admin port does not.
+        report = data.report and true or false,
         seat = data.seat,
+        -- "take any free seat", set by a cab exit
+        cab = data.cab and true or false,
+        -- which part of the vehicle to come out at: front/rear/left/right
+        toward = data.toward,
         standSeat = data.standSeat
     }
     if not wasPending then
@@ -316,6 +517,23 @@ function Client.notify(data)
     end
 end
 
+--- Ask to go inside a placed world object -- a tent, and whatever follows it.
+--
+-- Sends the square and nothing else. The server reads the object off it, so
+-- there is no identity here for a client to get wrong or to forge, and none of
+-- the vehicle path's paraphernalia applies: nothing to climb out of, no seat
+-- to remember, and no motion to be refused for.
+function Client.requestEnterObject(square)
+    if not square then
+        return
+    end
+    Core.dispatch(Core.commands.enterObject, {
+        x = square:getX(),
+        y = square:getY(),
+        z = square:getZ()
+    })
+end
+
 --- Ask to go in. The server decides.
 function Client.requestEnter(vehicle, seat, standSeat)
     if not vehicle then
@@ -332,11 +550,12 @@ function Client.requestEnter(vehicle, seat, standSeat)
     })
 end
 
---- Ask to come out. Normally the exit tile does this without being asked, but
---- the context menu is a discoverable affordance and a safety net.
+--- Ask to come out. Normally you walk out and the leash does this without
+--- being asked, but the context menu is a discoverable affordance and a safety
+--- net -- and it is the only way out of a room whose door has been blocked.
 function Client.requestLeave()
     Core.dispatch(Core.commands.leave, {
-        reason = "exit"
+        reason = "menu"
     })
 end
 
@@ -351,11 +570,15 @@ end
 -- This is the single client side caller. Type it into the debug console:
 --
 --     PhunInteriors.admin("list")
---     PhunInteriors.admin("remanifest", {roomSet = "phun.van", index = 4})
---     PhunInteriors.admin("scrub", {roomSet = "phun.van", index = 3})
+--     PhunInteriors.admin("rooms")    -- what exists, and what can reach it
+--     PhunInteriors.admin("enter", {room = "phun.van.roofed"})
+--     PhunInteriors.admin("enter", {room = "phun.van.roofed", index = 9})
+--     PhunInteriors.admin("release", {room = "phun.van.roofed", index = 9})
+--     PhunInteriors.admin("remanifest", {room = "phun.van", index = 4})
+--     PhunInteriors.admin("scrub", {room = "phun.van", index = 3})
 --     PhunInteriors.admin("free", {vehicleId = "..."})
 --     PhunInteriors.admin("age", {vehicleId = "...", days = 99})
---     PhunInteriors.admin("sweepleases")
+--     PhunInteriors.admin("reclaim")  -- or {room = "..."}; what a full pool would take
 --     PhunInteriors.admin("reload")   -- after changing a sandbox option
 --     PhunInteriors.admin("weight")
 --     PhunInteriors.admin("evict", {username = "..."})
@@ -368,12 +591,13 @@ end
 -- action: it is the same shape PhunServer2's chat command drives, and the same
 -- shape an admin UI would drive later, so none of this gets rewritten.
 -- ---------------------------------------------------------------------------
---- Build a room set from where you are standing and emit the lua for it.
+--- Build a room from where you are standing and emit the lua for it.
 --
 --     PhunInteriors.author("begin", {id = "yourmod.van"})
 --     PhunInteriors.author("corner")   -- twice, opposite corners of room 1
 --     PhunInteriors.author("spawn")    -- standing on the spawn tile
---     PhunInteriors.author("exit")     -- standing on each exit tile
+--     PhunInteriors.author("cab")      -- optional, at the wall whose doorway
+--                                      -- should put you in a seat
 --     PhunInteriors.author("power")    -- standing on the generator square
 --     PhunInteriors.author("strip", {count = 38, pitchX = 60})
 --     PhunInteriors.author("scripts", {scripts = "Base.Van, Base.VanSeats", match = "Van"})

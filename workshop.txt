@@ -13,7 +13,7 @@ description=[*]Every constraint is a sandbox option. Turn any of them off if it 
 description=[/list]
 description=
 description=[H2]For mod authors[/H2]
-description=Room sets and vehicle classes are registered, not hard coded. Hook PhunInteriorsOnReady and call registerRoomSet and registerVehicleClass to add your own interiors for your own vehicles. Ids are namespaced so nothing collides.
+description=Rooms and the vehicles that reach them are registered, not hard coded. Hook the vanilla OnInitGlobalModData event and call PhunInteriors.registerRoom and PhunInteriors.registerVehicles to add your own interiors for your own vehicles, or registerObjects to hang one off a placed item like a tent. Bindings name ordinary game script names, so you never need an id of ours. Ids are namespaced so nothing collides, and bindings are unioned rather than overridden, so adding rooms for a vehicle somebody else already covers takes nothing away from them.
 description=
 description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
 tags=Build 42;Vehicles;Multiplayer

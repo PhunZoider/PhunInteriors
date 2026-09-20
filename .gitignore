@@ -1,6 +1,18 @@
-# Nothing yet.
+# Nothing is ignored by path.
 #
 # maps/phuninteriors used to be excluded here while it was borrowed space
-# standing in for the purpose-built map. Cells 87,46 and 88,46 are ours now,
-# and the rooms do not exist without them, so they are tracked. See
-# .gitattributes -- they are binary and must not be line-ending converted.
+# standing in for the purpose-built map. All twenty cells (87..91 x 46..49) are
+# ours now and the rooms do not exist without them, so the whole map is
+# tracked. See .gitattributes -- the lotpacks, lotheaders and chunkdata are
+# binary and must not be line-ending converted.
+
+# GIMP sources for icon.png, poster.png and the tileset. Large, regenerable by
+# export, and of no use to anyone cloning the repo -- xclude keeps them out of
+# the Workshop staging trees for the same reason.
+Docs/images/
+
+# Scratch backups left by the tile and map editors. xclude also drops these, so
+# a stray one cannot reach a Workshop build.
+*.bak
+*.orig
+*.tmp

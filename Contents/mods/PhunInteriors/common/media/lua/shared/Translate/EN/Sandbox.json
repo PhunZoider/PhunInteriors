@@ -22,18 +22,16 @@
     "Sandbox_PhunInteriors_EntryZombieRadius": "Entry Block Radius",
     "Sandbox_PhunInteriors_EntryZombieRadius_tooltip": "How close a zombie has to be to stop you getting inside",
 
-    "Sandbox_PhunInteriors_LeaseDays": "Room Lease Days",
-    "Sandbox_PhunInteriors_LeaseDays_tooltip": "Days of disuse before a room is reclaimed and reset. Set to 0 to make rooms permanent",
+    "Sandbox_PhunInteriors_RoomProtectedDays": "Days A Room Is Kept",
+    "Sandbox_PhunInteriors_RoomProtectedDays_tooltip": "Rooms are never taken away while any are free. Once every room is in use, a vehicle that needs one is given the room that has gone unused the longest, provided it has gone unused for at least this many days, and whatever was in it is cleared. Set to 0 to let any unused room be reused as soon as they are all taken. Set it to the maximum to never reuse a room at all: vehicles are simply refused once the last one is gone. A room somebody has claimed as a safehouse is never reused whatever this says",
 
-    "Sandbox_PhunInteriors_LeaseWarningDays": "Lease Warning Days",
-    "Sandbox_PhunInteriors_LeaseWarningDays_tooltip": "How long before a lease expires that the owner is warned",
     "Sandbox_PhunInteriors_PowerBinding": "Interior runs off the vehicle battery",
     "Sandbox_PhunInteriors_PowerBinding_tooltip": "The room is lit by a generator fuelled from the vehicle battery. A flat battery means a dark room, and time spent inside costs charge. Turn off to leave interior power alone.",
-    "Sandbox_PhunInteriors_PowerDrainFactor": "Interior power drain (%)",
+    "Sandbox_PhunInteriors_PowerDrainFactor": "Interior power drain (%%)",
     "Sandbox_PhunInteriors_PowerDrainFactor_tooltip": "How much battery charge the room costs, as a percentage of what the generator burns. 100 is one full battery per full tank. 0 means the lights are free.",
 
     "Sandbox_PhunInteriors_ScrubKeepsLoot": "Keep Loot On Reset",
-    "Sandbox_PhunInteriors_ScrubKeepsLoot_tooltip": "If yes, loot in an expired room is salvaged rather than destroyed when the room is reset",
+    "Sandbox_PhunInteriors_ScrubKeepsLoot_tooltip": "If yes, loot in a reclaimed room is salvaged rather than destroyed when the room is reset",
 
     "Sandbox_PhunInteriors_HardenShell": "Unbreakable Outer Walls",
     "Sandbox_PhunInteriors_HardenShell_tooltip": "If yes, the outer shell of a room cannot be destroyed or burned. Containment does not depend on this",
@@ -42,8 +40,5 @@
     "Sandbox_PhunInteriors_BreachEjects_tooltip": "If yes, leaving the room any way other than the door puts you back at the vehicle. If no, you are simply moved back inside",
 
     "Sandbox_PhunInteriors_AdminNoClipExempt": "Noclip Frees Admins",
-    "Sandbox_PhunInteriors_AdminNoClipExempt_tooltip": "If yes, an admin with noclip turned on is ignored by room containment, so they can inspect and pass through rooms without being ejected. Turning noclip off puts them back under the normal rules",
-
-    "Sandbox_PhunInteriors_Scripts_phun_van": "Extra Van Scripts",
-    "Sandbox_PhunInteriors_Scripts_phun_van_tooltip": "Comma separated vehicle script names to treat as vans, eg Base.MyModdedVan, Base.AnotherVan"
+    "Sandbox_PhunInteriors_AdminNoClipExempt_tooltip": "If yes, an admin with noclip turned on is ignored by room containment, so they can inspect and pass through rooms without being ejected. Turning noclip off puts them back under the normal rules"
 }

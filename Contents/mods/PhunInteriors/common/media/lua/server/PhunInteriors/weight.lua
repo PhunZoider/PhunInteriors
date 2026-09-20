@@ -37,7 +37,7 @@ local function moveableWeight(object)
     return raw / 10
 end
 
---- Total weight of everything the tenant added to a slot.
+--- Everything the tenant added to a slot: what it weighs, and how much of it.
 --
 -- Three things count, and one deliberately does not:
 --
@@ -51,20 +51,46 @@ end
 -- would just be a constant tax on using the feature at all. Anything beyond
 -- what the blueprint expects was carried in, and carrying it is exactly the
 -- thing this mechanic exists to make cost something.
-function Weight.ofSlot(roomSetId, index)
-    local set = Core.roomSets[roomSetId]
-    if not set then
-        return 0
+--
+-- TWO NUMBERS OUT OF ONE WALK, and that is the point of the shape rather than
+-- a convenience. The count is what tells a tent whether it may be packed away,
+-- and "what a scrub would take" and "what the tenant is charged for" have to
+-- be the same set or the two answers drift -- the same failure the manifest
+-- and the scrub have to agree object for object to avoid. Sharing the walk
+-- makes drifting impossible rather than unlikely.
+--
+-- All three categories count toward the tally, loose floor items included. A
+-- floor pile is real storage in this game, and the alternative -- treating it
+-- as leavings a scrub would remove anyway -- means packing a tent silently
+-- bins it. The cost is that one dropped rag refuses a pickup until the tenant
+-- goes back in and sweeps, which is friction the player can see and undo.
+--
+-- Note the tally inherits the blueprint's accuracy: a slot that never captured
+-- its own decor resolves through a sibling, so a fixture the sibling does not
+-- have reads as brought in. That errs toward refusing a pickup rather than
+-- toward losing somebody's belongings, which is the right way round.
+--
+-- Returns weight, count.
+function Weight.surveySlot(roomId, index)
+    local room = Core.rooms[roomId]
+    if not room then
+        return 0, 0
     end
 
     local Manifest = require "PhunInteriors/manifest"
-    local blueprint = Manifest.forSlot(roomSetId, index)
-    local bounds = Core.slotBounds(set, index)
-    local origin = Core.slotOrigin(set, index)
+    local blueprint = Manifest.forSlot(roomId, index)
+    local bounds = Core.slotBounds(room, index)
+    local origin = Core.slotOrigin(room, index)
+    if not bounds then
+        return 0, 0
+    end
 
     -- The room itself, before anything is put in it. Zero by default, so a
-    -- room set that says nothing costs nothing to have.
-    local total = tonumber(set.baseWeight) or 0
+    -- room that says nothing costs nothing to have.
+    local total = tonumber(room.baseWeight) or 0
+    -- baseWeight is the room's own, so it is not something a tenant brought
+    -- and it is deliberately not counted here.
+    local count = 0
 
     for z = bounds.z, bounds.z + 1 do
         for x = bounds.x1, bounds.x2 do
@@ -79,6 +105,7 @@ function Weight.ofSlot(roomSetId, index)
                             local item = worldItem and worldItem:getItem()
                             if item then
                                 total = total + item:getActualWeight()
+                                count = count + 1
                             end
                         end
                     end
@@ -100,6 +127,11 @@ function Weight.ofSlot(roomSetId, index)
                             local container = object.getContainer and object:getContainer()
                             if container then
                                 total = total + container:getContentsWeight()
+                                -- The cupboard is the room's; what is in it is
+                                -- the tenant's, so the items count and the
+                                -- cupboard itself does not.
+                                local items = container:getItems()
+                                count = count + (items and items:size() or 0)
                             end
 
                             local sprite = object:getSprite()
@@ -108,6 +140,11 @@ function Weight.ofSlot(roomSetId, index)
                                 expected[name] = expected[name] - 1
                             else
                                 total = total + moveableWeight(object)
+                                -- Counted even when it weighs nothing. A
+                                -- placed object with no IsMoveAble property is
+                                -- free to carry but is still a thing the
+                                -- tenant put here and would lose.
+                                count = count + 1
                             end
                         end
                     end
@@ -116,7 +153,13 @@ function Weight.ofSlot(roomSetId, index)
         end
     end
 
-    return total
+    return total, count
+end
+
+--- What the interior weighs. The half of the survey the vehicle path wants.
+function Weight.ofSlot(roomId, index)
+    local weight = Weight.surveySlot(roomId, index)
+    return weight
 end
 
 --- Push our share of the interior weight onto the vehicle.
@@ -138,9 +181,8 @@ function Weight.apply(vehicle, interiorWeight)
         -- Silence here reads as "the weight was never calculated", which is
         -- the one thing it does not mean: the room is scanned on every exit,
         -- and this only skips pushing an identical number back at the engine.
-        Core.debugLn(string.format(
-            "mass unchanged at %.1f (%.0f%% of %.1f), nothing to apply",
-            applied, factor, tonumber(interiorWeight) or 0))
+        Core.debugLn(string.format("mass unchanged at %.1f (%.0f%% of %.1f), nothing to apply", applied, factor,
+            tonumber(interiorWeight) or 0))
         return applied
     end
 
@@ -205,7 +247,7 @@ function Weight.report()
             applied = tonumber(vehicle:getModData()[Core.consts.massDeltaKey]) or 0
         end
         table.insert(lines,
-            string.format("%s -> %s#%s, carrying %.1f%s", vehicleId, assignment.roomSet, assignment.index, applied,
+            string.format("%s -> %s#%s, carrying %.1f%s", vehicleId, assignment.room, assignment.index, applied,
                 vehicle and "" or " (vehicle not loaded, delta unread)"))
     end
 

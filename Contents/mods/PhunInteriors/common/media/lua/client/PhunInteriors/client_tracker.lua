@@ -54,10 +54,16 @@ end
 -- lives in server side modData -- so it filters on the vehicle *class*, which
 -- the registry knows on both sides, and the server filters on the lease.
 local function pushPosition(vehicle)
-    if not vehicle or not Core.classForVehicle(vehicle) then
+    -- Liveness first: this is also called for getVehicleTowing(), which can
+    -- hand back a vehicle whose chunk has gone even when the tower's has not,
+    -- and getScript() on a torn down vehicle is the same null dereference as
+    -- isStopped().
+    if not Core.vehicleIsLive(vehicle) or not Core.vehicleHasRooms(vehicle) then
         return
     end
-    Core.dispatch(Core.commands.updatePosition, {id = vehicle:getId()})
+    Core.dispatch(Core.commands.updatePosition, {
+        id = vehicle:getId()
+    })
 end
 
 --- Start watching, if this player just took the wheel of something we care
@@ -74,7 +80,7 @@ local function watch(player)
     end
     -- A trailer with an interior is worth following even when the thing towing
     -- it has none of its own.
-    if not Core.classForVehicle(vehicle) and not Core.classForVehicle(vehicle:getVehicleTowing()) then
+    if not Core.vehicleHasRooms(vehicle) and not Core.vehicleHasRooms(vehicle:getVehicleTowing()) then
         return
     end
 
@@ -95,6 +101,24 @@ local function watch(player)
             return
         end
         delay = CHECK_TICKS
+
+        -- The vehicle has gone -- unloaded with its chunk, or destroyed. There
+        -- is nothing left to read a position off, and the engine side is torn
+        -- down, so anything we ask it from here is a null dereference.
+        --
+        -- This is reachable on every entry made while driving: the stop-send
+        -- below sets lastSent while moving, the tenant is then teleported
+        -- across the map, and the "nothing left to watch" test at the bottom
+        -- will not fire because lastSent is still owed. The watcher kept
+        -- polling a van that no longer existed.
+        --
+        -- Nothing is lost by giving up here. Transit.enter stored the vehicle
+        -- position server side at the moment of entry, which is the position
+        -- the exit actually uses.
+        if not Core.vehicleIsLive(vehicle) then
+            stopWatching()
+            return
+        end
 
         local moving = Core.vehicleIsMoving(vehicle)
         local far = not lastSent or lastSent:DistTo(player) > RESEND_TILES
@@ -132,7 +156,37 @@ function Client.installTracker()
     if Events.OnSwitchVehicleSeat then
         Events.OnSwitchVehicleSeat.Add(watch)
     else
-        Core.logLn("OnSwitchVehicleSeat not registered; position tracking will "
-            .. "miss a player who slides into the driver's seat")
+        Core.logLn("OnSwitchVehicleSeat not registered; position tracking will " ..
+                       "miss a player who slides into the driver's seat")
+    end
+end
+
+--- Warn the server before the admin "remove vehicle" cheat runs.
+--
+-- The cheat sends VehicleCommands.remove, and that table is local to its file,
+-- so the server has no way in. By the time anything could look, the vehicle
+-- and the UUID its lease is keyed on are gone. So say so first, from the same
+-- client, which puts this message ahead of vanilla's on the wire; the server
+-- reads the UUID while it still can and watches for the removal to land. In
+-- single player the dispatch is a direct call and the removal is synchronous,
+-- which is the same order.
+--
+-- Deferred, and it has to be: ISVehicleMechanics is vanilla client lua. The
+-- confirmation dialog reads onCheatRemoveAux when it is opened, which is long
+-- after this runs.
+function Client.installRemovalNotice()
+    if not ISVehicleMechanics or not ISVehicleMechanics.onCheatRemoveAux then
+        Core.logLn("ISVehicleMechanics not loaded; removing a vehicle will not release its room")
+        return
+    end
+    local baseRemove = ISVehicleMechanics.onCheatRemoveAux
+    ISVehicleMechanics.onCheatRemoveAux = function(dummy, button, playerObj, vehicle)
+        -- vanilla's own test for the confirmation
+        if button and button.internal ~= "NO" and Core.vehicleIsLive(vehicle) and Core.vehicleHasRooms(vehicle) then
+            Core.dispatch(Core.commands.vehicleRemoving, {
+                id = vehicle:getId()
+            })
+        end
+        return baseRemove(dummy, button, playerObj, vehicle)
     end
 end
