@@ -46,16 +46,22 @@ $arg =~ s{\\}{/}g;      # PI_MAPSRC is a Windows path; glob and -d want slashes
 my @files;
 if (-d $arg) {
     # readdir rather than glob: a project folder can hold a name with a space
-    # in it, and the backups alongside must not be rewritten.
+    # in it.
     opendir my $dh, $arg or die "$arg: $!\n";
     my @pzw = grep { /\.pzw$/ and -f "$arg/$_" } readdir $dh;
     closedir $dh;
-    my ($main) = grep { $_ eq "phuninteriors.pzw" } @pzw;
-    if    ($main)        { @files = ("$arg/$main") }
-    elsif (@pzw == 1)    { @files = ("$arg/$pzw[0]") }
-    elsif (@pzw)         { die "tighten: several .pzw in $arg, name one:\n"
-                               . join("", map { "  $arg/$_\n" } sort @pzw) }
-    else                 { die "tighten: no .pzw in $arg\n" }
+    # EVERY project in the folder, not just phuninteriors.pzw. pi5 now holds
+    # three -- phunspawn and phunhub took the cells that were 87,49 and 88,49
+    # -- and they share buildings/_, so they have the same border lots and
+    # WorldEd spills their rects on save exactly the same way. Tightening one
+    # and leaving the others is how a fence comes back with a hole in it.
+    #
+    # A `.pzw.bak` or `.pzw.pre-shrink` is not caught by the `.pzw$` test, but
+    # a `something - Copy.pzw` is, and it is normalised along with the rest.
+    # That costs nothing: tightening only ever makes a border lot rect match
+    # the building it points at, and it is idempotent.
+    die "tighten: no .pzw in $arg\n" unless @pzw;
+    @files = map { "$arg/$_" } sort @pzw;
 } else {
     @files = ($arg);
 }
@@ -72,7 +78,16 @@ for my $p (@files) {
     my $n = 0;
 
     # No /x on this pattern: it would strip the literal spaces out of it.
-    $d =~ s{(<lot x="-?\d+" y="-?\d+" level="\d+" width=")(\d+)(" height=")(\d+)(" map="[^"]*/(Border_[A-Z]+)\.tbx"/>)}{
+    #
+    # The building name takes DIGITS as well as letters, and the pattern says
+    # so even though the three current names do not need it. `Border_[A-Z]+`
+    # was written when they were all letters and it silently skipped the one
+    # `Border_W1` that briefly existed: that rect sat spilled at 2x2 through a
+    # whole export while this printed "all border lot rects already tight".
+    # A check that passes by not looking is worse than no check, and the shape
+    # of that one is worth keeping -- the pattern was exactly right for every
+    # name in existence when it was written.
+    $d =~ s{(<lot x="-?\d+" y="-?\d+" level="\d+" width=")(\d+)(" height=")(\d+)(" map="[^"]*/(Border_[A-Z][A-Z0-9]*)\.tbx"/>)}{
         my ($p1, $w, $p2, $h, $p3, $b) = ($1, $2, $3, $4, $5, $6);
         my $t = $want{$b};
         if ($t and ($w != $t->[0] or $h != $t->[1])) { $n++; "$p1$t->[0]$p2$t->[1]$p3" }

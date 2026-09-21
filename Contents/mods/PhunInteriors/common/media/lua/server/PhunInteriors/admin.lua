@@ -26,8 +26,8 @@ actions.list = function()
     local lines = {}
 
     for _, room in ipairs(summary.rooms) do
-        table.insert(lines, string.format("%s: %d/%d leased (%s)",
-            room.id, room.used, room.total, room.source))
+        table.insert(lines, string.format("%s: %d/%d leased (%s)%s",
+            room.id, room.used, room.total, room.source, Slots.isOpen(room.id) and "" or ", CLOSED"))
     end
 
     -- Longest idle first, because that is the next one a full pool would take
@@ -395,6 +395,7 @@ local function contractOf(room)
             z = room.generator.z or 0
         } or nil,
         selfPowered = room.selfPowered and true or false,
+        singleUse = room.singleUse and true or false,
         reservoir = room.reservoir ~= false,
         baseWeight = room.baseWeight or 0
     }
@@ -429,6 +430,9 @@ function Admin.roomState(player)
         -- free. One word meaning both is how a reader ends up confidently
         -- wrong; see registerRoom.
         entry.powered = room.generator ~= nil
+        -- Runtime state rather than contract, so it is not in contractOf and
+        -- never reaches the override file.
+        entry.closed = not Slots.isOpen(id)
         entry.scripts = scripts
         entry.items = itemsForRoom(id)
         entry.matchers = matchers
@@ -783,6 +787,38 @@ actions.evict = function(args)
     -- sends an admin looking for the wrong problem.
     return {"could not evict " .. username .. ": " .. tostring(why)}
 end
+
+-- Open or close a room by hand: the same call PhunHub's schedule makes, so an
+-- admin can test it without waiting for the hour.
+--
+--     PhunInteriors.admin("close", {room = "...", evict = true, scrub = true})
+--     PhunInteriors.admin("open", {room = "...", scrub = true})
+local function openOrClose(open)
+    return function(args)
+        if not args.room then
+            return {(open and "open" or "close") .. " needs a room"}
+        end
+        local ok, report = Transit.setRoomOpen(args.room, open, {
+            evict = args.evict and true or false,
+            scrub = args.scrub and true or false
+        })
+        if not ok then
+            return {tostring(report)}
+        end
+        local lines = {string.format("%s is %s%s", args.room, open and "open" or "closed",
+            report.changed and "" or " (it already was)")}
+        if args.evict then
+            table.insert(lines, string.format("  evicted %d, could not move %d", report.evicted, report.stuck))
+        end
+        if args.scrub then
+            table.insert(lines, string.format("  scrubbed %d now, %d when next handed out, %d left alone "
+                .. "(somebody inside, or claimed)", report.scrubbed, report.deferred, report.skipped))
+        end
+        return lines
+    end
+end
+actions.open = openOrClose(true)
+actions.close = openOrClose(false)
 
 -- What every captured blueprint weighs. This is the measurement the design
 -- note asks for: the estimates there were derived from room dimensions, and

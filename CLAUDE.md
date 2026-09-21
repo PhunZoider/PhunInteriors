@@ -247,10 +247,10 @@ Contents/mods/PhunInteriors/common/
   media/lua/shared/Translate/EN/     ContextMenu.json, IG_UI.json, Sandbox.json,
                                     ItemName.json, Recipes.json
   media/scripts/PhunInteriors.txt    the reservoir kit item and its recipe
-  media/maps/phuninteriors/          the map: 20 cells of lotpack, lotheader
+  media/maps/phuninteriors/          the map: 18 cells of lotpack, lotheader
                                     and chunkdata, plus map.info, objects.lua
-                                    (the NoPowerOrWater zone) and roomtones.lua.
-                                    17MB, tracked, binary -- see .gitattributes
+                                    (the NoPowerOrWater zones) and roomtones.lua.
+                                    16MB, tracked, binary -- see .gitattributes
   media/phuninteriors.tiles          our own tiledefs, incl. the black lid tile
 
 Tests/run.sh                       syntax check + specs; the whole test suite
@@ -1340,6 +1340,44 @@ the same `lastSeen` measurement `Slots.isReclaimable` makes against
 reclaim cannot disagree. The id is a 36 character UUID nobody can recognise and
 960 of them would be most of the payload; `admin("list")` prints them.
 
+**A single use room hands itself back when the last person leaves, and is
+scrubbed on the spot.** `singleUse = true` on the room, for a spawn room or an
+arrival hall. `Transit.leave` calls `Transit.handBack`, which releases the
+lease and runs `Scrub.slot` there and then, taking the slot back out of
+quarantine if it worked.
+
+Scrubbing on exit is what makes this worth a field, not just an early release.
+An ordinary release waits for the next lease to scrub, because nobody is near
+a room that was released for going unused. On exit the server still has the
+tenant standing in the room, so the chunk is loaded and the scrub can run. If
+it cannot (no blueprint yet, a claim), the slot sits in quarantine exactly as
+an ordinary release leaves it.
+
+**Never while anybody else is inside.** That also changed `sendTo`'s
+`release`, which used to hand the room back regardless and would have left
+the others contained against a room nobody held. The interior weight of a
+handing-back exit is 0, since the room is about to be emptied.
+
+**A room can be open or closed, and that is runtime state rather than
+contract.** `Core.setRoomOpen(id, open, {evict, scrub})` server side, and
+`admin("open")` / `admin("close")` with the same options. A closed room hands
+out no new lease, is never reclaimed into, and refuses somebody who already
+holds a lease in it (`IGUI_PhunInteriors_RoomClosed`, which is also what
+allocation says when every candidate is shut, so the player hears "closed"
+rather than "full"). Leaving is always allowed. `adminEnter` ignores it,
+because a designer has to be able to get into a closed room to fix it.
+
+It lives in the save (`closed` in the store), not in `registerRoom` or the
+override file. The contract says what a room is, and whether it is open right
+now is something a schedule or an admin changes while the server runs. A room
+an admin closed stays closed across a restart, and a schedule simply
+re-asserts itself.
+
+`evict` puts everybody out through `Transit.leave`. `scrub` does to every slot
+nobody is standing in what Reset does to one: a held lease is released, an
+unheld slot is queued, and each is scrubbed now if loaded, otherwise on its
+next lease. Claimed slots are left alone, as Reset leaves them.
+
 **An edit is a patch, kept beside the registration rather than inside it.**
 The registry is code, and `defaults.lua` is *generated* from three CSVs by
 `Docs/gendefaults.pl` — so an edit written back into it is lost on the next
@@ -1738,7 +1776,7 @@ B41 tutorial applies.
 | **`instanceof` cannot identify a placed moveable, and the inconsistency is *within one object*.** Of a single TentGreen's tiles, `camping_04_100` loads as a plain `IsoObject` and `camping_04_103` as an `IsoThumpable`. | Identify by `CustomItem`; reach for `instanceof` only to guard behaviour you are about to invoke. Same lesson as the light switches from the other end — there the class was lost by rebuilding, here it was never uniform to begin with. |
 | **Object modData survives a save and a reload, and `AddSpecialObject` adds to `square.objects` as well as `specialObjects`.** A key written client side and left through a quit to the main menu came back intact on both a tent and the floor beneath it. `IsoObject.transmitModData` addresses a plain object by `square:getObjects():indexOf(object)` (`MovingObject.set`, objectType 1), and in single player both network flags are false so it falls through to `flagForHotSave()`. | A world object can hold a durable lease id across a save, a reload and a chunk unload, which a **vehicle cannot** — see the vehicle modData row. So a non-vehicle holder needs neither position keying nor the client-side identity workaround the exit handshake exists for. It does **not** survive being picked up; see the next row, which is the one that decides the design. |
 | **modData does not survive a tent being picked up, and whether it does depends on which tile was clicked.** Every tent carries the `ForceSingleItem` tile property, and that branch of `ISMoveableSpriteProps:pickUpMoveable` builds a fresh item from the anchor sprite and puts modData on it in exactly one place: `if instanceof(obj, "IsoThumpable") then self:saveThumpableParameters(item:getModData(), obj) end`, where `obj` is the object on the **clicked** square. The per-tile `pickUpMoveableInternal` calls run with `createItem = false`, so the items that *do* carry `movableData` are built and thrown away. And a single TentGreen is both classes at once — `camping_04_103` is an `IsoThumpable`, `camping_04_100` is not. | Picking a tent up by one corner carries its whole modData and by another carries **nothing at all**, not even `movableData`. Writing the id to every tile does not help: what is tested is the clicked tile's *class*, not whether it holds the id. So a lease must **never depend on surviving a pickup** — a tent put back down would mint a fresh id, take a different room, and leave the old one leased to an id nothing carries until reclaim took it, which is a tenant's belongings quietly disappearing. Refusing the pickup is what makes this moot; see "Known gaps" #11. |
-| **Finding the generator that powers a square.** `IsoGridSquare.getGenerator()` returns the generator standing on that square and reads `getSpecialObjects()`, so it is one list lookup. `IsoGenerator.isPoweringSquare(gx, gy, gz, x, y, z)` is static and **pure geometry** -- `IsoUtils.DistanceToSquared <= generatorRadius�` plus a vertical range -- with no activation test in it; `generatorRadius` and `generatorVerticalPowerRange` are set from `SandboxVars.GeneratorTileRange` / `GeneratorVerticalPowerRange` by `setGeneratorRange`. `IsoChunk.isGeneratorPoweringSquare` walks `generatorsTouchingThisChunk`, a list of positions the chunk only carries while a generator is activated, and `IsoGenerator.AllGenerators` is a static list of every loaded one. Vanilla lua uses **none** of these, and pairs `setFuel` with `generator:sync()` (`ISAddFuel:complete()`). | So `square:haveElectricity()` true already implies an activated generator in range, which makes it the gate and not the walk: `Power.syncObject` asks it first and only then rings outward with `getGenerator()` to find which one to bill. Nearest first, so several generators resolve to the one the tenant parked closest. `AllGenerators` would be cheaper still and is deliberately not used -- it is a static field rather than a method, nothing in vanilla lua reads one, and the ring walk is bounded by a sandbox radius anyway. |
+| **Finding the generator that powers a square.** `IsoGridSquare.getGenerator()` returns the generator standing on that square and reads `getSpecialObjects()`, so it is one list lookup. `IsoGenerator.isPoweringSquare(gx, gy, gz, x, y, z)` is static and **pure geometry** -- `IsoUtils.DistanceToSquared <= generatorRadius�` plus a vertical range -- with no activation test in it; `generatorRadius` and `generatorVerticalPowerRange` are set from `SandboxVars.GeneratorTileRange` / `GeneratorVerticalPowerRange` by `setGeneratorRange`. `IsoChunk.isGeneratorPoweringSquare` walks `generatorsTouchingThisChunk`, a list of positions the chunk only carries while a generator is activated, and `IsoGenerator.AllGenerators` is a static list of every loaded one. Vanilla lua uses **none** of these, and pairs `setFuel` with `generator:sync()` (`ISAddFuel:complete()`). | So `square:haveElectricity()` true already implies an activated generator in range, which makes it the gate and not the walk: `Power.syncObject` asks it first and only then rings outward with `getGenerator()` to find which one to bill. Nearest first, so several generators resolve to the one the tenant parked closest. `AllGenerators` would be cheaper still and is deliberately not used -- it is a static field rather than a method, nothing in vanilla lua reads one, and the ring walk is bounded by a sandbox radius anyway. |
 
 ### Checking an API call before you use it
 
@@ -1860,9 +1898,9 @@ describe the map that ships?**
 
 ```bash
 perl Docs/roomcheck.pl
-#   20 cells, 990 registered slots, 16140 interior squares, 1330 door squares,
+#   18 cells, 990 registered slots, 14540 interior squares, 1330 door squares,
 #   990 slots with a front
-#   FAIL 1600 interior squares inside no registered slot
+#   the registry matches the map
 ```
 
 It reads the interior squares and the door squares out of every lotpack, loads
@@ -1903,6 +1941,42 @@ broken", and reading `leash.lua` can never find it: the leash was entirely
 right about the box it was handed. The same run found a second fault nobody had
 noticed, one stamp a square south of its row, which had left that slot's exit
 tile on open ground outside its north wall.
+
+**It checks the whole family in one run, and it has to.** `--mod ../PhunSpawn`
+puts that repo's lua on the require path, requires its `PhunSpawn/interiors`
+and adds its cells to the scan:
+
+```bash
+perl Docs/roomcheck.pl --mod ../PhunSpawn --mod ../PhunHub
+```
+
+The two halves cannot be separated. Those mods call `registerRoom` into OUR
+registry from their own files, so their map without their lua reports every
+interior square as claimed by nobody -- and their map without OUR lua reports
+all 990 of our slots as sitting on ground that is not there. `Tests/lua/stubs.lua`
+grew `stubs.addRoot` for it: its `require` now searches a LIST of mod trees,
+because the game merges every enabled mod's lua into one namespace and so does
+the registry. It also fires `OnInitGlobalModData`, since that is the hook the
+author docs tell a third party to register from.
+
+**`Docs/fencecheck.pl` DERIVES the perimeter rather than listing it**, and that
+is the second lesson of the carve. It was a hand-written table of segments and
+corners, correct for a rectangle, and it had to be rewritten by hand the moment
+the block became an L. Now it reads which cells ship, works out what is inside
+the fence -- every square of every cell, less the last row of a cell whose
+south neighbour is absent and the last column of one whose east neighbour is
+absent, which is exactly the W/N-only wall convention -- and requires a face
+wherever inside meets outside. Carve a cell out, add one, or point it at a
+one-cell map like PhunSpawn's, and it asks the right question with no edit.
+
+Two things fell out of that which the table did not have. It found the
+**concave** turn, which is the one nobody writing out a rectangle thinks of:
+where a required west face and a required north face share a point, the square
+whose north-west corner is that point takes the post, whichever way the fence
+bends. And writing it caught its own bug before the map did -- scanning only
+cell-local lines 0 and 255 missed the boundary at **254**, which is where it
+falls when a last row is excluded, so the entire new south fence came back as
+"not required" and the check passed with a hole in it.
 
 `Docs/rooms.pl` dumps one cell's room DEFS — name, level and each rect in
 world coordinates — which is what `tiles.pl` cannot see and what decides both a
@@ -1964,24 +2038,37 @@ cells are actually towns.
    ```lua
    objects = {
      { name = "Waterless", type = "NoPowerOrWater",
-       x = 22272, y = 11776, z = 0, width = 1280, height = 1024 },
+       x = 22272, y = 11776, z = 0, width = 512, height = 768 },
+     { name = "Waterless", type = "NoPowerOrWater",
+       x = 22784, y = 11776, z = 0, width = 768, height = 1024 },
    }
    ```
 
-   That is the whole 5 x 4 block — x 22272..23551 across cells 87..91, y
-   11776..12799 across 46..49. It is **one** zone object drawn at 0,0 in the
-   north-west cell of `phuninteriors.pzw` at 1280 x 1024; the exporter offsets
-   it by the world origin and does not clip it to its cell, so one rectangle
-   in the editor covers the lot. Read it out of the export rather than the
-   editor -- the shipped `objects.lua` still carries the pre-resize 1536 and
-   is corrected by the next re-export.
+   That is the L the block actually is: cells 87..88 x 46..48, then cells
+   89..91 x 46..49. Both are drawn as objects at 0,0 in the north-west cell of
+   `phuninteriors.pzw` in cell-local coordinates; the exporter offsets them by
+   the world origin and does not clip either to its cell, so a rectangle in
+   the editor covers as many cells as it likes. Read them out of the export
+   rather than the editor.
+
+   **Two rectangles rather than one, for two independent reasons, and the
+   first is a hard engine limit.** `IsoMetaGrid.registerZone` refuses any zone
+   wider or taller than 1202 -- it logs `not adding suspicious zone` and
+   returns without calling `addZone` -- so the single 1280 x 1024 rectangle
+   that used to cover the whole block was dropped on every load and every room
+   sat on the mains. Nothing in the mod can see that; the only evidence is one
+   console line and `isNoPower` reading 0. The second reason is that the block
+   stopped being a rectangle when 87,49 and 88,49 were carved out, and a zone
+   over ground we no longer ship would answer for whatever map takes those
+   cells.
 
    `Zone.contains` is half open — `x >= zone.x` and `x < zone.x + width` — so
-   the width is the cell count times 256 **exactly**, not one more. A first
-   pass at this file had `x = 22527, width = 513`, which covers 88,46 and one
-   column of 87,46, silently leaving the whole `phun.van.plain` set on the
-   mains. Check the arithmetic against the cell bounds, not against a corner
-   read off a map editor.
+   a width is the cell count times 256 **exactly**, not one more, and the two
+   rectangles tile at x 22784 with no gap and no overlap. A first pass at this
+   file had `x = 22527, width = 513`, which covers 88,46 and one column of
+   87,46, silently leaving the whole `phun.van.plain` set on the mains. Check
+   the arithmetic against the cell bounds, not against a corner read off a map
+   editor.
 
    `isNoPower` calls `getZonesAt(x, y, 0, ...)` with the level **hardcoded to
    zero** whatever level the square is on, and `Zone.contains` requires
@@ -2093,26 +2180,94 @@ cells are actually towns.
 
 1. **The map is cut and `defaults.lua` matches it** — verified, not asserted:
    `perl Docs/roomcheck.pl` compares the two and is the only thing that does.
-   **It currently FAILS, deliberately and temporarily**: the grid has just
-   been shifted one square north-west and `defaults.lua` is regenerated for
-   the new origin, but the shipped lotpacks are still the old export. Re-export
-   from WorldEd and run `map.cmd`, and it goes green. **Everything in the rest
-   of this item below the next few paragraphs still describes the superseded
-   two-cell, two-room map and needs a pass.** The top of `defaults.lua` is the
-   current description.
+   Both it and `Docs/fencecheck.pl` are green as of 2026-09-20, against the
+   export taken after 87,49 and 88,49 were carved out. **Everything in the
+   rest of this item below the next few paragraphs still describes the
+   superseded two-cell, two-room map and needs a pass.** The top of
+   `defaults.lua` is the current description.
 
-   **Twenty cells** -- five across (87..91) by four down (46..49) -- each a
-   10 x 6 grid at a pitch of 25 across and 42 down: **960 registered slots,
-   13910 interior squares, 1300 door squares** as of 2026-09-19. The cell
-   contents below are older than that -- 92,49 now holds zero room defs and
-   the camping designs have moved to 90,48 -- so read the totals here and the
-   layout from `roomcheck.pl` and `defaults.lua`, not from the table. Of the
-   five original floor sizes (2x3, 3x4, 3x6, 3x9, 3x13) only 3x9 still ships
-   as a tier — the rest have been reworked cell by cell into fitted rooms —
-   and all of 87,47 is the ambulance bays. Every origin, and the pitch, came out of
-   the lotpacks.
+   **Eighteen cells**, an L: five across (87..91) by three down (46..48), plus
+   89..91 on row 49. Each is a 10 x 6 grid at a pitch of 25 across and 42
+   down: **990 registered slots, 14540 interior squares, 1330 door squares**
+   as of 2026-09-20. The cell contents below are older than that -- 92,49 now
+   holds zero room defs and the camping designs have moved to 90,48 -- so read
+   the totals here and the layout from `roomcheck.pl` and `defaults.lua`, not
+   from the table. Of the five original floor sizes (2x3, 3x4, 3x6, 3x9, 3x13)
+   only 3x9 still ships as a tier — the rest have been reworked cell by cell
+   into fitted rooms — and all of 87,47 is the ambulance bays. Every origin,
+   and the pitch, came out of the lotpacks.
 
-   **The 92 column is gone and the block is fenced on all four sides.** Those
+   **87,49 and 88,49 are gone, and the block is an L rather than a
+   rectangle.** 87,49 went to **PhunSpawn** and 88,49 to **PhunHub**, which is
+   why they had to leave rather than merely be emptied: maps sharing a `lots=`
+   chain share one coordinate space and `IsoLot.MapFiles` is ordered, so two
+   maps shipping 87,49 means the loser's cell is discarded with **no
+   warning**.
+   87,49's only registered room went with it -- `Spawn`, an 8x9 garage stamped
+   once at a floor corner rather than on the grid, bound to `Base.CarTaxi` --
+   and 88,49 held nothing but ground and fence. `Docs/cells.pl` is what checks
+   nobody else has claimed a cell.
+
+   `gendefaults.pl` keeps the `Floor X` / `Floor Y` columns that room needed,
+   so a one-off building placed off the ten-by-six grid can still be
+   registered. Nothing uses them now.
+
+   **Both of those mods' maps are drawn with OUR tiledefs**, and neither ships
+   a copy: their ground is `phuninteriors_01_0` and their fence is
+   `phuninteriors_01_8/9/10`, out of `media/phuninteriors.tiles` and
+   `media/texturepacks/phuninteriors.pack`. That is deliberate and it is
+   recorded in each of their `Docs/map.md`, but it makes those two files a
+   **published interface** rather than ours alone: renaming a sprite, dropping
+   one, or renumbering the sheet breaks two other mods' maps, and the only
+   symptom is a cell of missing sprites in a mod that never changed. Their
+   projects also live in `D:\pz-dev\maps\pi5` beside ours and share
+   `buildings/_`, which is why `tighten.pl` now normalises every `.pzw` in
+   that folder rather than only `phuninteriors.pzw`.
+
+   **The map tools are shared rather than copied, and each of those repos has
+   its own `map.cmd` that calls ours.** `PI_REPO` points at this checkout and
+   defaults to `..\PhunInteriors`. Their `map.cmd` syncs their export into
+   their repo, runs `roomcheck.pl --mod <their repo>`, `fencecheck.pl <their
+   map>`, `tighten.pl` and `zombies.pl`, calls their own `deploy.cmd` and
+   resets their cell out of a test save (`PS_TESTSAVE` / `PH_TESTSAVE`,
+   falling back to `PI_TESTSAVE`). Keeping the checks here is not tidiness:
+   roomcheck cannot answer for their map without our registry, and a copy of
+   it in each repo would be three copies of a harness that has to agree about
+   one registry. They document it in their own `Docs/map.md`.
+
+   **The new border is three lots and no new building.** `Border_N` at
+   cell-local y=255 in 87,48 and 88,48 is the south fence for those two
+   columns; `Border_W` at x=0 in 89,49 is the west fence for the surviving
+   row-49 block; `Border_NW` posts go at 22272,12543, 22784,12543 and
+   22784,12799.
+
+   **The middle one of those is a CONCAVE turn and it takes a post anyway.**
+   That was got wrong first and the correction is the useful part. The
+   reasoning was that a post there hangs a square of wall east into the map,
+   so a lone west face was wanted, and `Border_W1.tbx` was built for it -- a
+   1x1 derived from `Border_NW` with its two `dir="N"` objects removed. It
+   exported as `phuninteriors_01_10`, the NW post, at both levels: the
+   exporter will not emit a lone `West` from a 1x1 building. And the derived
+   rule in `fencecheck.pl` independently says a post belongs there, because a
+   turn is a turn whichever way it bends. Two answers agreeing, so
+   `Border_W1.tbx` is deleted and the lot is an ordinary `Border_NW`.
+
+   It left one thing behind that is worth keeping. `tighten.pl` matched
+   `Border_[A-Z]+`, which skipped `Border_W1` for having a digit in it, so
+   that lot sat spilled at 2x2 through a whole export while the tool printed
+   "all border lot rects already tight". It matches `Border_[A-Z][A-Z0-9]*`
+   now. **A check that passes by not looking is worse than no check**, and the
+   shape of this one generalises: the pattern was exactly right for every name
+   that existed when it was written.
+
+   Note the south fence sits on y=12543 rather than 12542: a `Border_N` wall
+   blocks the **north edge** of its own square, so the row carrying it is
+   outside the fence. That is why the west fence of the row-49 block has to
+   start at 12543 and not at 12544 -- the square at 22784,12543 is inside the
+   map while 22783,12543 is outside it, and without a wall between them the
+   whole new fence is decorative.
+
+   **The 92 column is gone and the block was fenced on all four sides.** Those
    four cells held no lots and no room defs, and each was still a 776 KB
    lotpack because the whole 65,536 squares are painted with
    `phuninteriors_01_0` -- 3 MB of a 20 MB map for nothing. Dropping the
@@ -2128,9 +2283,11 @@ cells are actually towns.
    x=0, which land on the *west edge* of that column; `Border_N` is 256 x 1
    with `dir="W"` walls on the *north edge* of its row. (`dir` is the
    direction the wall runs, not the edge it sits on.) So **no new building was
-   needed**: `Border_W` placed at cell-local x=255 is the east fence and
-   `Border_N` at y=255 is the south fence, leaving line 255 itself outside the
-   fence, which is the map edge and costs nothing.
+   needed** for a rectangle: `Border_W` placed at cell-local x=255 is the east
+   fence and `Border_N` at y=255 is the south fence, leaving line 255 itself
+   outside the fence, which is the map edge and costs nothing. The L needed no
+   new building either, once its concave turn turned out to want a post like
+   every other turn -- see above.
 
    What it does cost is a square of grid. Lots were at `x = 6 + 25*col` and
    `y = 4 + 42*row`, 25 x 42 each, so they filled **x 6..255 and y 4..255** --
@@ -2155,6 +2312,14 @@ cells are actually towns.
    fence stops pathing, not realisation, so it is not a substitute. The right
    answer is a deliberate ring on all four sides; until there is one, the
    block is fenced but the void starts immediately beyond it on every edge.
+
+   **Carving out 87,49 and 88,49 is the same trade taken again**, and it is
+   worse than the 92 column was: those two cells sat *inside* the perimeter,
+   so the void they leave is a notch in the south-west corner rather than a
+   strip along one edge, and it is adjacent to three surviving cells rather
+   than to five. Both mods that take them will ship a lotheader for their own
+   cell, which is `n_initMetaChunk(..., 0)` for it -- but only for whoever has
+   them installed, and this mod cannot depend on that.
 
    **A cell can hold more than one design**, which is why `stamps()` takes a
    row count — 87,47 was half 2x3 rooms and half bays for a while, and is all
@@ -2641,7 +2806,7 @@ cells are actually towns.
    `Tests/root/PhunInteriors/common/` carries its own pair for the test id.
    GIMP sources are in `Docs/images/` and are deliberately untracked.
 3. **`workshop.txt` has an empty `id=`.** Fill on first publish.
-4. **The registry is fully populated.** `defaults.lua` registers 83 rooms, 80
+4. **The registry is fully populated.** `defaults.lua` registers 83 rooms, 78
    vehicle bindings and one object binding, generated by `Docs/gendefaults.pl`
    from the three CSVs. There is no `phun.van` binding any more -- every
    binding is `phun.vehicles.*` and the matcher is gone, so the sandbox
@@ -3055,6 +3220,22 @@ cells are actually towns.
       closing it means a fourth arrival shape, or a second command meaning
       nothing but "I have landed", and neither is worth it for two paths that
       put somebody where they already chose to be.
+
+15. **Single use rooms and open/closed have never run in game.**
+    `slots_spec.lua` and `sendto_spec.lua` cover allocation, the refusals and
+    the last-one-out rule, and the closed checks were confirmed to fail with
+    `Slots.isOpen` forced true. What they cannot see:
+    - **The scrub on exit.** It runs while the server still has the tenant on
+      the floor and the client has not yet teleported. `reconcileSquare`
+      walks `getObjects()`, which does not hold the player, so it should be
+      safe. It has never been watched.
+    - **A cab exit from a single use room that finds the cab full.** The lease
+      is already gone by the time the arrival report says so, so the tenant is
+      told the cab is full and left standing beside the vehicle rather than
+      put back inside.
+    - **PhunHub's rooms are never leased**, so the leash never captures a
+      blueprint for them, and `scrub` on a hub room will defer forever unless
+      one ships or the hub's entry goes through this mod.
 
 ## v2, deliberately not in v1
 

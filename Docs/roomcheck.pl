@@ -3,6 +3,19 @@
 #
 #   perl Docs/roomcheck.pl                  # every cell under media/maps
 #   perl Docs/roomcheck.pl <dir>            # a different map folder
+#   perl Docs/roomcheck.pl --mod ../PhunSpawn --mod ../PhunHub
+#
+# `--mod <repo>` folds another mod of the family into the SAME run: its lua on
+# the require path, its `<Mod>/interiors` required, and every cell under its
+# media/maps added to the scan. That is one run for the whole family rather
+# than one per mod, and it has to be, because the two halves cannot be
+# separated. Those mods call PhunInteriors.registerRoom from their own files,
+# so checking their map without their lua reports every interior square as
+# claimed by nobody -- and checking it without OUR lua reports all 990 of our
+# slots as sitting on ground that is not there.
+#
+# Give `--mod <repo>:<Name>/<file>` to require something other than
+# `<Mod>/interiors`.
 #
 # Reads the interior squares and the door squares straight out of every
 # lotpack, asks the registry (loaded under Tests/lua/stubs.lua) where it thinks
@@ -27,12 +40,35 @@ use strict;
 use warnings;
 
 my $root = ".";
-my $maps = shift // "Contents/mods/PhunInteriors/common/media/maps/phuninteriors";
+my (@mods, @argv);
+while (@ARGV) {
+    my $a = shift @ARGV;
+    if ($a ne "--mod") { push @argv, $a; next }
+    my $spec = shift(@ARGV) // die "--mod wants a repo folder\n";
+    my ($repo, $req) = split /:(?=[^\\\/]*$)/, $spec, 2;
+    $repo =~ s{[\\/]+$}{};
+    $repo =~ s{\\}{/}g;
+    die "--mod $repo is not a folder\n" unless -d $repo;
+    # The mod NAME is the folder's, which is also the name of the one folder
+    # under Contents/mods and the prefix of every require path. That is the
+    # family convention rather than a guess, and a mod that breaks it can say
+    # so with the `:<Name>/<file>` form.
+    my ($name) = $repo =~ m{([^/]+)$};
+    push @mods, {repo => $repo, name => $name, require => $req // "$name/interiors"};
+}
+
+my $maps = shift(@argv)
+        // "Contents/mods/PhunInteriors/common/media/maps/phuninteriors";
 die "no map folder at $maps\n" unless -d $maps;
 
 # --- what the map says ------------------------------------------------------
 my (%interior, %door);
 my @cells = sort glob("$maps/world_*.lotpack");
+for my $m (@mods) {
+    my @theirs = sort glob("$m->{repo}/Contents/mods/$m->{name}/common/media/maps/*/world_*.lotpack");
+    warn "$m->{name}: no lotpacks yet, only its rooms are checked\n" unless @theirs;
+    push @cells, @theirs;
+}
 die "no lotpacks in $maps\n" unless @cells;
 
 for my $file (@cells) {
@@ -131,7 +167,13 @@ require "PhunInteriors/core"; require "PhunInteriors/registry"; require "PhunInt
 local Core = PhunInteriors
 Core.logLn = function() end; Core.debugLn = function() end
 require "PhunInteriors/defaults"
+--@MODS@
 triggerEvent("PhunInteriorsOnRegisterRooms")
+-- The family registers from the vanilla hook rather than from ours, which is
+-- what the author docs tell a third party to do, so this has to fire too or
+-- their rooms never arrive. Ours is unaffected: nothing required above hooks
+-- it -- server_events does, and this harness does not load it.
+triggerEvent("OnInitGlobalModData")
 for id, room in pairs(Core.rooms) do
     for _, i in ipairs(room.indices) do
         local b = Core.slotBounds(room, i)
@@ -142,6 +184,17 @@ for id, room in pairs(Core.rooms) do
 end
 LUA
 
+my $inject = "";
+for my $m (@mods) {
+    # pcall'd and reported rather than fatal: a mod whose lua will not load is
+    # a fact worth printing beside the map it failed to account for, not a
+    # reason to stop checking the other eighteen cells.
+    $inject .= qq{stubs.addRoot("$m->{repo}", "$m->{name}")\n}
+            .  qq{do local ok, err = pcall(require, "$m->{require}")\n}
+            .  qq{   print("#mod\\t$m->{name}\\t" .. (ok and "ok" or "FAILED " .. tostring(err))) end\n};
+}
+$lua =~ s/--\@MODS\@/$inject/;
+
 my $tmp = ($ENV{TEMP} || "/tmp") . "/roomcheck_$$.lua";
 open(my $w, ">", $tmp) or die; print $w $lua; close $w;
 my $lj = $ENV{LUAJIT} || "$ENV{HOME}/AppData/Local/Programs/LuaJIT/bin/luajit";
@@ -150,8 +203,9 @@ my @reg = `"$lj" "$tmp" 2>&1`;
 unlink $tmp;
 die "could not load the registry:\n@reg" if $? != 0 or !@reg;
 
-my (%covered, %slotbox, %fronts, $slots);
+my (%covered, %slotbox, %fronts, $slots, @modstatus);
 for my $line (@reg) {
+    if ($line =~ /^#mod\t(\S+)\t(.*?)\s*$/) { push @modstatus, [$1, $2]; next }
     my ($id, $i, $x1, $y1, $x2, $y2, $exits) = split /\t/, $line;
     next unless defined $y2;
     $slots++;
@@ -211,8 +265,10 @@ for my $slot (sort keys %slotbox) {
 }
 printf("%d cells, %d registered slots, %d interior squares, %d door squares, %d slots with a front\n",
     scalar(@cells), $slots, scalar(keys %interior), scalar(keys %door), scalar(keys %fronts));
+printf("  %-14s %s\n", $_->[0], $_->[1]) for @modstatus;
 
 my $bad = 0;
+$bad += grep { $_->[1] ne "ok" } @modstatus;
 for ([\@orphan,   "interior squares inside no registered slot"],
      [\@misfit,   "squares where the floor and the registered box disagree"]) {
     my ($list, $what) = @$_;

@@ -337,6 +337,53 @@ function Power.syncRoom(roomId, index, vehicleId)
     assignment.fuelLast = fuel
 end
 
+--- Turn on every light switch in a slot that is off.
+--
+-- Returns false when the room is not loaded, so the caller keeps asking. Only
+-- the floor has to be there: a switch on the south or east wall stands on the
+-- footprint's last row or column, and a nil square there is the edge of the
+-- map rather than a chunk still streaming in.
+--
+-- setActive is what vanilla's toggle() calls, and it syncs to clients itself.
+-- It does not care whether there is power: a switch left on in a dark room
+-- lights up the moment the generator does, which is how a wall switch works.
+function Power.switchOn(roomId, index)
+    local room = Core.rooms[roomId]
+    local bounds = room and Core.slotBounds(room, index)
+    local floor = room and Core.slotFloor(room, index)
+    if not bounds or not floor then
+        -- The slot is gone. Nothing will ever load, so do not keep asking.
+        return true
+    end
+    local cell = getCell()
+    if not cell:getGridSquare(floor.x1, floor.y1, floor.z)
+        or not cell:getGridSquare(floor.x2, floor.y2, floor.z) then
+        return false
+    end
+
+    local switched = 0
+    for x = bounds.x1, bounds.x2 do
+        for y = bounds.y1, bounds.y2 do
+            local square = cell:getGridSquare(x, y, bounds.z)
+            local objects = square and square:getObjects()
+            if objects then
+                for i = 0, objects:size() - 1 do
+                    local object = objects:get(i)
+                    if instanceof(object, "IsoLightSwitch") and not object:isActivated() then
+                        object:setActive(true)
+                        switched = switched + 1
+                    end
+                end
+            end
+        end
+    end
+    if switched > 0 then
+        Core.debugLn(string.format("%s#%s: switched on %d light(s) for a new tenant",
+            tostring(roomId), tostring(index), switched))
+    end
+    return true
+end
+
 --- Settle the debt against the real battery.
 --
 -- Called whenever the vehicle is loaded and in hand: on entry, on the arrival

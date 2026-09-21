@@ -7,6 +7,7 @@ local Core = PhunInteriors
 local Transit = require "PhunInteriors/transit"
 local Manifest = require "PhunInteriors/manifest"
 local Scrub = require "PhunInteriors/scrub"
+local Slots = require "PhunInteriors/slots"
 local Leash = {}
 Core.modules.leash = Leash
 
@@ -154,6 +155,22 @@ local function attemptPower(occupancy)
     require("PhunInteriors/power").syncRoom(occupancy.room, occupancy.index, occupancy.vehicleId)
 end
 
+--- Lights on for a new tenant, once per lease.
+--
+-- After capture, so the blueprint records the room as the map built it, and
+-- after the scrub, which may have just recreated the switch. Rides the leash
+-- for the usual reason: the room is loaded because the tenant is standing in
+-- it, and nowhere else can say so.
+local function attemptLights(occupancy)
+    local assignment = occupancy.vehicleId and Slots.find(occupancy.vehicleId)
+    if not assignment or not assignment.lightsPending then
+        return
+    end
+    if require("PhunInteriors/power").switchOn(occupancy.room, occupancy.index) then
+        assignment.lightsPending = nil
+    end
+end
+
 local function checkOne(player, occupancy)
     local where, edge = Leash.classify(occupancy, player:getX(), player:getY(), player:getZ())
 
@@ -169,6 +186,7 @@ local function checkOne(player, occupancy)
             attemptScrub(occupancy)
         else
             attemptPower(occupancy)
+            attemptLights(occupancy)
         end
     end
 

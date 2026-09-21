@@ -125,18 +125,36 @@ function stubs.install(root)
 
     -- The mod's own require, resolving "PhunInteriors/x" against the three
     -- source trees the game merges.
-    local lua = root .. "/Contents/mods/PhunInteriors/common/media/lua/"
+    --
+    -- A LIST of trees rather than one, because the game merges every enabled
+    -- mod's lua into one namespace and so does the registry: PhunSpawn and
+    -- PhunHub call PhunInteriors.registerRoom from their own files, so a check
+    -- that wants to see their rooms has to load their lua beside ours.
+    -- `stubs.addRoot` is how a caller says so; nothing changes for a caller
+    -- that does not.
+    --
+    -- Note `package.path` is deliberately not consulted. This require exists
+    -- because the game's does not work like LuaJIT's, and quietly falling back
+    -- to the real one would let a test pass against a file the game would
+    -- never have found.
+    local trees = {root .. "/Contents/mods/PhunInteriors/common/media/lua/"}
     local loaded = {}
+    function stubs.addRoot(modRoot, modName)
+        table.insert(trees,
+            modRoot .. "/Contents/mods/" .. modName .. "/common/media/lua/")
+    end
     function require(path)
         if loaded[path] then return loaded[path] end
         loaded[path] = true
-        for _, dir in ipairs({"shared/", "server/", "client/"}) do
-            local file = lua .. dir .. path .. ".lua"
-            local fh = io.open(file, "r")
-            if fh then
-                fh:close()
-                loaded[path] = assert(loadfile(file))() or true
-                return loaded[path]
+        for _, lua in ipairs(trees) do
+            for _, dir in ipairs({"shared/", "server/", "client/"}) do
+                local file = lua .. dir .. path .. ".lua"
+                local fh = io.open(file, "r")
+                if fh then
+                    fh:close()
+                    loaded[path] = assert(loadfile(file))() or true
+                    return loaded[path]
+                end
             end
         end
         error("no module " .. path)

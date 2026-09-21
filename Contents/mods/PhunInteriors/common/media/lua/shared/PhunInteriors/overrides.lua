@@ -60,6 +60,7 @@ Core.roomPatchFields = {
     cab = {kind = "boolean"},
     generator = {kind = "offset"},
     selfPowered = {kind = "boolean"},
+    singleUse = {kind = "boolean"},
     reservoir = {kind = "boolean"},
     baseWeight = {kind = "number"},
     locations = {kind = "locations"}

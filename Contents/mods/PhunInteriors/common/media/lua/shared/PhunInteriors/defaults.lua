@@ -8,7 +8,7 @@ local Core = PhunInteriors
 -- Docs/pi-mappings.csv and Docs/pi-vehicles.csv. Edit those and regenerate;
 -- an edit made here is lost on the next run.
 --
--- 84 rooms, 100 rows of ten stamps, 1000 slots.
+-- 83 rooms, 99 rows of ten stamps, 990 slots.
 --
 -- A ROOM is a contract: one shape, and every place on the map it is stamped.
 -- Two rooms whose CONTRACT differs are two registrations. What is on the
@@ -660,20 +660,6 @@ local function registerRooms()
             [17] = {23230, 12247, 0},
             [18] = {23255, 12247, 0},
             [19] = {23280, 12247, 0}
-        }
-    })
-
-    -- Spawn -- floor 8x9, 1 slots, room def 'garagestorage'.
-    -- Stamped at 87,49 at 4,19.
-    Core.registerRoom("phun.room.Spawn", {
-        label = "Spawn",
-        source = SOURCE,
-        size = {w = 9, h = 10},
-        spawn = {x = 4, y = 4},
-        selfPowered = true,
-        generator = {x = 13, y = -6, z = 1},
-        locations = {
-            [0] = {22276, 12563, 0}
         }
     })
 
@@ -2336,14 +2322,6 @@ local function registerVehicles()
         source = SOURCE,
         rooms = {"phun.room.Semi_Trailer_Water"},
         scripts = {"Base.SemiTrailerVan", "Base.SemiTrailerVanCattle", "Base.SemiTrailerVan_mil", "Base.W900_Container"}
-    })
-
-    -- Spawn: 1 bound directly.
-    Core.registerVehicles({
-        id = "phun.vehicles.Spawn",
-        source = SOURCE,
-        rooms = {"phun.room.Spawn"},
-        scripts = {"Base.CarTaxi"}
     })
 
     -- Step Van: 1 bound directly, 30 more overflowing in.

@@ -1,9 +1,11 @@
 # Nothing is ignored by path.
 #
 # maps/phuninteriors used to be excluded here while it was borrowed space
-# standing in for the purpose-built map. All twenty cells (87..91 x 46..49) are
-# ours now and the rooms do not exist without them, so the whole map is
-# tracked. See .gitattributes -- the lotpacks, lotheaders and chunkdata are
+# standing in for the purpose-built map. All eighteen cells are ours now and
+# the rooms do not exist without them, so the whole map is tracked. That is
+# 87..91 x 46..48 plus 89..91 on row 49: 87,49 went to PhunSpawn and 88,49 to
+# PhunHub, and shipping either from here as well would silently discard one
+# copy. See .gitattributes -- the lotpacks, lotheaders and chunkdata are
 # binary and must not be line-ending converted.
 
 # GIMP sources for icon.png, poster.png and the tileset. Large, regenerable by

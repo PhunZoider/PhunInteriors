@@ -23,6 +23,7 @@ local function store()
     Core.data.occupied = Core.data.occupied or {} -- room -> {index -> vehicleId}
     Core.data.quarantine = Core.data.quarantine or {} -- list of {room, index}
     Core.data.used = Core.data.used or {} -- room -> {index -> true}
+    Core.data.closed = Core.data.closed or {} -- room -> {at = world hours}
     Core.data.adopted = Core.data.adopted or false
     return Core.data
 end
@@ -66,6 +67,59 @@ local function isOccupied(vehicleId)
         end
     end
     return false
+end
+Slots.isOccupied = isOccupied
+
+--- Put a slot in the queue to be scrubbed, whether or not anybody holds it.
+--
+-- Release does this for a leased slot. This is for one nobody holds -- a room
+-- being reset on request -- so it goes through the same queue, and the same
+-- scrub on reissue, rather than being a second kind of dirty.
+function Slots.markDirty(roomId, index)
+    if isQuarantined(roomId, index) then
+        return false
+    end
+    table.insert(store().quarantine, {
+        room = roomId,
+        index = index
+    })
+    return true
+end
+
+--- Take a slot out of the queue because it has just been scrubbed.
+Slots.markClean = dequarantine
+
+-- ---------------------------------------------------------------------------
+-- Open and closed.
+--
+-- A closed room hands out nothing: no new lease, no reclaim into it, and no
+-- way back in for somebody who already holds one. What it does NOT do is
+-- touch anybody inside -- leaving is always allowed, and turning people out is
+-- the caller's choice (Transit.setRoomOpen's `evict`).
+--
+-- Runtime state rather than a contract field, which is why it is here and
+-- not in registerRoom or the override file. The contract says what a room IS;
+-- whether it is open right now is something a schedule or an admin changes
+-- while the server runs. It is kept in the save, so a room an admin closed is
+-- still closed after a restart; a schedule simply re-asserts it.
+-- ---------------------------------------------------------------------------
+
+function Slots.isOpen(roomId)
+    return store().closed[roomId] == nil
+end
+
+--- Returns true when the state changed.
+function Slots.setOpen(roomId, open)
+    local closed = store().closed
+    local was = closed[roomId] == nil
+    if open then
+        closed[roomId] = nil
+    else
+        closed[roomId] = closed[roomId] or {
+            at = Core.now()
+        }
+    end
+    return was ~= (open and true or false)
 end
 
 --- How long a lease is safe from being taken, in world hours.
@@ -183,7 +237,12 @@ local function leaseTo(vehicleId, roomId, index, dirty)
     local assignment = {
         room = roomId,
         index = index,
-        lastSeen = Core.now()
+        lastSeen = Core.now(),
+        -- A new tenant walks into a lit room rather than groping for the
+        -- switch. On the LEASE rather than the occupancy, so it happens once
+        -- per tenancy: whoever turns the lights off afterwards keeps them off.
+        -- The leash clears it, being the first moment the room is loaded.
+        lightsPending = true
     }
     occupiedFor(roomId)[tostring(index)] = vehicleId
     d.assignments[vehicleId] = assignment
@@ -335,6 +394,13 @@ function Slots.acquire(vehicleId, vehicle)
             -- question for the next lease, not this one: leasing again would
             -- hand them a different room and orphan the old one, occupied and
             -- unreachable, for the life of the save.
+            --
+            -- Unless the room is closed. The lease is theirs and survives;
+            -- going in is what waits. Refused before the touch below, because
+            -- a refused entry must not renew what the reclaim measures.
+            if not Slots.isOpen(existing.room) then
+                return nil, "IGUI_PhunInteriors_RoomClosed"
+            end
             existing.lastSeen = Core.now()
             return existing
         end
@@ -363,55 +429,69 @@ function Slots.acquire(vehicleId, vehicle)
     -- cannot refuse a holder; it is kept because the reclaim needs the RANK,
     -- not because the set is ever smaller than `candidates`.
     local allowedRooms = {}
+    local anyOpen = false
     for rank, roomId in ipairs(candidates) do
         local room = Core.rooms[roomId]
 
-        -- Every candidate is allowed. A room used to be able to state demands
-        -- on the holder here -- Core.roomAllows, `requires` -- tested per
-        -- candidate so that a vehicle failing one room could still be given
-        -- the next. Both are gone: nothing on the shipped map ever declared
-        -- one, and asking a vehicle question during allocation, which is
-        -- holder agnostic, is what once made every room unreachable for a
-        -- tent. Whether a holder may have a room is the binding's answer, and
-        -- Core.roomsForHolder above has already applied it.
-        allowedRooms[roomId] = rank
-        local occupied = occupiedFor(roomId)
+        -- A closed room is not a candidate at all, and is left out of
+        -- allowedRooms too, so the reclaim below cannot reach into one either.
+        if Slots.isOpen(roomId) then
+            anyOpen = true
 
-        -- Every slot is leasable. Slot 0 used to be reserved as a pristine
-        -- copy to scan blueprints from, which cost a room of map per set
-        -- and only ever worked when somebody happened to be standing near
-        -- it. Blueprints are authored now, and the first slot leased
-        -- captures the room's.
-        --
-        -- A slot with a safehouse claimed over it is skipped even when
-        -- nobody holds its lease: it is somebody's, and handing it to a
-        -- stranger would give them the owner's room and the owner's things.
-        for _, index in ipairs(room.indices) do
-            if isSpare(roomId, index, occupied) and not isQuarantined(roomId, index) then
-                return lease(roomId, index, false)
+            -- Every candidate is allowed. A room used to be able to state demands
+            -- on the holder here -- Core.roomAllows, `requires` -- tested per
+            -- candidate so that a vehicle failing one room could still be given
+            -- the next. Both are gone: nothing on the shipped map ever declared
+            -- one, and asking a vehicle question during allocation, which is
+            -- holder agnostic, is what once made every room unreachable for a
+            -- tent. Whether a holder may have a room is the binding's answer, and
+            -- Core.roomsForHolder above has already applied it.
+            allowedRooms[roomId] = rank
+            local occupied = occupiedFor(roomId)
+
+            -- Every slot is leasable. Slot 0 used to be reserved as a pristine
+            -- copy to scan blueprints from, which cost a room of map per set
+            -- and only ever worked when somebody happened to be standing near
+            -- it. Blueprints are authored now, and the first slot leased
+            -- captures the room's.
+            --
+            -- A slot with a safehouse claimed over it is skipped even when
+            -- nobody holds its lease: it is somebody's, and handing it to a
+            -- stranger would give them the owner's room and the owner's things.
+            for _, index in ipairs(room.indices) do
+                if isSpare(roomId, index, occupied) and not isQuarantined(roomId, index) then
+                    return lease(roomId, index, false)
+                end
+            end
+
+            -- Quarantine used to be a one way door. A slot only left it by
+            -- being scrubbed, a scrub needs the chunk loaded, and the chunk
+            -- only loads when somebody is near the room -- which nobody is,
+            -- because the room was released precisely because nobody was using
+            -- it. The measured load radius is between 61 and 120 tiles against
+            -- a 60 tile pitch, so only slots next to an occupied one ever
+            -- drained. Every other released slot was lost for good and the
+            -- pool shrank until the set reported itself full: exactly the
+            -- reference mod's failure, reached from the opposite direction.
+            --
+            -- The invariant weakens from "never reissued dirty" to "never used
+            -- dirty". The caller scrubs it, immediately if its chunk happens
+            -- to be loaded and otherwise the moment the tenant arrives, which
+            -- is the first point the chunk is guaranteed to exist.
+            for _, index in ipairs(room.indices) do
+                if isSpare(roomId, index, occupied) and isQuarantined(roomId, index) then
+                    dequarantine(roomId, index)
+                    return lease(roomId, index, true), nil, true
+                end
             end
         end
+    end
 
-        -- Quarantine used to be a one way door. A slot only left it by
-        -- being scrubbed, a scrub needs the chunk loaded, and the chunk
-        -- only loads when somebody is near the room -- which nobody is,
-        -- because the room was released precisely because nobody was using
-        -- it. The measured load radius is between 61 and 120 tiles against
-        -- a 60 tile pitch, so only slots next to an occupied one ever
-        -- drained. Every other released slot was lost for good and the
-        -- pool shrank until the set reported itself full: exactly the
-        -- reference mod's failure, reached from the opposite direction.
-        --
-        -- The invariant weakens from "never reissued dirty" to "never used
-        -- dirty". The caller scrubs it, immediately if its chunk happens
-        -- to be loaded and otherwise the moment the tenant arrives, which
-        -- is the first point the chunk is guaranteed to exist.
-        for _, index in ipairs(room.indices) do
-            if isSpare(roomId, index, occupied) and isQuarantined(roomId, index) then
-                dequarantine(roomId, index)
-                return lease(roomId, index, true), nil, true
-            end
-        end
+    -- Every room this holder could have is shut, which is a different answer
+    -- from "they are all full" and the player can act on it: come back later.
+    if not anyOpen then
+        Core.debugLn("every room for this holder is closed: " .. table.concat(candidates, ", "))
+        return nil, "IGUI_PhunInteriors_RoomClosed"
     end
 
     -- Every room this vehicle could have is full. Take the one nobody has used

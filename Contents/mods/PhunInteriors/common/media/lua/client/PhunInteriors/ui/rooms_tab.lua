@@ -78,10 +78,16 @@ end
 --- filling up when nothing is in it.
 local function freeText(room)
     local free = room.total - room.leased
+    local text = tostring(free)
     if room.quarantined > 0 then
-        return getText("IGUI_PhunInteriors_Rooms_FreeDirty", free, room.quarantined)
+        text = getText("IGUI_PhunInteriors_Rooms_FreeDirty", free, room.quarantined)
     end
-    return tostring(free)
+    -- In this column because it is the answer to the question this column
+    -- asks: a closed room with ten free slots hands out none of them.
+    if room.closed then
+        text = getText("IGUI_PhunInteriors_Rooms_Closed", text)
+    end
+    return text
 end
 
 --- Everything that can reach this room, vehicles and world objects together.

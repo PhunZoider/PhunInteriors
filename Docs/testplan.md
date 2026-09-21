@@ -65,22 +65,20 @@ It currently **exits 1**, and the shape of the failure matters, because it is
 narrower than Known gap #1 in CLAUDE.md suggests:
 
 ```
-20 cells, 990 registered slots, 16140 interior squares, 1330 door squares,
+18 cells, 990 registered slots, 14540 interior squares, 1330 door squares,
 990 slots with a front
 
-FAIL 1600 interior squares inside no registered slot
+the registry matches the map
 ```
 
-Both of roomcheck's checks ran. The one that fired is "map content no room
-claims", and **every one of those 1600 squares is in cell 87,49**. The other
-check, squares where the floor and the registered box disagree, **passed for
-all 990 slots**.
+Both of roomcheck's checks ran and both passed: no map content that no room
+claims, and no slot where the floor and the registered box disagree.
 
-That second check is the one containment depends on, so the practical reading
-is: **the 990 registered slots are correctly aligned with the map and are
-testable now.** Cell 87,49 holds rooms nobody registered, so nothing can be
-allocated there and no tenant can reach them. That is a capacity gap, not a
-containment fault, and it does not block this plan.
+The second of those is the one containment depends on, so the practical
+reading is: **the 990 registered slots are correctly aligned with the map and
+are testable now.** Cell 87,49 used to hold rooms nobody registered; it and
+88,49 have since been carved out into stand-alone mods, which is what closed
+that gap.
 
 Re-run roomcheck after any map re-export, and expect the number to change.
 

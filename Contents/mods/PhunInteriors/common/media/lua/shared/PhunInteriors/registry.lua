@@ -189,7 +189,7 @@ end
 
 --- Register one room design and every place it is stamped.
 -- @param id namespaced id, eg "phun.van.roofed"
--- @param def size/spawn/front/cab/generator/selfPowered/reservoir/baseWeight/
+-- @param def size/spawn/front/cab/generator/selfPowered/singleUse/reservoir/baseWeight/
 --        label/priority, plus locations
 function Core.registerRoom(id, def)
     if type(id) ~= "string" or not def then
@@ -332,6 +332,17 @@ function Core.registerRoom(id, def)
         -- meaning both "has a generator" and "has a free one" is how a reader
         -- ends up confidently wrong.
         selfPowered = def.selfPowered == true,
+        -- A room nobody comes back to: a spawn room, an arrival hall. When the
+        -- last occupant walks out the lease is handed back and the slot is
+        -- scrubbed there and then, so the next arrival never inherits what
+        -- this one left.
+        --
+        -- It overrides the ordinary lifecycle rather than ScrubKeepsLoot:
+        -- everywhere else a room keeps its tenant's things until a full pool
+        -- reclaims it, and scrubbing on EXIT is the only moment it can
+        -- actually run, because the room is loaded while somebody stands in
+        -- it and nobody is near a room that was released for being unused.
+        singleUse = def.singleUse == true,
         -- There is deliberately no `requires`. A def carrying one is ignored
         -- rather than refused, so an old third party room set still loads;
         -- see the note above Core.vehicleMotionAllows for why it went.

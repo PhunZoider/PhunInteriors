@@ -272,6 +272,11 @@ function RoomForm.open(player, roomId)
         hint = getText("IGUI_PhunInteriors_Hint_Reservoir"),
         section = "other"
     })
+    form:addCheckField("singleUse", label(room, "singleUse", getText("IGUI_PhunInteriors_Fld_SingleUse")), {
+        checked = room and room.singleUse or false,
+        hint = getText("IGUI_PhunInteriors_Hint_SingleUse"),
+        section = "other"
+    })
     form:addTextField("priority", label(room, "priority", getText("IGUI_PhunInteriors_Fld_Priority")), {
         default = tostring(room and room.priority or 0),
         numeric = true,
@@ -337,6 +342,7 @@ function RoomForm.apply(roomId, creating, form)
         spawn = {x = num(form, "spawnX") or 0, y = num(form, "spawnY") or 0},
         cab = form:getFieldValue("cab") and true or false,
         selfPowered = form:getFieldValue("selfPowered") and true or false,
+        singleUse = form:getFieldValue("singleUse") and true or false,
         reservoir = form:getFieldValue("reservoir") and true or false,
         priority = num(form, "priority") or 0,
         baseWeight = num(form, "baseWeight") or 0,

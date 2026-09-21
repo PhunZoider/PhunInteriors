@@ -82,4 +82,3 @@ Bus_Military,Bus - Military,3,9,0,1,south,TRUE,1,17,0,FALSE,TRUE,oldarmy,Bus
 Bus_Prison,Bus - Prison,3,9,0,1,south,FALSE,1,17,0,FALSE,TRUE,prisoncells,Bus
 Bus_School,Bus - School,3,9,0,1,south,TRUE,1,17,0,FALSE,TRUE,elementaryschool,Bus
 Bus,Bus,3,9,0,1,south,FALSE,1,17,0,FALSE,TRUE,shed,
-Spawn,Spawn,8,9,4,4,,FALSE,13,-6,1,TRUE,TRUE,garagestorage,

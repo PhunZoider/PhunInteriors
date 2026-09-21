@@ -449,4 +449,49 @@ check("a role with the capability may go in",
     Slots.trespassOn("t.claimed", 0, playerNamed("dave", true)), nil)
 claims = {}
 
+-- ---------------------------------------------------------------------------
+-- Open and closed. A closed room hands out nothing -- not a new lease, not a
+-- reclaim, and not a way back in to somebody who already holds one -- and says
+-- "closed" rather than "full", because the player can act on the difference.
+-- ---------------------------------------------------------------------------
+Core.registerRoom("k.special", {size = {w = 2, h = 2}, locations = {[0] = {0, 6000, 0}}})
+Core.registerRoom("k.general", {size = {w = 2, h = 2}, locations = {[0] = {0, 6100, 0}, [1] = {20, 6100, 0}}})
+Core.registerVehicles({id = "k.justK", rooms = {"k.special"}, scripts = {"Base.K"}})
+Core.registerVehicles({id = "k.both", rooms = {"k.general"}, scripts = {"Base.K", "Base.L"}})
+local vanK, vanL = vehicle("Base.K"), vehicle("Base.L")
+
+check("a room is open until somebody closes it", Slots.isOpen("k.special"), true)
+check("closing says it changed", Slots.setOpen("k.special", false), true)
+check("closing again says it did not", Slots.setOpen("k.special", false), false)
+check("and it reads closed", Slots.isOpen("k.special"), false)
+check("the specialised room is skipped while closed",
+    where(Slots.acquire("k1", vanK)), "k.general#0")
+
+Slots.setOpen("k.general", false)
+check("with every candidate closed, nothing is handed out", (Slots.acquire("k2", vanL)), nil)
+check("and the refusal says closed, not full", select(2, Slots.acquire("k2", vanL)),
+    "IGUI_PhunInteriors_RoomClosed")
+check("a lease already held is not a way in either", (Slots.acquire("k1", vanK)), nil)
+check("that refusal says closed too", select(2, Slots.acquire("k1", vanK)), "IGUI_PhunInteriors_RoomClosed")
+check("but the lease itself survives the closing", where(Slots.find("k1")), "k.general#0")
+
+-- A reclaim must not reach into a closed room either, however old the lease.
+Slots.store().assignments["k1"].lastSeen = -99999
+Slots.setOpen("k.special", true)
+check("reopening says it changed", Slots.isOpen("k.special"), true)
+check("the open room is handed out again", where(Slots.acquire("k3", vanK)), "k.special#0")
+check("and with it full, a stale lease in a closed room is not reclaimed", (Slots.acquire("k4", vanK)), nil)
+check("so its holder keeps it", where(Slots.find("k1")), "k.general#0")
+
+-- Transit.setRoomOpen with a scrub resets every slot nobody is standing in:
+-- the held one is released, the empty one queued, and neither can be scrubbed
+-- here because nothing has a blueprint -- so both wait in quarantine.
+local ok, opened = Transit.setRoomOpen("k.general", true, {scrub = true})
+check("setRoomOpen succeeds", ok, true)
+check("and reports the change", opened.changed, true)
+check("both slots are deferred to their next lease", opened.deferred, 2)
+check("the held slot's lease is released", Slots.find("k1"), nil)
+check("and both are queued for a scrub", queued("k.general", 0) and queued("k.general", 1), true)
+check("an unknown room is refused", (Transit.setRoomOpen("k.nope", false)), false)
+
 os.exit(report.finish("slots") == 0 and 0 or 1)

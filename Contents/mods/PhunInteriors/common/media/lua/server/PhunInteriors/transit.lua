@@ -1041,6 +1041,46 @@ local function resolveReturn(player, occupancy)
         or Transit.fallbackReturn(player, occupancy), nil
 end
 
+--- Is anybody other than `key` standing in the room this holder leases?
+local function othersInside(key, holder)
+    for other, occupancy in pairs(Core.occupants) do
+        if other ~= key and occupancy.vehicleId == holder then
+            return true
+        end
+    end
+    return false
+end
+
+--- Give a lease back and scrub its slot now, while that is still possible.
+--
+-- Now is the whole point. An ordinary release sends the slot to quarantine to
+-- be scrubbed when it is next handed out, because nobody is near a room that
+-- was released for going unused. Here somebody has only just walked out: the
+-- server still has them standing in the room, so its chunk is loaded and the
+-- scrub can run.
+--
+-- A scrub that cannot run -- no blueprint yet, because the slot's first tenant
+-- left before capture finished, or a safehouse claim -- leaves the slot in
+-- quarantine, which is exactly where an ordinary release puts it. Nothing is
+-- lost by trying.
+function Transit.handBack(holder, reason)
+    local assignment = Slots.find(holder)
+    if not assignment then
+        return false
+    end
+    local roomId, index = assignment.room, assignment.index
+    Slots.release(holder, reason)
+    local Scrub = require "PhunInteriors/scrub"
+    local cleaned, why = Scrub.slot(roomId, index)
+    if cleaned then
+        Slots.markClean(roomId, index)
+    else
+        Core.debugLn(string.format("%s#%s handed back but not scrubbed (%s); it stays in quarantine",
+            tostring(roomId), tostring(index), tostring(why)))
+    end
+    return true
+end
+
 --- A seat this player could be put into, preferring the one they came from.
 --
 -- Core.seatIsEnterable rather than isSeatInstalled plus isSeatOccupied, and it
@@ -1083,14 +1123,27 @@ end
 -- The reason matters because admin evict reports it: without one, every
 -- refusal read as "not inside a room", which is a lie when the truth is
 -- "inside, but the van they are riding in is doing forty".
-function Transit.leave(player, reason, via)
+--
+-- `sendTo` is Transit.sendTo's, and nobody else passes it: {x, y, z,
+-- release}. It replaces the holder as the destination, so there is no
+-- vehicle to rejoin, no seat, no side of anything to come out at, and the
+-- arrival report only clears the ground. Everything else an exit does -- the
+-- survey, the power reading, the occupancy teardown, the exit tax -- happens
+-- exactly as it would, which is why this is a parameter here rather than a
+-- second copy of the teardown.
+function Transit.leave(player, reason, via, sendTo)
     local key = Core.playerKey(player)
     local occupancy = Core.occupants[key]
     if not occupancy then
         return false, "not inside a room"
     end
 
-    local destination, vehicle = resolveReturn(player, occupancy)
+    local destination, vehicle
+    if sendTo then
+        destination = sendTo
+    else
+        destination, vehicle = resolveReturn(player, occupancy)
+    end
     if not destination then
         -- Nothing to fall back on. Refusing silently strands the player with a
         -- dead exit tile and no idea why, so say so; the lease survives, and
@@ -1180,6 +1233,21 @@ function Transit.leave(player, reason, via)
     if lease then
         lease.contents = interiorCount
     end
+
+    -- Is this exit handing the room back? A single use room does whenever the
+    -- last person walks out, and a caller sending somebody away for good -- a
+    -- spawn room's picker -- can ask for it on any room. Never while anybody
+    -- else is still in there: pulling the lease out from under them would
+    -- leave the leash containing them against a room nobody holds, and the
+    -- scrub would clear the floor they are standing on.
+    local room = Core.rooms[occupancy.room]
+    local handBack = occupancy.vehicleId
+        and ((sendTo and sendTo.release) or (room and room.singleUse))
+        and not othersInside(key, occupancy.vehicleId)
+    if handBack then
+        -- The room is about to be emptied, so there is nothing to carry.
+        interiorWeight = 0
+    end
     if occupancy.noVehicle then
         interiorWeight = 0
     elseif vehicle then
@@ -1201,7 +1269,18 @@ function Transit.leave(player, reason, via)
     -- for, so it files no paperwork. Without this the client would search the destination
     -- for a vehicle, find none, and be told its vehicle is gone -- which for
     -- somebody who arrived on foot is both true and useless.
-    if not occupancy.noVehicle then
+    --
+    -- Sent somewhere else entirely, the holder is not where they are going,
+    -- so none of its paperwork applies. What is left is the shove, which
+    -- needs the destination loaded and so still waits for the report. The
+    -- weight is not applied at all; Weight.apply composes over the stored
+    -- delta, so the next ordinary exit from this holder corrects it.
+    if sendTo then
+        pendingArrivals[key] = {
+            shoveOnly = true,
+            expires = getTimestampMs() + ARRIVAL_TIMEOUT_MS
+        }
+    elseif not occupancy.noVehicle then
         pendingArrivals[key] = {
             vehicleId = occupancy.vehicleId,
             -- both nil when they were applied above, because the vehicle
@@ -1245,7 +1324,9 @@ function Transit.leave(player, reason, via)
     end
 
     Transit.setOccupancy(player, nil)
-    if occupancy.vehicleId then
+    if handBack then
+        Transit.handBack(occupancy.vehicleId, reason)
+    elseif occupancy.vehicleId then
         Slots.touch(occupancy.vehicleId)
     end
 
@@ -1264,8 +1345,9 @@ function Transit.leave(player, reason, via)
         z = destination.z,
         inside = false,
         reason = reason,
-        -- Nothing to rejoin when nobody drove here.
-        rejoin = not occupancy.noVehicle,
+        -- Nothing to rejoin when nobody drove here, or when they are not
+        -- going back to what they drove.
+        rejoin = not occupancy.noVehicle and not sendTo,
         -- ...but a world object holder still owes an arrival report, because
         -- its tent has to be reached to be unlocked. Separate from `rejoin`,
         -- which means "look for a vehicle and climb into it" and would send
@@ -1274,13 +1356,13 @@ function Transit.leave(player, reason, via)
         -- A cab exit takes any seat, so it sends no preference and lets the
         -- client pick. Otherwise it is the seat they are owed: forced when the
         -- vehicle is moving, else the one they arrived in.
-        seat = (not cabExit) and (seatOut or occupancy.seat) or nil,
+        seat = (not cabExit and not sendTo) and (seatOut or occupancy.seat) or nil,
         cab = cabExit or nil,
         -- Which part of the holder to come out at -- "front", "rear", "left",
         -- "right" -- or nil for "anywhere beside it". The client turns that
         -- into a real position, because only the client has the vehicle.
         toward = toward,
-        standSeat = occupancy.standSeat
+        standSeat = (not sendTo) and occupancy.standSeat or nil
     })
 
     -- Deliberately no "your vehicle is gone" warning here. While the player was
@@ -1295,6 +1377,188 @@ function Transit.leave(player, reason, via)
     triggerEvent(Core.events.OnExit, player, reason, owed)
     Core.debugLn(tostring(key) .. " left via " .. tostring(reason))
     return true, owed
+end
+
+--- Put a player at a position the way an exit would: out of any room they
+--- are in, and onto cleared ground.
+--
+-- For another mod that decides WHERE somebody goes -- PhunSpawn's picker is
+-- the first -- and wants the rest of an exit rather than a bare teleport.
+-- A bare teleport out of a room leaves the occupancy, the lease, the leash
+-- and the client's "Step outside" all believing the player is still in it,
+-- and lands them in whatever is standing on the square.
+--
+-- Inside a room, this is Transit.leave with the destination replaced. Not
+-- inside one, it is only the arrival half: the teleport, and the shove once
+-- the report says they landed. Either way the client's own teleport hold does
+-- the move, so the chunk streaming problem is solved in one place.
+--
+-- `release` hands the room back rather than renewing its lease. Pass it for a
+-- room nobody returns to.
+--
+-- Refuses a destination this world does not have, for placeInside's reason:
+-- the engine undoes a teleport onto a square that does not exist, and that
+-- reads as the button doing nothing.
+function Transit.sendTo(player, destination, reason, release)
+    if not player or not destination then
+        return false, "nowhere to send them"
+    end
+    local x, y = tonumber(destination.x), tonumber(destination.y)
+    if not x or not y then
+        return false, "nowhere to send them"
+    end
+    local target = {
+        x = math.floor(x),
+        y = math.floor(y),
+        z = math.floor(tonumber(destination.z) or 0),
+        release = release and true or nil
+    }
+
+    local grid = getWorld() and getWorld():getMetaGrid()
+    if grid and not grid:isValidSquare(target.x, target.y) then
+        Core.logLn(string.format("sendTo %s,%s refused: not a square in this world", tostring(target.x),
+            tostring(target.y)))
+        return false, "that square is not in this world"
+    end
+
+    reason = reason or "sent"
+    if Transit.occupancyOf(player) then
+        return Transit.leave(player, reason, nil, target)
+    end
+
+    pendingArrivals[Core.playerKey(player)] = {
+        shoveOnly = true,
+        expires = getTimestampMs() + ARRIVAL_TIMEOUT_MS
+    }
+    Core.respond(player, Core.commands.teleport, {
+        x = target.x,
+        y = target.y,
+        z = target.z,
+        inside = false,
+        reason = reason,
+        rejoin = false,
+        report = true
+    })
+    Core.debugLn(tostring(Core.playerKey(player)) .. " sent to " .. target.x .. "," .. target.y .. " (" .. reason .. ")")
+    return true, 0
+end
+
+--- The public face of Transit.sendTo, SERVER side only.
+--
+--     PhunInteriors.sendTo(player, {x = 10608, y = 9698, z = 0}, "phunspawn", true)
+--
+-- Returns true, or false plus a reason in plain English.
+function Core.sendTo(player, destination, reason, release)
+    return Transit.sendTo(player, destination, reason, release)
+end
+
+--- Reset every slot of a room that nobody is standing in.
+--
+-- The same thing an admin's Reset does to one slot -- a leased slot is
+-- released, so its holder's belongings go -- applied to the room, plus the
+-- slots nobody holds, which are queued as dirty. Each is then scrubbed on the
+-- spot if its chunk happens to be loaded, and otherwise when it is next handed
+-- out, exactly like any other quarantined slot.
+--
+-- Two kinds of slot are left alone, for the reasons the admin Reset refuses
+-- them: one somebody is standing in, and one somebody has claimed as a
+-- safehouse.
+local function resetRoom(roomId, reason)
+    local room = Core.rooms[roomId]
+    local occupied = Slots.store().occupied[roomId] or {}
+    local Scrub = require "PhunInteriors/scrub"
+    local out = {scrubbed = 0, deferred = 0, skipped = 0}
+    for _, index in ipairs(room.indices) do
+        local holder = occupied[tostring(index)]
+        if (holder and Slots.isOccupied(holder)) or Slots.safehouseOn(roomId, index) then
+            out.skipped = out.skipped + 1
+        else
+            if holder then
+                Slots.release(holder, reason)
+            else
+                Slots.markDirty(roomId, index)
+            end
+            if Scrub.slot(roomId, index) then
+                Slots.markClean(roomId, index)
+                out.scrubbed = out.scrubbed + 1
+            else
+                out.deferred = out.deferred + 1
+            end
+        end
+    end
+    return out
+end
+
+--- Open or close a room, SERVER side.
+--
+--     PhunInteriors.setRoomOpen("phunhub.room.market", false, {evict = true, scrub = true})
+--
+-- For whatever decides WHEN a room is available -- PhunHub's opening hours are
+-- the first -- while this mod keeps deciding what that means. A closed room
+-- takes no new tenant, is never reclaimed into, and refuses somebody who
+-- already holds a lease in it; see Slots.isOpen.
+--
+-- opts, all optional:
+--   evict  put everybody inside back out, through the ordinary exit. Without
+--          it they stay until they leave by themselves, which is always
+--          allowed.
+--   scrub  reset every slot nobody is standing in (see resetRoom). Applies
+--          whether opening or closing: close-and-scrub cleans up after the
+--          day, open-and-scrub makes sure the first one in finds it fresh.
+--
+-- Returns true plus a report {changed, evicted, stuck, scrubbed, deferred,
+-- skipped}, or false plus a reason in plain English.
+function Transit.setRoomOpen(roomId, open, opts)
+    if not Core.rooms[roomId] then
+        return false, "there is no room called " .. tostring(roomId)
+    end
+    opts = opts or {}
+    local reason = open and "opened" or "closed"
+    local report = {
+        changed = Slots.setOpen(roomId, open),
+        evicted = 0,
+        stuck = 0
+    }
+
+    if opts.evict then
+        -- Keys first: Transit.leave clears the occupancy, and a table is not
+        -- something to delete from while walking it.
+        local keys = {}
+        for key, occupancy in pairs(Core.occupants) do
+            if occupancy.room == roomId then
+                table.insert(keys, key)
+            end
+        end
+        for _, key in ipairs(keys) do
+            -- A tenant who disconnected in there has no player to move. They
+            -- log back in inside, contained as ever, and walk out.
+            local player = Core.tools.getPlayerByUsername(key, true)
+            if player and Transit.leave(player, reason) then
+                report.evicted = report.evicted + 1
+            else
+                report.stuck = report.stuck + 1
+            end
+        end
+    end
+
+    if opts.scrub then
+        local reset = resetRoom(roomId, reason)
+        report.scrubbed, report.deferred, report.skipped = reset.scrubbed, reset.deferred, reset.skipped
+    end
+
+    Core.logLn(string.format("%s %s%s", roomId, reason, report.changed and "" or " (it already was)"))
+    return true, report
+end
+
+--- The public face of Transit.setRoomOpen, SERVER side only.
+function Core.setRoomOpen(roomId, open, opts)
+    return Transit.setRoomOpen(roomId, open, opts)
+end
+
+--- Whether a room is taking tenants, SERVER side only: the state lives in the
+--- save, which a client never sees.
+function Core.isRoomOpen(roomId)
+    return Slots.isOpen(roomId)
 end
 
 --- The player landed back outside and is telling us what they found there.
@@ -1326,6 +1590,13 @@ function Transit.arrived(player, handle, seated)
     -- loaded chunk. The player arriving is what loads it, and this report is
     -- the first moment the server knows they have.
     Transit.shoveZombies(player:getX(), player:getY(), player:getZ(), Core.settings.ExitShoveRadius)
+
+    -- Transit.sendTo's arrival. No holder at the destination, so clearing the
+    -- ground was the whole of what was owed, and going on would look for a
+    -- vehicle and report it gone.
+    if record.shoveOnly then
+        return true
+    end
 
     -- A world object holder. Nothing was driven here and there is no seat to
     -- be refused, so the whole report is "the tent is loaded again": settle
