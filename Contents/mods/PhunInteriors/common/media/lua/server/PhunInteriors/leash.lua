@@ -206,8 +206,22 @@ local function checkOne(player, occupancy)
     -- position takes a round trip to get back here, and the destination chunk
     -- may still be streaming. Without this the leash sees the player at the
     -- vehicle, calls it a breach and ejects them the instant they enter.
-    if occupancy.graceUntil and getTimestampMs() < occupancy.graceUntil then
-        return
+    --
+    -- It ends early on two facts together, and each covers the other's hole.
+    -- The client's `landed` report says the destination chunk exists, so the
+    -- engine will no longer snap them back to where they were -- which is the
+    -- flicker a position sample alone could catch mid-stream. And seeing them
+    -- inside here says the server's copy of their position has caught up,
+    -- which the report can overtake because it rides a different channel.
+    -- Timed out in full, the grace was the 3-6s a player waited in the doorway
+    -- after walking straight back out.
+    if occupancy.graceUntil then
+        if occupancy.landed and where == "inside" then
+            occupancy.graceUntil = nil
+            occupancy.landed = nil
+        elseif getTimestampMs() < occupancy.graceUntil then
+            return
+        end
     end
 
     if where == "inside" then

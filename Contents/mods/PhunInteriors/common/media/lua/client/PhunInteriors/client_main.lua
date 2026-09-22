@@ -489,6 +489,12 @@ function holdTeleport()
         if pending.report then
             Core.dispatch(Core.commands.arrived, {})
         end
+        -- Going in: let the leash stop waiting out its arrival grace. Sent
+        -- only now because this is the first moment the engine will not snap
+        -- the player back to where they came from.
+        if pending.inside then
+            Core.dispatch(Core.commands.landed, {})
+        end
         stopHolding()
         return
     end
@@ -567,7 +573,9 @@ function Client.teleport(data)
         cab = data.cab and true or false,
         -- which part of the vehicle to come out at: front/rear/left/right
         toward = data.toward,
-        standSeat = data.standSeat
+        standSeat = data.standSeat,
+        -- into a room, so the server wants to hear that we landed
+        inside = data.inside and true or false
     }
     if not wasPending then
         Events.OnTick.Add(holdTeleport)

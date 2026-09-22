@@ -86,6 +86,10 @@ PhunInteriors = {
         -- client -> server: "I have landed back outside, and this is the id of
         -- the vehicle I found there". Closes the exit handshake.
         arrived = "arrived",
+        -- client -> server: "I am standing in the room now". The going-in half
+        -- of arrived, and all it does is end the leash's arrival grace early;
+        -- see Leash.checkOne.
+        landed = "landed",
         -- client -> server: "an admin is about to remove the vehicle with this
         -- id". A warning, not a claim; see Removal.watch.
         vehicleRemoving = "vehicleRemoving",
@@ -156,6 +160,9 @@ PhunInteriors = {
     roomDefs = {},
     -- derived: lowercased script name -> {bindingId = true}, rebuilt lazily
     scriptLookup = {},
+    -- lowercased script name -> where it is boarded, "AreaName" or "door".
+    -- Per script rather than per binding; see boarding.lua.
+    boarding = {},
     -- server side only: username -> occupancy record
     occupants = {},
     settings = {},
@@ -199,6 +206,7 @@ Core.defaults = {
     ExitTax = true,
     ExitTaxGrowth = 2,
     EntryDelay = 15,
+    EntryAtBoardingPoint = true,
     EntryBlockedByZombies = true,
     EntryZombieRadius = 4,
     ExitShoveRadius = 6,

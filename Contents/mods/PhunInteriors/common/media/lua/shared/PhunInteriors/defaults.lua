@@ -2155,6 +2155,22 @@ local function registerRooms()
 end
 
 local function registerVehicles()
+    -- Where each vehicle is boarded, where the default -- the rear, then any
+    -- door -- would be wrong. Every one of these declares a TruckBed, so the
+    -- default would send somebody round the back of a vehicle whose door is
+    -- in the side.
+    Core.registerBoarding({
+        ["Base.63Type2Van"] = "SeatRearRight",
+        ["Base.63Type2VanApocalypse"] = "SeatRearRight",
+        ["Base.63Type2VanHippie"] = "SeatRearRight",
+        ["Base.63Type2VanMilitary"] = "SeatRearRight",
+        ["Base.RollingRefuge"] = "door",
+        ["Base.Trailer54FlyingCloud22"] = "door",
+        ["Base.Trailer61Bambi16"] = "door",
+        ["Base.Trailer87Scamp13"] = "door",
+        ["Base.Trailer87Scamp16"] = "door",
+        ["Base.WhennyagoInitiative"] = "door"
+    })
 
     -- Ambulance Bay: 1 bound directly.
     Core.registerVehicles({

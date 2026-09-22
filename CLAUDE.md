@@ -10,7 +10,7 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 **The registry was reshaped and has not run in game since.** Rooms, bindings
 and blueprints all changed shape -- see "A room is a contract" in Architecture.
-`Tests/run.sh` is green across 552 checks, which is real verification of the
+`Tests/run.sh` is green across 637 checks, which is real verification of the
 logic and no verification at all that PZ agrees. Everything below describes
 what was proven *before* that change; the mechanics are the same, but the
 registry underneath them is not.
@@ -108,6 +108,13 @@ client side in `Client.beginEnter`.
 
 The leash was proven at 4Hz over the network back when an exit tile ran
 through the same handler, so `graceUntil` at 6s survives real latency. That
+6s is now a **cap**: the client sends `landed` once the destination square
+exists, and the leash ends the grace when it has that report AND sees the
+player inside the box. Served in full it held anybody who walked straight
+back out in the doorway for 3-6s, which read as a slow leash. Both halves are
+needed -- the report proves the engine will not snap them back, and the
+server's own inside reading proves its copy of the position has caught up,
+which the report can overtake. That
 tile is gone and **the breach branch is now the ordinary way out**, so the path
 that carries every exit is the one that was never exercised. It is the first
 thing to watch in game.
@@ -227,7 +234,7 @@ Contents/mods/PhunInteriors/common/
   icon.png  poster.png
   media/sandbox-options.txt
   media/lua/shared/PhunInteriors/    core, tools, registry, bounds, defaults,
-                                    reservoir, holders, overrides, json
+                                    reservoir, holders, overrides, json, boarding
   media/lua/server/PhunInteriors/    slots, transit, leash, manifest, scrub,
                                     weight, power, harden, removal, admin,
                                     author, rainwater, loot, store,
@@ -721,6 +728,37 @@ is already in the target vehicle. That is not an optimisation: `ISExitVehicle`'s
 vehicle impossible, and the queue dropped both actions without a word. The seat
 is vacated by `vehicle:exit()` in `Client.teleport` instead, which is where it
 always was. A player in a *different* vehicle still climbs out properly.
+
+**You get in at the door, and the vehicle says where the door is.**
+`shared/PhunInteriors/boarding.lua`, shared so the client walks to the same
+point the server checks. A boarding point is one of two things the vehicle
+script already declares, never a number of ours and never a compass letter,
+since both turn with the vehicle: a named **area** (stand in it -- `isInArea`,
+what vanilla's server side trunk access gates on, with `getAreaDist` for
+slack) or **`"door"`**, any seat's `position outside` (within 2.5, the
+`ISEnterVehicle` reach plus lag). Resolved: what `Core.registerBoarding` says
+for the script, then the rear (`TruckBed`, `TrunkDoor`, the list a rear exit
+uses), then any door, then anywhere, as before. The client walks there with
+vanilla's own `pathToVehicleArea` / `pathToVehicleSeat`; `Transit.canEnter`
+refuses anybody who is not there. Aboard already means there, because a seat
+and the interior are the same vehicle. `EntryAtBoardingPoint` turns it off.
+
+**Per script, not per binding**, and that is what the earlier sketch got
+wrong. Where the door is is a fact about the vehicle alone, and a binding is
+per room and names every vehicle that *overflows* into that room -- so an
+`entry` on a binding would apply to vans that merely fall back into a caravan's
+room, and a vehicle named by two bindings could get two answers. The
+`boarding` column in `Docs/pi-vehicles.csv` generates one `registerBoarding`
+call.
+
+**The default cannot be derived for side doors, which is why the column
+exists.** Every side-door vehicle on this map declares a `TruckBed` -- the four
+KI5 campers, the 63Type2Van family, both RVs -- so rear-first sends somebody
+round the back of exactly the vehicles a side door matters on. None of the
+campers declares a rear door *part* either, so "has a rear door" cannot tell
+them apart. The campers and RVs say `door` (a caravan's passengers all share
+one outside position, which is the door); the VW buses say `SeatRearRight`,
+because `door` would include the driver's.
 
 **You cannot step out of a moving vehicle onto the ground** unless there is a
 seat free.
@@ -2816,7 +2854,7 @@ cells are actually towns.
    about.
 5. **The reshaped registry has never run in game.** Rooms, bindings, per-slot
    blueprint capture and the nullable generator are all
-   covered by `Tests/lua/` — 552 checks, all green — which is real verification
+   covered by `Tests/lua/` -- 637 checks, all green -- which is real verification
    of the logic and no verification at all that PZ agrees. In particular:
    - **Capture is now load bearing and has never succeeded on this map.** The
      `bounds.z + 1` sweep used to count a nil square above the room as a
@@ -3311,15 +3349,9 @@ was the means.
   calibrate against.
 - ~~Should entering from the driver's seat make you climb out?~~ **Answered:
   no.** See "A seat and the interior are the same vehicle" in Architecture.
-- **Where should you have to stand to get in?** Entry is currently allowed from
-  anywhere the radial menu resolves the vehicle, which in practice is anywhere
-  around it. Confirmed in game. Sketched, not decided: the back of a van, the
-  side door of an RV, and never the driver's seat of a trailer. This is per
-  vehicle, so it belongs on the binding -- not on the room, because where the
-  door is is a fact about the van and not about the room it is carrying. That
-  is the same conclusion removing `requires` reached from the other direction:
-  a fact about the holder goes on the thing that knows what kind of holder it
-  is naming. Needs a session of its own.
+- ~~Where should you have to stand to get in?~~ **Answered: at the boarding
+  point**, and it is per SCRIPT rather than per binding, which is where the
+  sketch here went wrong. See "You get in at the door" in Architecture.
 
 ## Design note
 

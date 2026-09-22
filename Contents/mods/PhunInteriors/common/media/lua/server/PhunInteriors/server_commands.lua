@@ -116,6 +116,16 @@ Commands[Core.commands.arrived] = function(player, args)
     Transit.arrived(player, tonumber(args and args.id), args and args.seated)
 end
 
+-- The player has landed INSIDE a room. Only a flag: the leash still has to see
+-- them inside the box itself before the grace ends, so a report that arrives
+-- ahead of the position update, or one that is simply false, changes nothing.
+Commands[Core.commands.landed] = function(player, args)
+    local occupancy = Transit.occupancyOf(player)
+    if occupancy then
+        occupancy.landed = true
+    end
+end
+
 -- An admin is about to remove a vehicle. Nothing is released on the strength of
 -- this; the server watches the vehicle and acts only if it really goes.
 Commands[Core.commands.vehicleRemoving] = function(player, args)

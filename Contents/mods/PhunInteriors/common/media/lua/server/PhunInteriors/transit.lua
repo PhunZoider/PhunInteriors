@@ -262,6 +262,14 @@ function Transit.canEnter(player, vehicle)
         return false, why
     end
 
+    -- Standing at the door, not merely somewhere near the vehicle. The client
+    -- walks there first; this is what refuses a client that did not. The
+    -- vehicle is loaded, because the player is standing beside it.
+    local atDoor, point = Core.atBoardingPoint(vehicle, player)
+    if not atDoor then
+        return false, Core.boardingRefusal(point)
+    end
+
     if Core.settings.EntryBlockedByZombies then
         local radius = Core.settings.EntryZombieRadius or 4
         if zombiesNear(vehicle:getX(), vehicle:getY(), vehicle:getZ(), radius) > 0 then
@@ -416,7 +424,12 @@ local function placeInside(player, assignment, occupancy)
     -- Give the teleport time to land before the leash starts judging. Must
     -- outlast the client's HOLD_TICKS window, or the leash ejects a player
     -- who is still waiting for the destination chunk to stream in.
+    --
+    -- A CAP, not a duration: the client's `landed` report ends it as soon as
+    -- the leash can also see them inside. Served in full, this held anybody
+    -- who walked straight back out in the doorway for up to six seconds.
     occupancy.graceUntil = getTimestampMs() + 6000
+    occupancy.landed = nil
     occupancy.captureSlot = pristine or nil
     occupancy.captureTries = 0
     occupancy.scrubTries = 0

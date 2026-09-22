@@ -46,6 +46,14 @@ option PhunInteriors.EntryDelay
     translation = PhunInteriors_EntryDelay,
 }
 
+option PhunInteriors.EntryAtBoardingPoint
+{
+    type = boolean,
+    default = true,
+    page = PhunInteriors,
+    translation = PhunInteriors_EntryAtBoardingPoint,
+}
+
 option PhunInteriors.EntryBlockedByZombies
 {
     type = boolean,

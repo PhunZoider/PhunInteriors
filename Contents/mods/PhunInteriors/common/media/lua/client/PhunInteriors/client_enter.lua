@@ -94,6 +94,39 @@ function PhunInteriorsEnterAction:new(character, vehicle, seat)
     return o
 end
 
+local function boardingUnreachable()
+    Client.notify({text = "IGUI_PhunInteriors_BoardingUnreachable", warning = true})
+end
+
+--- Walk to where this vehicle is boarded, if we are not there already.
+--
+-- Vanilla's own pathing, to vanilla's own targets: pathToVehicleArea is how
+-- ISVehicleMenu walks somebody to a trunk, and pathToVehicleSeat is how it
+-- walks them to a door before ISEnterVehicle. The server makes the same
+-- Core.atBoardingPoint test when the request lands, so skipping this walk
+-- gets a refusal rather than a way in.
+--
+-- A failed path clears the queue, entry action included, which is what
+-- vanilla's trunk does too; the note is the only thing we add.
+local function queueWalkToBoarding(player, vehicle)
+    local point = Core.boardingFor(vehicle)
+    if not point or Core.atBoardingPoint(vehicle, player) then
+        return
+    end
+    local walk
+    if point.area then
+        walk = ISPathFindAction:pathToVehicleArea(player, vehicle, point.area)
+    else
+        local seat = Core.nearestVehicleDoor(vehicle, player)
+        if not seat then
+            return
+        end
+        walk = ISPathFindAction:pathToVehicleSeat(player, vehicle, seat)
+    end
+    walk:setOnFail(boardingUnreachable)
+    ISTimedActionQueue.add(walk)
+end
+
 --- Queue the walk-to plus the entry action.
 function Client.beginEnter(vehicle)
     local player = getPlayer()
@@ -130,6 +163,10 @@ function Client.beginEnter(vehicle)
         -- only ever leaves a seat through ISExitVehicle; calling exit() from a
         -- menu skips the animation and the seat bookkeeping.
         ISTimedActionQueue.add(ISExitVehicle:new(player))
+    end
+
+    if current ~= vehicle then
+        queueWalkToBoarding(player, vehicle)
     end
 
     ISTimedActionQueue.add(PhunInteriorsEnterAction:new(player, vehicle, seat))

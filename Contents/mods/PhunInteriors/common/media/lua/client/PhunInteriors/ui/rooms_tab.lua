@@ -26,17 +26,19 @@ UI.instances = {}
 -- somebody can get wrong in a way that only shows up as a stranded tenant.
 -- ---------------------------------------------------------------------------
 
---- "3x4", from the footprint. Shown rather than the floor, because `size` is
---- what the registration states and what the form edits -- and the difference
---- between the two is exactly the thing that goes wrong (the south and east
---- walls sit outside the floor, so the floor is the box less its last row and
---- column). Labelling this "size" and meaning the footprint keeps the window
---- honest about which number it is.
-local function sizeText(room)
+--- "2x3", the floor a tenant can stand on, not the registered footprint.
+---
+--- It used to show the footprint, on the reasoning that `size` is what the
+--- registration states. But a 3x3 room read as 4x4, and nobody reading a room
+--- list thinks in footprints: the south and east walls sit outside the floor,
+--- so the footprint's last row and column are wall. The header says "Floor"
+--- and the form's fields say "Footprint", so each number is named where it is
+--- shown. Same arithmetic as Core.slotFloor, clamp included.
+local function floorText(room)
     if not room.size then
         return "-"
     end
-    return tostring(room.size.w) .. "x" .. tostring(room.size.h)
+    return tostring(math.max(1, room.size.w - 1)) .. "x" .. tostring(math.max(1, room.size.h - 1))
 end
 
 --- Which way out, in one column.
@@ -195,7 +197,7 @@ function UI:refreshList()
             -- Falls back to the id, as registerRoom does, so the column is
             -- never blank for a room whose author never named one.
             label = room.label or room.id,
-            size = sizeText(room),
+            size = floorText(room),
             slots = tostring(room.total),
             free = freeText(room),
             exit = exitText(room),

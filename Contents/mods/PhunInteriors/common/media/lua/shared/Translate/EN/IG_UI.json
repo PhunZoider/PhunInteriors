@@ -11,6 +11,9 @@
     "IGUI_PhunInteriors_VehicleMoving": "You cannot climb out while it is moving",
     "IGUI_PhunInteriors_CabFull": "Every seat is taken",
     "IGUI_PhunInteriors_VehicleMovingBoard": "You cannot climb aboard while it is moving",
+    "IGUI_PhunInteriors_BoardAtRear": "You get in from the back",
+    "IGUI_PhunInteriors_BoardAtDoor": "You get in by the door",
+    "IGUI_PhunInteriors_BoardingUnreachable": "You cannot get to the door",
     "IGUI_PhunInteriors_DrivingCannotEnter": "Not while you are at the wheel",
     "IGUI_PhunInteriors_RoomReclaimed": "Your old interior sat unused and was cleared out. This one is empty",
     "IGUI_PhunInteriors_RoomLost": "The interior you were in is no longer yours. You are back where you went in",
@@ -58,7 +61,7 @@
     "IGUI_PhunInteriors_Tab_Slots": "Slots",
     "IGUI_PhunInteriors_Tab_Bindings": "Bindings",
 
-    "IGUI_PhunInteriors_Col_Size": "Size",
+    "IGUI_PhunInteriors_Col_Size": "Floor",
     "IGUI_PhunInteriors_Col_Exit": "Way out",
     "IGUI_PhunInteriors_Col_Edited": "Edited",
     "IGUI_PhunInteriors_Col_Binding": "Binding",

@@ -7,7 +7,8 @@
 #   Docs/pi-mappings.csv   one row per ROW OF TEN STAMPS: which cell, which
 #                          row, which room is stamped there.
 #   Docs/pi-vehicles.csv   one row per BINDING: a game script (or a moveable
-#                          item type, for a tent) and the room it reaches.
+#                          item type, for a tent) and the room it reaches,
+#                          and optionally where the vehicle is boarded.
 #
 # Nothing here reads the map. The grid is an assertion --
 #
@@ -151,7 +152,7 @@ for my $id (sort keys %room) {
 # object ones, so the kinds cannot cross.
 my %ITEM_ROOM = map { $_ => 1 } ("Tent");
 
-my (%scripts, %items);
+my (%scripts, %items, %boarding);
 for my $b (@$bindings) {
     my $what = trim($b->{vehicle});
     my $id   = trim($b->{room});
@@ -160,6 +161,17 @@ for my $b (@$bindings) {
         unless $room{$id};
     if ($ITEM_ROOM{$id}) { $items{$id}{$what} = 1 }
     else                 { $scripts{$id}{$what} = 1 }
+
+    # Where the vehicle is boarded: an area it declares, or "door". Blank
+    # means the default -- the rear, then any door -- which is right for
+    # everything with its doors at the back. See boarding.lua.
+    my $board = trim($b->{boarding});
+    next unless length $board;
+    die "pi-vehicles gives a boarding point to '$what', which is an item, not a vehicle\n"
+        if $ITEM_ROOM{$id};
+    die "pi-vehicles boards '$what' at both '$boarding{$what}' and '$board'\n"
+        if $boarding{$what} and $boarding{$what} ne $board;
+    $boarding{$what} = $board;
 }
 
 # Overflow. `fallback` is TRANSITIVE: a beer step van whose own room is full
@@ -311,6 +323,19 @@ for my $id (sort keys %room) {
 }
 
 w("end\n\nlocal function registerVehicles()\n");
+
+if (%boarding) {
+    w("    -- Where each vehicle is boarded, where the default -- the rear, then any\n"
+        . "    -- door -- would be wrong. Every one of these declares a TruckBed, so the\n"
+        . "    -- default would send somebody round the back of a vehicle whose door is\n"
+        . "    -- in the side.\n");
+    w("    Core.registerBoarding({\n");
+    my @k = sort keys %boarding;
+    for my $i (0 .. $#k) {
+        w("        [" . lua_str($k[$i]) . "] = " . lua_str($boarding{$k[$i]}) . ($i == $#k ? "\n" : ",\n"));
+    }
+    w("    })\n");
+}
 
 for my $id (sort keys %room) {
     next if $ITEM_ROOM{$id};

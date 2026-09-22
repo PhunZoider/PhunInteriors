@@ -1,5 +1,6 @@
 require "PhunInteriors/core"
 require "PhunInteriors/holders"
+require "PhunInteriors/boarding"
 -- Core.snapshotRoomDef and Core.isApplyingOverride, which registerRoom calls.
 -- Not a cycle: overrides.lua needs core and tools at load time and this file's
 -- register calls only at run time.

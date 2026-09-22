@@ -54,7 +54,7 @@ which is the mechanic working correctly, and it silently invalidates the test.
 Both run from the repo root, and both must be understood before any in-game
 result means anything.
 
-**1. `bash Tests/run.sh`** expects 552 checks, 0 failures, plus the three
+**1. `bash Tests/run.sh`** expects 637 checks, 0 failures, plus the three
 static checks and the syntax pass. A failure here makes every phase below
 untrustworthy.
 
@@ -190,11 +190,31 @@ nil-checked and every caller falls back to the nearest door.
 Nothing to do beyond watching for a Lua error naming it during A1 to A5. If it
 never resolves, the fallback should hide it completely, which is the point.
 
+### A9. Walk straight back out
+
+Enter, and walk out of the door the moment you land. **Pass:** the leash fires
+within about a quarter second of crossing the edge. Six seconds means the
+`landed` report is not reaching the server, and the grace is timing out in
+full instead.
+
+### A10. Boarding point
+
+Use the enter option from the front of a van, from beside a caravan, and from
+the far side of a VW bus. **Pass:** you walk to the back of the van, to the
+caravan's side door, and to the bus's right-hand sliding door, and only then
+does the entry action start. Also:
+- An unreachable point (van backed against a wall): "You cannot get to the
+  door", and no entry.
+- Entering from a seat of the same vehicle: no walk at all.
+- `EntryAtBoardingPoint` off: enter from anywhere, as before.
+- A modded vehicle nobody listed: the rear if it declares one, else its nearest
+  door.
+
 ---
 
 ## Phase B: the reshaped registry and allocation
 
-The registry has not run in game since it was reshaped. 552 bench checks are
+The registry has not run in game since it was reshaped. 637 bench checks are
 real verification of the logic and none at all that PZ agrees.
 
 ### B1. Boot

@@ -16,6 +16,9 @@
     "Sandbox_PhunInteriors_EntryDelay": "Entry Time",
     "Sandbox_PhunInteriors_EntryDelay_tooltip": "Seconds it takes to get inside. Interruptible. Set to 0 to enter instantly",
 
+    "Sandbox_PhunInteriors_EntryAtBoardingPoint": "Enter At The Door",
+    "Sandbox_PhunInteriors_EntryAtBoardingPoint_tooltip": "If yes, you walk to the back of a van or the door of a caravan to get inside, rather than going in from anywhere beside it",
+
     "Sandbox_PhunInteriors_EntryBlockedByZombies": "Block Entry When Chased",
     "Sandbox_PhunInteriors_EntryBlockedByZombies_tooltip": "If yes, you cannot get inside while a zombie is close, so the interior is not an escape hatch mid chase",
 
