@@ -10,7 +10,7 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 **The registry was reshaped and has not run in game since.** Rooms, bindings
 and blueprints all changed shape -- see "A room is a contract" in Architecture.
-`Tests/run.sh` is green across 637 checks, which is real verification of the
+`Tests/run.sh` is green across 686 checks, which is real verification of the
 logic and no verification at all that PZ agrees. Everything below describes
 what was proven *before* that change; the mechanics are the same, but the
 registry underneath them is not.
@@ -33,6 +33,9 @@ is wrong**, so it is the first thing to watch. Four rooms deliberately register
 doors are in the side -- so their tenants land beside the vehicle until
 somebody says which way a caravan points. `selfPowered` is new and has never
 run either.
+
+**And `Core.enterRoom`, putting a player in a room with no holder, is new and
+has never run.** PhunSpawn's arrival room depends on it. Known gaps #16.
 
 **Playable in single player and on a dedicated server.** Confirmed working in
 game: enter and exit, containment, seat and door restore, translations,
@@ -267,8 +270,9 @@ Tests/lua/*_spec.lua               registry placement/links, allocation order,
                                    reservoir coverage, world-object holders,
                                    the tent pickup lock, the override layer,
                                    the entrance position and its fallback,
-                                   the PhunInteriors.json round trip and the
-                                   admin actions the editor drives
+                                   the PhunInteriors.json round trip, the
+                                   admin actions the editor drives, sendTo
+                                   and holderless entry (enterRoom)
 Tests/root/PhunInteriors/common/   overlay carrying the test ids, applied by
                                    deploy.cmd to build PhunInteriorsTest. The
                                    path must mirror the live mod folder or the
@@ -611,7 +615,8 @@ field. That is not a shortage of bookkeeping: the fact is per visit, and there
 is no value of it a lease could carry. It is also the reason a community hub
 room needs no new registry surface, and the reason the `admin:<username>`
 lease — the one lease in the system keyed by a player — is not the pattern to
-copy for one.
+copy for one. The pattern for a room several people share is `room:<uuid>`,
+minted per lease by `Core.enterRoom`: see "A room can have no holder at all".
 
 **Player modData, and the asymmetry with the vehicle row below is the point.**
 `IsoPlayer.save` reaches `IsoMovingObject.save`, which writes the modData
@@ -1415,6 +1420,62 @@ re-asserts itself.
 nobody is standing in what Reset does to one: a held lease is released, an
 unheld slot is queued, and each is scrubbed now if loaded, otherwise on its
 next lease. Claimed slots are left alone, as Reset leaves them.
+
+**A room can have no holder at all.** `Core.enterRoom(player, roomId, opts)`
+puts somebody into a named room with no vehicle, tent or admin behind it --
+PhunSpawn's arrival room is the first caller. It is `Transit.adminEnter` with
+two differences, and both are about there being more than one person.
+
+**The lease key belongs to the lease, not the player.** `room:<uuid>`, minted
+when a slot is first taken (`Core.roomKey`, holder kind `"room"`). Every "is
+anybody else in here" question -- `othersInside` on the hand back, `isOccupied`
+in the reclaim -- compares occupancies against the lease key, so a second
+tenant pointed at the same key is simply a second occupant, and every one of
+them answers correctly with no new code. This is the pattern for a room several
+people share, and `admin:<username>` is exactly not it.
+
+**It shares when full**, with `share = true`: no spare slot means joining the
+least occupied `room:` lease in that room, lowest index on a tie, skipping a
+slot claimed as a safehouse the player is not on. Only `room:` leases are
+joined -- a vehicle's slot in the same room is its owner's. A server may have
+one spawn room, so full is the normal case rather than an edge.
+
+`exit = false` removes the way out: no "Step outside" (`Client.noExit`, carried
+on the teleport and the `state` reply), `Transit.requestLeave` refuses the menu
+request, and `Leash.ejects` contains rather than ejects. `sendTo`, an admin
+eviction and a closing room still get them out, being somebody with the
+authority to move them. `returnTo` becomes the occupancy's `returnTo` **and**
+its `enteredFrom`, so the entrance in player modData, which `rescueStranded`
+reads, is the caller's answer rather than wherever a new character happened
+to be standing. It is deliberately not written to `lastKnownVehiclePos`, which
+is one field on a lease several people share.
+
+**Idempotent**, because the caller runs it from its own `playerSetup` and that
+lands before or after ours in no fixed order: already inside that room, or
+standing in a leased slot of it, is recovered where they stand with no
+teleport and no second lease. And the rooms it has been used on are recorded in
+the save (`holderless`), so `Transit.recover` can answer the one case it could
+not: a restart forgets who was inside, the last one out hands a single use room
+back over a logged off tenant, and on login they would otherwise be
+`rescueStranded` out. `Transit.recoverInPlace` re-leases the slot they are in
+instead, **without scrubbing it**, since what is on the floor is theirs.
+
+Recover also learned the holder kind on the way: a recovered admin, tent or
+holderless tenant now gets `noVehicle`, where before it went looking for a
+vehicle on the way out.
+
+A `room:` lease is reclaimable like any other once nobody is in it and it has
+aged past `RoomProtectedDays`. In practice only a vehicle bound to that room
+can reclaim it, so a room no binding names never loses one that way.
+
+The server side calls other mods use, all plain-English on refusal:
+
+| Call | For |
+|---|---|
+| `Core.enterRoom(player, roomId, {reason, share, exit, returnTo})` | put somebody in a named room with no holder. `true, "room#index"` or `false, why` |
+| `Core.sendTo(player, {x, y, z}, reason, release)` | the rest of an exit to a position the caller chose; `release` hands the room back once the last one is out |
+| `Core.setRoomOpen(roomId, open, {evict, scrub})` | open or close a room; closing refuses new leases, `enterRoom` included |
+| `Core.isRoomOpen(roomId)` | whether it is taking tenants |
 
 **An edit is a patch, kept beside the registration rather than inside it.**
 The registry is code, and `defaults.lua` is *generated* from three CSVs by
@@ -2854,7 +2915,7 @@ cells are actually towns.
    about.
 5. **The reshaped registry has never run in game.** Rooms, bindings, per-slot
    blueprint capture and the nullable generator are all
-   covered by `Tests/lua/` -- 637 checks, all green -- which is real verification
+   covered by `Tests/lua/` -- 686 checks, all green -- which is real verification
    of the logic and no verification at all that PZ agrees. In particular:
    - **Capture is now load bearing and has never succeeded on this map.** The
      `bounds.z + 1` sweep used to count a nil square above the room as a
@@ -3273,7 +3334,24 @@ cells are actually towns.
       put back inside.
     - **PhunHub's rooms are never leased**, so the leash never captures a
       blueprint for them, and `scrub` on a hub room will defer forever unless
-      one ships or the hub's entry goes through this mod.
+      one ships or the hub's entry goes through this mod. `Core.enterRoom` is
+      that route now; see #16.
+
+16. **Holderless entry (`Core.enterRoom`) has never run in game.**
+    `enterroom_spec.lua` is 49 checks: a free slot, sharing when full,
+    idempotent re-entry and recovery, release only when the last occupant
+    leaves, re-leasing in place after a hand back, reclaiming an empty one, a
+    safehouse refusal, and `exit = false`. What it cannot see:
+    - **The leash containing a `noExit` tenant.** `Leash.ejects` is tested;
+      the teleport back to spawn that follows it is the old
+      `BreachEjects = false` branch, which has never run in game either.
+    - **`Client.noExit` hiding "Step outside".** Client UI, so untested. If the
+      option still shows, the server refuses it anyway and logs at debug.
+    - **Ordering against PhunSpawn's `playerSetup`.** Both orders are covered
+      in the spec, but only against stubs. The tell if it is wrong is a new
+      character put out at their `returnTo` on login, or a second slot leased.
+    - **`recoverInPlace` not scrubbing.** Deliberate, but it means a slot comes
+      out of quarantine marked clean with whatever the last visit left in it.
 
 ## v2, deliberately not in v1
 
@@ -3300,7 +3378,9 @@ position covers it, and covers it *because* it is per player -- see "And behind
 both of those sits the player" in Architecture. What such a room must not do is
 copy the `admin:<username>` lease: a lease keyed by a player would make the
 room that player's, and a hub is exactly the case where the next person in gets
-whatever the last one left behind.
+whatever the last one left behind. That pattern now exists and is built:
+`Core.enterRoom`, with a `room:<uuid>` key minted per lease. See "A room can
+have no holder at all" in Architecture.
 
 A tent is the obvious first one, and it is simpler than a vehicle rather than
 harder: it does not move, so the tracker, the live sweep, `vehicleMotionAllows`,

@@ -112,10 +112,14 @@ local function onFillWorldObjectContextMenu(playerNum, context, worldObjects, te
         end
         return
     end
-    local leave = context:addOption(getText("ContextMenu_PhunInteriors_Leave"), player, function()
-        Client.requestLeave()
-    end)
-    leave.iconTexture = modTexture()
+    -- Not in a room whose only way out is somebody else's decision, such as
+    -- a spawn room's picker. The server refuses it too.
+    if not Client.noExit then
+        local leave = context:addOption(getText("ContextMenu_PhunInteriors_Leave"), player, function()
+            Client.requestLeave()
+        end)
+        leave.iconTexture = modTexture()
+    end
     if Client.reservoirOption then
         Client.reservoirOption(context, player)
     end

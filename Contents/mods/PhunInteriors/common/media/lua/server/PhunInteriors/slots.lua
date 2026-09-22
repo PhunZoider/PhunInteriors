@@ -24,6 +24,7 @@ local function store()
     Core.data.quarantine = Core.data.quarantine or {} -- list of {room, index}
     Core.data.used = Core.data.used or {} -- room -> {index -> true}
     Core.data.closed = Core.data.closed or {} -- room -> {at = world hours}
+    Core.data.holderless = Core.data.holderless or {} -- room -> {exit = bool}, see Transit.enterRoom
     Core.data.adopted = Core.data.adopted or false
     return Core.data
 end

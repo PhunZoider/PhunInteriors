@@ -171,6 +171,16 @@ local function attemptLights(occupancy)
     end
 end
 
+--- Does walking out of this room put you out, or back on the spawn square?
+--
+-- Out, normally. Back, when the server turned ejection off, or when the room
+-- was entered with `exit = false` (Transit.enterRoom): a spawn room's only way
+-- out is the picker, which calls sendTo, and a doorway that let people skip it
+-- would land them at a returnTo nobody chose.
+function Leash.ejects(occupancy)
+    return Core.settings.BreachEjects and not occupancy.noExit
+end
+
 local function checkOne(player, occupancy)
     local where, edge = Leash.classify(occupancy, player:getX(), player:getY(), player:getZ())
 
@@ -231,7 +241,7 @@ local function checkOne(player, occupancy)
     -- Outside the box: a doorway, a hole in the wall, a window, or something
     -- that moved them. All the same answer -- back to the vehicle -- differing
     -- only in which part of it they land at, which is what `edge` carries.
-    if Core.settings.BreachEjects then
+    if Leash.ejects(occupancy) then
         -- nil when the room has gone out from under a live occupancy, which is
         -- itself a reason to eject rather than a reason to stop.
         local b = Core.slotFloor(Core.rooms[occupancy.room], occupancy.index) or {}
@@ -250,6 +260,7 @@ local function checkOne(player, occupancy)
                 y = spawn.y,
                 z = spawn.z,
                 inside = true,
+                noExit = occupancy.noExit or nil,
                 reason = "leash"
             })
         else

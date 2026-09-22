@@ -18,6 +18,7 @@ end
 -- which is the affordance people actually look for.
 Commands[Core.commands.state] = function(arguments)
     Client.inside = arguments and arguments.inside and true or false
+    Client.noExit = Client.inside and arguments.noExit and true or false
 end
 
 Commands[Core.commands.notify] = function(arguments)

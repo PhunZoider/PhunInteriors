@@ -15,6 +15,9 @@ local Client = Core.client
 --- True while this client believes it is inside one of our rooms. Used only
 --- for menu state; the server is the authority.
 Client.inside = false
+--- True while that room has no "Step outside": one entered through
+--- Core.enterRoom with `exit = false`. Menu state only, like the above.
+Client.noExit = false
 
 -- ---------------------------------------------------------------------------
 -- Teleporting across the map.
@@ -582,6 +585,7 @@ function Client.teleport(data)
     end
 
     Client.inside = data.inside and true or false
+    Client.noExit = (data.inside and data.noExit) and true or false
 end
 
 function Client.notify(data)

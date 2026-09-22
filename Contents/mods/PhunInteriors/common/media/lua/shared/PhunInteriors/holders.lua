@@ -6,7 +6,8 @@ local Core = PhunInteriors
 --
 -- A lease key has always been a string, and `admin:<username>` already proved
 -- a holder need not be a vehicle. This is the third kind: a world object, of
--- which a tent is the first and the reason the rest exists.
+-- which a tent is the first and the reason the rest exists. The fourth is no
+-- holder at all -- `room:<uuid>`, for a room another mod puts people into.
 --
 -- Four questions separate one holder kind from another -- which rooms it may
 -- lease, where its tenant comes back out, what settles the power debt, and
@@ -18,7 +19,7 @@ local Core = PhunInteriors
 --- What a lease key is held by. The only thing that reads the prefix.
 --
 -- Vehicle ids are getRandomUUID strings and contain no colon, so namespacing
--- the other two cannot collide with one.
+-- the other three cannot collide with one.
 function Core.holderKind(leaseKey)
     if type(leaseKey) ~= "string" then
         return "vehicle"
@@ -29,11 +30,27 @@ function Core.holderKind(leaseKey)
     if string.sub(leaseKey, 1, 7) == "object:" then
         return "object"
     end
+    if string.sub(leaseKey, 1, 5) == "room:" then
+        return "room"
+    end
     return "vehicle"
 end
 
 function Core.objectKey(id)
     return "object:" .. tostring(id)
+end
+
+--- A lease held by nothing at all: a room another mod put somebody into
+--- directly, through Core.enterRoom.
+--
+-- Minted per LEASE, never per player, and that is the whole reason it is not
+-- `admin:<username>`. Several people can stand in one of these at once, and
+-- everything that asks "is anybody else in here" -- the hand back on the last
+-- exit, the reclaim -- asks it by comparing occupancies against the lease key.
+-- A key built from a player would make the room that player's, and the second
+-- person in would be holding somebody else's lease.
+function Core.roomKey(id)
+    return "room:" .. tostring(id)
 end
 
 --- What kind of holder this actually is. The companion to holderKind, which

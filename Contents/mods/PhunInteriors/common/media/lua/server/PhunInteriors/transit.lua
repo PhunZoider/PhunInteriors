@@ -407,7 +407,11 @@ local function placeInside(player, assignment, occupancy)
             tostring(spawn.x), tostring(spawn.y),
             tostring(grid:getMinX()), tostring(grid:getMaxX()),
             tostring(grid:getMinY()), tostring(grid:getMaxY())))
-        Slots.release(occupancy.vehicleId, "destination not in this world")
+        -- Unless somebody is already in there: a holderless tenant joining a
+        -- shared lease must not pull it out from under the others.
+        if not Slots.isOccupied(occupancy.vehicleId) then
+            Slots.release(occupancy.vehicleId, "destination not in this world")
+        end
         notify(player, "IGUI_PhunInteriors_RoomNotInWorld", true)
         return false
     end
@@ -444,7 +448,11 @@ local function placeInside(player, assignment, occupancy)
     -- it too: Transit.arrived re-enters a player whose cab turned out to be
     -- full, and they went in from beside the vehicle they are now standing
     -- next to. Transit.recover is deliberately NOT a caller of this function.
-    occupancy.enteredFrom = {
+    --
+    -- Unless the caller already said. Transit.enterRoom takes a `returnTo`
+    -- from the mod putting them in, because where a new character happens to
+    -- be standing when a spawn room claims them is nowhere worth going back to.
+    occupancy.enteredFrom = occupancy.enteredFrom or {
         x = player:getX(),
         y = player:getY(),
         z = player:getZ()
@@ -456,7 +464,9 @@ local function placeInside(player, assignment, occupancy)
         x = spawn.x,
         y = spawn.y,
         z = spawn.z,
-        inside = true
+        inside = true,
+        -- No "Step outside" in the menu. See Transit.enterRoom's `exit`.
+        noExit = occupancy.noExit or nil
     })
     return true
 end
@@ -858,6 +868,267 @@ function Transit.adminEnter(player, roomId, index)
         assignment.room, tostring(assignment.index),
         dirty and " (quarantined, scrubbing)" or ""))
     return true, string.format("%s#%s", assignment.room, tostring(assignment.index))
+end
+
+-- ---------------------------------------------------------------------------
+-- A room with no holder.
+--
+-- For another mod that decides WHO goes into a room -- PhunSpawn's arrival
+-- room is the first -- where there is no vehicle, no tent and no admin: the
+-- room is simply where new characters start. Built from the admin port,
+-- because the admin port already is "a real lease on a named room with
+-- nothing on the other end", and a room that behaves differently for these
+-- tenants would be a room nobody has tested.
+--
+-- Two things differ from the admin port, and both are about there being more
+-- than one person.
+--
+-- THE LEASE KEY BELONGS TO THE LEASE. `room:<uuid>`, minted when a slot is
+-- first taken, never built from a player. Every "is anybody else in here"
+-- question in the mod -- the hand back on the last exit, the reclaim, the
+-- isOccupied that keeps a lease alive -- compares occupancies against the
+-- lease key, so a second tenant pointed at the same key is simply a second
+-- occupant of the same lease and every one of those questions answers
+-- correctly with no new code. `admin:<username>` is exactly wrong for this.
+--
+-- AND IT SHARES WHEN FULL. A server may only ever have one spawn room, so a
+-- full room is the normal case rather than an edge. With `share`, a player
+-- who finds no spare slot joins the least occupied holderless lease in the
+-- room instead of being refused.
+--
+-- Which rooms have been used this way is kept in the save (`holderless`), for
+-- Transit.recover: a tenant whose lease was handed back while they were
+-- logged off -- a restart forgets who was inside, so the last one out hands
+-- the room back -- is re-leased where they stand rather than rescued out.
+-- ---------------------------------------------------------------------------
+
+--- How many people are standing in the room this holder leases.
+local function occupantCount(holder)
+    local n = 0
+    for _, occupancy in pairs(Core.occupants) do
+        if occupancy.vehicleId == holder then
+            n = n + 1
+        end
+    end
+    return n
+end
+
+--- The holderless lease in this room a player may join, or nil.
+--
+-- Least occupied first, then lowest index, which room.indices already is.
+-- Only leases of our own kind: a vehicle's slot in the same room belongs to
+-- that vehicle's owner, and walking a stranger into it is a different feature.
+-- A slot claimed as a safehouse is joined only by somebody the claim lets in.
+local function joinableLease(roomId, player)
+    local room = Core.rooms[roomId]
+    local occupied = Slots.store().occupied[roomId] or {}
+    local best, bestCount
+    for _, index in ipairs(room.indices) do
+        local holder = occupied[tostring(index)]
+        if holder and Core.holderKind(holder) == "room" and not Slots.trespassOn(roomId, index, player) then
+            local count = occupantCount(holder)
+            if not best or count < bestCount then
+                best, bestCount = holder, count
+            end
+        end
+    end
+    return best
+end
+
+--- {x, y, z} or {x = , y = , z = }, as registerRoom's locations accept both.
+local function asPosition(p)
+    if type(p) ~= "table" then
+        return nil
+    end
+    local x, y = tonumber(p.x or p[1]), tonumber(p.y or p[2])
+    if not x or not y then
+        return nil
+    end
+    return {x = x, y = y, z = tonumber(p.z or p[3]) or 0}
+end
+
+--- Give somebody standing in a free slot of a holderless room a lease on it,
+--- without moving them.
+--
+-- The one way a lease can go while its tenant is still inside is a restart:
+-- Core.occupants is memory, so after one nobody is "inside" until they log
+-- in, and the last one out hands a single use room back over their heads.
+-- When they do log in, recover finds no lease and rescueStranded would put
+-- them out -- the wrong answer for a room they were put in on purpose.
+--
+-- Not scrubbed, even though the slot comes back out of quarantine flagged
+-- dirty. What is on the floor is theirs, from the visit they are resuming.
+function Transit.recoverInPlace(player, roomId, index, noExit)
+    local holder = Core.roomKey(getRandomUUID())
+    local assignment = Slots.acquireIn(holder, roomId, index)
+    if not assignment then
+        return false
+    end
+    if Slots.trespassOn(roomId, index, player) then
+        Slots.release(holder, "claimed as a safehouse")
+        return false
+    end
+    assignment.noExit = noExit or nil
+    assignment.lastUser = Core.playerKey(player)
+    -- No enteredFrom: the entrance in their modData is still the one from
+    -- when they first went in, and this is the same visit.
+    Transit.setOccupancy(player, {
+        vehicleId = holder,
+        room = roomId,
+        index = index,
+        noVehicle = true,
+        noExit = noExit or nil,
+        seat = -1,
+        standSeat = -1,
+        enteredAt = Core.now(),
+        zombieSnapshot = 0
+    })
+    Core.logLn(string.format("recovered %s inside %s#%s on a fresh lease; the last one was handed back",
+        tostring(Core.playerKey(player)), roomId, tostring(index)))
+    return true
+end
+
+--- Put a player into a named room with nothing holding it. SERVER side.
+--
+--     local ok, why = PhunInteriors.enterRoom(player, "phun.spawn.arrival", {
+--         reason = "phunspawn",
+--         share = true,          -- join an occupied slot when none is free
+--         exit = false,          -- no way out but PhunInteriors.sendTo
+--         returnTo = {x, y, z}   -- where a rescue or an eviction puts them
+--     })
+--
+-- Idempotent, because the caller runs it from its own playerSetup and that
+-- lands before or after ours in no fixed order. Somebody already inside this
+-- room, or standing in one of its slots, is recovered where they stand and
+-- nothing else happens: no second lease, no teleport.
+--
+-- Returns true plus "room#index", or false plus a reason in plain English.
+function Transit.enterRoom(player, roomId, opts)
+    opts = opts or {}
+    if not player then
+        return false, "no player"
+    end
+    local room = Core.rooms[roomId]
+    if not room then
+        return false, "there is no room called " .. tostring(roomId)
+    end
+    local key = Core.playerKey(player)
+    local noExit = opts.exit == false
+    local returnTo = asPosition(opts.returnTo)
+    local reason = tostring(opts.reason or "enterRoom")
+
+    -- Written before anything can fail, so a recover that runs ahead of the
+    -- next call already knows this room re-leases in place.
+    Slots.store().holderless[roomId] = {
+        exit = not noExit
+    }
+
+    -- Already inside. Here is fine; anywhere else is not ours to undo.
+    local current = Core.occupants[key]
+    if current then
+        if current.room == roomId then
+            return true, string.format("%s#%s (already inside)", roomId, tostring(current.index))
+        end
+        return false, string.format("already inside %s#%s", tostring(current.room), tostring(current.index))
+    end
+
+    -- Logged in inside and our playerSetup has not run yet. Recover them
+    -- rather than porting them, which would lease a second slot.
+    if Transit.recover(player) then
+        current = Core.occupants[key]
+        if current.room == roomId then
+            return true, string.format("%s#%s (recovered)", roomId, tostring(current.index))
+        end
+        return false, string.format("standing in %s#%s, which is not %s", tostring(current.room),
+            tostring(current.index), roomId)
+    end
+
+    if not Slots.isOpen(roomId) then
+        return false, roomId .. " is closed"
+    end
+
+    -- A fresh lease if there is a slot to spare, else a share of one.
+    local holder = Core.roomKey(getRandomUUID())
+    local assignment, refusal, dirty = Slots.acquireIn(holder, roomId, nil)
+    local joined = false
+    if not assignment and opts.share then
+        local shared = joinableLease(roomId, player)
+        if shared then
+            holder, assignment, dirty, joined = shared, Slots.find(shared), false, true
+        end
+    end
+    if not assignment then
+        if opts.share then
+            refusal = string.format("%s has no slot to spare and none that can be shared", roomId)
+        end
+        return false, refusal
+    end
+    -- Stated on the lease as well as the occupancy, because Transit.recover
+    -- rebuilds an occupancy from the lease and has no call options to read.
+    if not joined then
+        assignment.noExit = noExit or nil
+    end
+
+    assignment.lastUser = key
+    -- Nothing to bill. Said full for the admin port's reason: a room with a
+    -- generator reads its charge from this ledger, and nothing will ever
+    -- settle the debt, so left alone it would darken the room. A selfPowered
+    -- room skips the ledger regardless.
+    assignment.batteryKnown = 1
+    assignment.fuelOwed = 0
+
+    local scrubOnArrival = false
+    if dirty then
+        local Scrub = require "PhunInteriors/scrub"
+        scrubOnArrival = not Scrub.slot(assignment.room, assignment.index)
+    end
+    Slots.touch(holder)
+
+    if not placeInside(player, assignment, {
+        vehicleId = holder,
+        noVehicle = true,
+        noExit = noExit or nil,
+        seat = -1,
+        standSeat = -1,
+        scrubOnArrival = scrubOnArrival or nil,
+        zombieSnapshot = 0,
+        -- Deliberately not lastKnownVehiclePos: that is one field on a lease
+        -- several people share. Per occupancy, and via the entrance in their
+        -- own modData, which is what rescueStranded reads.
+        returnTo = returnTo,
+        enteredFrom = returnTo
+    }) then
+        if not joined and not Slots.isOccupied(holder) then
+            Slots.release(holder, "nowhere to put them")
+        end
+        return false, "that room has nowhere to put anybody; check the log"
+    end
+
+    local where = string.format("%s#%s", assignment.room, tostring(assignment.index))
+    Core.logLn(string.format("%s put into %s (%s)%s", tostring(key), where, reason,
+        joined and ", sharing" or ""))
+    return true, where
+end
+
+--- The public face of Transit.enterRoom, SERVER side only.
+function Core.enterRoom(player, roomId, opts)
+    return Transit.enterRoom(player, roomId, opts)
+end
+
+--- Ask to leave, as a player rather than as a mechanic.
+--
+-- The menu's "Step outside" arrives here. A room entered with `exit = false`
+-- refuses: the client does not draw the option, and this is what refuses a
+-- client that drew it anyway. Everything else that calls Transit.leave -- an
+-- admin eviction, a closing room, sendTo -- is somebody with the authority to
+-- move them, and is not gated.
+function Transit.requestLeave(player, reason)
+    local occupancy = Transit.occupancyOf(player)
+    if occupancy and occupancy.noExit then
+        Core.debugLn(tostring(Core.playerKey(player)) .. " asked to leave a room with no way out")
+        return false, "this room has no way out"
+    end
+    return Transit.leave(player, reason)
 end
 
 --- Record where a leased vehicle is, from a client that can see it moving.
@@ -1779,6 +2050,11 @@ function Transit.recover(player)
                     vehicleId = vehicleId,
                     room = assignment.room,
                     index = assignment.index,
+                    -- Everything but a vehicle. Without it a recovered admin,
+                    -- tent or holderless tenant went looking for a vehicle on
+                    -- the way out.
+                    noVehicle = (Core.holderKind(vehicleId) ~= "vehicle") or nil,
+                    noExit = assignment.noExit or nil,
                     seat = -1,
                     enteredAt = Core.now(),
                     zombieSnapshot = 0,
@@ -1789,6 +2065,15 @@ function Transit.recover(player)
                 return true
             end
         end
+    end
+
+    -- No lease covers them. In a room that takes holderless tenants that is
+    -- a lease handed back over their heads, not a room that is gone; see
+    -- Transit.recoverInPlace.
+    local roomId, index = Core.slotAt(x, y, z)
+    local holderless = roomId and store.holderless[roomId]
+    if holderless then
+        return Transit.recoverInPlace(player, roomId, index, holderless.exit == false)
     end
 
     return false

@@ -48,8 +48,10 @@ Commands[Core.commands.playerSetup] = function(player, args)
     -- Then tell them, because the client has no other way to find out. It
     -- only learns it is inside from a teleport, and reconnecting is the one
     -- path into a room that does not involve one.
+    local occupancy = Core.occupants[Core.playerKey(player)]
     Core.respond(player, Core.commands.state, {
-        inside = Core.occupants[Core.playerKey(player)] ~= nil
+        inside = occupancy ~= nil,
+        noExit = occupancy and occupancy.noExit or nil
     })
 end
 
@@ -99,7 +101,7 @@ Commands[Core.commands.leave] = function(player, args)
     -- No `via`. Asking to leave through the menu is not walking out of any
     -- particular side, so there is no edge to attribute it to and it lands
     -- beside the vehicle, which is what it always did.
-    Transit.leave(player, (args and args.reason) or "menu")
+    Transit.requestLeave(player, (args and args.reason) or "menu")
 end
 
 -- "This vehicle just moved, go and look at it." Carries an id and no
