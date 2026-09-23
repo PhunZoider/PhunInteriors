@@ -46,6 +46,34 @@ function Core.isOurSpace(x, y, z)
     return Core.slotAt(x, y, z) ~= nil
 end
 
+--- Is this room's shell unbreakable right now?
+--
+-- The room's own `hardenShell` when it states one, the HardenShell sandbox
+-- option when it does not. The one place that decides, so the destroy guards
+-- on the client and the fire sweep on the server cannot disagree about a room.
+function Core.shellHardened(roomId)
+    local room = roomId and Core.rooms[roomId]
+    if room and room.hardenShell ~= nil then
+        return room.hardenShell
+    end
+    return Core.settings.HardenShell and true or false
+end
+
+--- Is this point inside a room whose shell is unbreakable?
+function Core.isHardenedAt(x, y, z)
+    local roomId = Core.slotAt(x, y, z)
+    return roomId ~= nil and Core.shellHardened(roomId)
+end
+
+--- The same, for an object, by the square it stands on.
+function Core.objectIsHardened(object)
+    local square = object and object.getSquare and object:getSquare()
+    if not square then
+        return false
+    end
+    return Core.isHardenedAt(square:getX(), square:getY(), square:getZ())
+end
+
 --- Convenience for the object based callers.
 function Core.objectIsOurs(object)
     if not object or not object.getSquare then

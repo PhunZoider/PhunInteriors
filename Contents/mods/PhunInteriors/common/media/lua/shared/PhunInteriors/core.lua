@@ -77,6 +77,12 @@ PhunInteriors = {
         -- window is an entry point and never a gate.
         editRoom = "editRoom",
         editBinding = "editBinding",
+        -- server -> client: the override document, so a client's registry
+        -- carries what the editor changed. Without it, a binding made in the
+        -- editor exists only on the server: no client draws "Enter" on the
+        -- object it names, and no client can refuse to pick up a permanent
+        -- one. Sent on login and after every edit.
+        overrides = "overrides",
         author = "author",
         -- server -> client, so a reconnecting player learns they are inside
         state = "state",

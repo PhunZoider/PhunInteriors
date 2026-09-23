@@ -10,7 +10,7 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 **The registry was reshaped and has not run in game since.** Rooms, bindings
 and blueprints all changed shape -- see "A room is a contract" in Architecture.
-`Tests/run.sh` is green across 686 checks, which is real verification of the
+`Tests/run.sh` is green across 735 checks, which is real verification of the
 logic and no verification at all that PZ agrees. Everything below describes
 what was proven *before* that change; the mechanics are the same, but the
 registry underneath them is not.
@@ -68,7 +68,9 @@ The fire dousing half of `HardenShell` was exercised and was broken -- it
 reported success on every sweep while the fire kept burning. Fixed to vanilla's
 `stopFire()` + `transmitStopFire()` pair and retested working. Dousing is gated
 on the `HardenShell` sandbox option, so with it unticked fires burn rooms
-normally; that is intended.
+normally; that is intended. A room's own `hardenShell` now overrides the
+option either way (see "A room can override Unbreakable Outer Walls"), and
+that per-room gate has not run in game.
 
 **So every mechanic in v1 is now proven in game except power binding**, which
 is new and has never run. It needs a map with a generator sprite in the room.
@@ -1468,6 +1470,60 @@ A `room:` lease is reclaimable like any other once nobody is in it and it has
 aged past `RoomProtectedDays`. In practice only a vehicle bound to that room
 can reclaim it, so a room no binding names never loses one that way.
 
+**An object is named by item or by sprite, and a binding may use both.** An
+item is right for a thing a player carries about: one `Base.TentGreen` covers
+all thirty-two of its sprites. A sprite is right for everything else: it is
+what the debug tools show, and it reaches a fixture no item stands behind.
+A sprite matches every facing of itself (the `Noffset`/`Woffset`/`Soffset`/
+`Eoffset` tile properties, read the way `ISMoveableSpriteProps:getFaces`
+reads them) and, for a multi-tile object, the grid's anchor, so neither a
+rotate nor clicking another tile loses the binding.
+
+An item is found two ways. `CustomItem` on the tile, which is what tents
+carry, and failing that the item script whose `WorldObjectSprite` names the
+sprite or one of its facings. Most furniture is only the second:
+`Mov_FancyToilet` appears in no `.tiles` file, so a binding naming it matched
+nothing until the fallback existed. `Core.holderIdentity` is item, else grid
+anchor, else sprite, and is what ties the tiles of one object to one lease id.
+
+**`permanent` is on the binding, never on the object.** Every object the
+binding matches refuses pickup, disassembly and the sledgehammer, admins
+included, for the reason the tent lock has no cheat bypass. Per object would
+leave some toilets movable and others not for no reason a player could see.
+The cost is breadth, so bind a sprite nothing else uses.
+
+**A `shared` room is a hub**: every object reaching it opens onto one
+`room:` lease, so a toilet in Louisville and one in Rosewood lead to the same
+floor. `Transit.enterObject` routes it through `Transit.enterRoom`, which for
+a shared room joins the existing lease before taking a slot, lowest index
+first. Each tenant's `returnTo` is where they stood to go in, never the
+object's square, which may be solid. It is never reclaimed and never handed
+to a holder of its own (`Slots.acquire` skips it), so nothing clears it but
+an admin: Recapture and Scrub on the Slots tab, which are `remanifest` and
+`scrub`.
+
+**A room can override Unbreakable Outer Walls**, with `hardenShell`: nil
+follows the `HardenShell` sandbox option, true always hardens, false never
+does. A hub wants true, so it stays intact on a server that lets vehicle rooms
+be smashed or burned. `Core.shellHardened(roomId)` is the only reader, and the
+destroy guards (`Core.objectIsHardened`, `Core.isHardenedAt`) and
+`Harden.sweepFire` all go through it, so the client and server cannot
+disagree about a room.
+
+Three states means false is an answer, which is the trap: `x and false or
+nil` is nil, and "never" would silently become "follow". `registerRoom` reads
+it through `triState`, the room form sends "server" as a `clear` rather than
+an omission, and `overrides_spec` checks false survives the register, the
+patch and the file reader; two of those checks were confirmed to fail against
+the `and/or` form.
+
+**Clients are sent the override document**, on login and after every edit
+(`Admin.pushOverrides`, `Core.syncOverrides`). A client boots only the
+shipped registry, so before this an editor-made binding existed only on the
+server: no client drew "Enter" on its object and no client could enforce
+`permanent`. Single player never showed it, because there both halves share
+one registry.
+
 The server side calls other mods use, all plain-English on refusal:
 
 | Call | For |
@@ -1776,7 +1832,7 @@ so it rides the arrival report.
 
 **A rain reservoir is barrels on the roof, placed from a kit, and wiped by the
 scrub like anything else a tenant brought in.** `PhunInteriors.RainReservoirKit`
-is a real item -- craftable at Woodwork 5, a 0.01 weight in `CrateCarpentry`
+is a real item -- craftable at Woodwork 5 and Mechanics 2, a 0.01 weight in `CrateCarpentry`
 and `CrateFarming`, and nameable by PhunMart. Installing it puts vanilla's
 `RainCollectorRound` on the roof with `square:addWorkstationEntity`, the call
 vanilla's own lid toggle makes, and consumes the kit server side.
@@ -2915,7 +2971,7 @@ cells are actually towns.
    about.
 5. **The reshaped registry has never run in game.** Rooms, bindings, per-slot
    blueprint capture and the nullable generator are all
-   covered by `Tests/lua/` -- 686 checks, all green -- which is real verification
+   covered by `Tests/lua/` -- 735 checks, all green -- which is real verification
    of the logic and no verification at all that PZ agrees. In particular:
    - **Capture is now load bearing and has never succeeded on this map.** The
      `bounds.z + 1` sweep used to count a nil square above the room as a
@@ -3012,7 +3068,7 @@ cells are actually towns.
     - **The kit being spent over the wire**: `sendRemoveItemFromContainer`
       from a command handler rather than from a timed action's `complete()`.
     - **The item script and recipe** parse, the kit shows its name, and the
-      recipe appears under Carpentry at Woodwork 5.
+      recipe appears under Carpentry at Woodwork 5 and Mechanics 2.
     - **A sink in the room plumbing to a barrel.** Vanilla also requires the
       sink's square to be `isInARoom()`, which ours are.
     - **Weight does not count the water.** `weight.lua` charges a barrel's own
@@ -3352,6 +3408,27 @@ cells are actually towns.
       character put out at their `returnTo` on login, or a second slot leased.
     - **`recoverInPlace` not scrubbing.** Deliberate, but it means a slot comes
       out of quarantine marked clean with whatever the last visit left in it.
+
+17. **Sprite bindings, `permanent`, shared rooms and the override sync have
+    never run in game.** See "An object is named by item or by sprite" in
+    Architecture. Covered by `holders_spec`, `overrides_spec` and
+    `enterroom_spec`, and the hub checks were confirmed to fail with each
+    guard disabled. What they cannot see, in rough order of risk:
+    - **The item fallback.** `Item.getWorldObjectSprite` has no vanilla lua
+      uses. `console.txt` gets `indexed N world object sprites, M more by
+      facing` on the first right click; N of 0 means it does not work.
+    - **The facing offsets.** Read with `getSprite(name):getProperties()`,
+      the way `ISMoveableSpriteProps:getFaces` does. If a rotated fixture is
+      not recognised, that is the one.
+    - **The override push on a dedicated server.** A table value of `false`
+      (a deleted-slot tombstone) may not survive `sendServerCommand`, in
+      which case a client keeps a slot the server deleted. Harmless to the
+      menu and the guards, which only read bindings.
+    - **The scrap guard.** Wraps `canScrapObject` and turns `canScrap` off,
+      silently, because the disassemble menu asks it while being built. If
+      the option still shows and works, the wrap did not take.
+    - **A hub exit.** Lands on the square the player stood on to go in, via
+      the occupancy's `returnTo`, the path `enterRoom` already uses.
 
 ## v2, deliberately not in v1
 

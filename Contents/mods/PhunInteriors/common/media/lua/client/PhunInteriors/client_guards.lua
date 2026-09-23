@@ -50,7 +50,7 @@ local function noteUnlocked(square)
     local objects = square and square:getObjects()
     for i = 0, (objects and objects:size() or 0) - 1 do
         local object = objects:get(i)
-        local item = object and Core.moveableItemOf(object)
+        local item = object and Core.holderIdentity(object)
         if item and Core.objectHasRooms(object) then
             local now = getTimestampMs()
             if now - lastCarryNote >= CARRY_NOTE_MS then
@@ -73,7 +73,8 @@ local function refuseCarry(player, reason)
         return
     end
     lastCarryNote = now
-    local text = (reason == "occupied") and "IGUI_PhunInteriors_HolderOccupied" or
+    local text = (reason == "permanent") and "IGUI_PhunInteriors_HolderPermanent" or
+                     (reason == "occupied") and "IGUI_PhunInteriors_HolderOccupied" or
                      "IGUI_PhunInteriors_HolderNotEmpty"
     player:setHaloNote(getText(text), 255, 180, 60, 300)
 end
@@ -88,7 +89,13 @@ function Client.installGuards()
     if ISDestroyStuffAction then
         local baseIsValid = ISDestroyStuffAction.isValid
         function ISDestroyStuffAction:isValid()
-            if Core.settings.HardenShell and Core.objectIsOurs(self.item) then
+            if Core.objectIsHardened(self.item) then
+                return false
+            end
+            -- Not gated on the shell being hardened: that is about the room's
+            -- own walls, and a permanent binding is somebody saying this
+            -- object stays put regardless.
+            if Core.objectIsPermanent(self.item) then
                 return false
             end
             return baseIsValid(self)
@@ -96,7 +103,12 @@ function Client.installGuards()
 
         local baseStart = ISDestroyStuffAction.start
         function ISDestroyStuffAction:start()
-            if Core.settings.HardenShell and Core.objectIsOurs(self.item) then
+            if Core.objectIsPermanent(self.item) then
+                refuseCarry(self.character, "permanent")
+                self:forceStop()
+                return
+            end
+            if Core.objectIsHardened(self.item) then
                 refuse(self.character)
                 self:forceStop()
                 return
@@ -111,8 +123,10 @@ function Client.installGuards()
     if ISDestroyCursor then
         local baseIsValid = ISDestroyCursor.isValid
         function ISDestroyCursor:isValid(square)
-            if Core.settings.HardenShell and square and
-                Core.isOurSpace(square:getX(), square:getY(), square:getZ()) then
+            if square and Core.isHardenedAt(square:getX(), square:getY(), square:getZ()) then
+                return false
+            end
+            if Core.permanentObjectOn(square) then
                 return false
             end
             return baseIsValid(self, square)
@@ -161,6 +175,12 @@ function Client.installGuards()
     if ISMoveableSpriteProps then
         local baseCanPickUp = ISMoveableSpriteProps.canPickUpMoveable
         function ISMoveableSpriteProps:canPickUpMoveable(character, square, object)
+            -- Permanent first: it is true whatever the lease says, and it is
+            -- the answer an admin reaching for a hub fixture needs to hear.
+            if Core.permanentObjectOn(square) then
+                refuseCarry(character, "permanent")
+                return false
+            end
             local locked, reason = Core.lockedObjectOn(square)
             if locked then
                 refuseCarry(character, reason)
@@ -168,6 +188,32 @@ function Client.installGuards()
             end
             noteUnlocked(square)
             return baseCanPickUp(self, character, square, object)
+        end
+
+        -- And disassembling it, which is the other way a moveable leaves the
+        -- world and was never guarded: a tent that refused to be packed could
+        -- still be scrapped for parts, taking the lease id with it. Same two
+        -- tests as the pickup, on the object's own square.
+        --
+        -- The base runs first and we only ever turn a yes into a no, so every
+        -- caller keeps getting the result table it expects. Note vanilla's own
+        -- cheat branch sets canScrap after its checks; ours runs after THAT,
+        -- for the reason the pickup guard has no cheat bypass.
+        local baseCanScrap = ISMoveableSpriteProps.canScrapObject
+        function ISMoveableSpriteProps:canScrapObject(character)
+            local result, chance, perkName = baseCanScrap(self, character)
+            local square = self.object and self.object.getSquare and self.object:getSquare()
+            if result and result.canScrap and square then
+                local reason = Core.permanentObjectOn(square) and "permanent" or
+                                   select(2, Core.lockedObjectOn(square))
+                -- Silent. ISDisassembleMenu asks this while BUILDING the right
+                -- click menu, so a note here would fire on every right click
+                -- beside the object rather than on an attempt.
+                if reason then
+                    result.canScrap = false
+                end
+            end
+            return result, chance, perkName
         end
     else
         Core.logLn("ISMoveableSpriteProps not loaded; the tent pickup guard is off")

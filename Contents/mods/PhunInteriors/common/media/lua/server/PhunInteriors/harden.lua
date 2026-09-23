@@ -21,10 +21,11 @@ Core.modules.harden = Harden
 -- ---------------------------------------------------------------------------
 
 --- Put out any fire burning inside a room a player currently occupies.
+--
+-- Per room rather than all or nothing: a room's own `hardenShell` beats the
+-- sandbox option either way, so a hub stays fireproof on a server that lets
+-- vehicle rooms burn, and the reverse.
 function Harden.sweepFire()
-    if not Core.settings.HardenShell then
-        return 0
-    end
     if Core.tools.isEmpty(Core.occupants) then
         return 0
     end
@@ -34,7 +35,7 @@ function Harden.sweepFire()
 
     for _, occupancy in pairs(Core.occupants) do
         local key = occupancy.room .. "#" .. occupancy.index
-        if not seen[key] then
+        if not seen[key] and Core.shellHardened(occupancy.room) then
             seen[key] = true
             local room = Core.rooms[occupancy.room]
             local bounds = room and Core.slotBounds(room, occupancy.index)

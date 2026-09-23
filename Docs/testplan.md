@@ -576,7 +576,7 @@ answer decides whether the shipped barrels mean anything.
 
 ### G2. Install a kit
 
-1. Craft `PhunInteriors.RainReservoirKit` (Carpentry, Woodwork 5) or spawn one.
+1. Craft `PhunInteriors.RainReservoirKit` (Carpentry, Woodwork 5, Mechanics 2) or spawn one.
 2. Stand inside a room with a clear roof. Install.
 
 **Pass:** `IGUI_PhunInteriors_ReservoirInstalled`, barrels on the roof at one

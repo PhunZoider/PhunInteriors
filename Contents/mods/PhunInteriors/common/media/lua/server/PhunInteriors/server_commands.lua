@@ -48,6 +48,10 @@ Commands[Core.commands.playerSetup] = function(player, args)
     -- Then tell them, because the client has no other way to find out. It
     -- only learns it is inside from a teleport, and reconnecting is the one
     -- path into a room that does not involve one.
+    -- What the editor changed. A client boots the shipped registry only, so
+    -- without this an editor-made binding is invisible to it.
+    require("PhunInteriors/admin").pushOverrides(player)
+
     local occupancy = Core.occupants[Core.playerKey(player)]
     Core.respond(player, Core.commands.state, {
         inside = occupancy ~= nil,

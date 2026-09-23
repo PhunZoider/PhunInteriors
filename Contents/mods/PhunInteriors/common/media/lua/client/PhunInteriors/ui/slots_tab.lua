@@ -126,7 +126,7 @@ local ANY = "IGUI_PhunInteriors_Any"
 local function allHolders(rooms)
     local seen, out = {}, {}
     for _, room in ipairs(rooms or {}) do
-        for _, list in ipairs({room.scripts or {}, room.items or {}}) do
+        for _, list in ipairs({room.scripts or {}, room.items or {}, room.sprites or {}}) do
             for _, name in ipairs(list) do
                 if not seen[name] then
                     seen[name] = true
@@ -145,7 +145,7 @@ local function roomReaches(room, holder)
     if not holder then
         return true
     end
-    for _, list in ipairs({room.scripts or {}, room.items or {}}) do
+    for _, list in ipairs({room.scripts or {}, room.items or {}, room.sprites or {}}) do
         for _, name in ipairs(list) do
             if name == holder then
                 return true
@@ -232,6 +232,14 @@ function UI:createChildren()
     -- is looking at.
     self:addBottomButton(getText("IGUI_PhunInteriors_Btn_Reset"),
         self.onReleaseClick, true).tooltip = getText("IGUI_PhunInteriors_Tip_Reset")
+    -- The refresh loop for a room that is never handed back, a hub above all:
+    -- redecorate it, Recapture to make that the blueprint, and Scrub whenever
+    -- it wants putting back to it. Both are the console's remanifest and
+    -- scrub, unchanged.
+    self:addBottomButton(getText("IGUI_PhunInteriors_Btn_Recapture"),
+        self.onRecaptureClick, true).tooltip = getText("IGUI_PhunInteriors_Tip_Recapture")
+    self:addBottomButton(getText("IGUI_PhunInteriors_Btn_Scrub"),
+        self.onScrubClick, true).tooltip = getText("IGUI_PhunInteriors_Tip_Scrub")
     self:addBottomButton(getText("IGUI_PhunInteriors_Btn_Move"), self.onMoveClick, true)
     self:addBottomButton(getText("IGUI_PhunInteriors_Btn_AddSlot"), self.onAddClick)
     self:addBottomButton(getText("IGUI_PhunInteriors_Btn_DeleteSlot"), self.onDeleteClick, true)
@@ -496,6 +504,40 @@ function UI:onReleaseClick()
     tools.confirm(getText("IGUI_PhunInteriors_Confirm_Reset", slot.index, self.roomId),
         function()
             Core.admin("release", {room = self.roomId, index = slot.index})
+        end, self)
+end
+
+--- Take the room as it stands now as this slot's blueprint.
+---
+--- Needs the chunk loaded, which in practice means standing in it; the server
+--- says so in plain words if not. Confirmed because it replaces what every
+--- later scrub restores, and the old capture is not kept.
+function UI:onRecaptureClick()
+    local slot = self:selectedSlot()
+    if not slot or not self.roomId then
+        return
+    end
+    local tools = require "PhunInteriors/ui/ui_utils"
+    tools.confirm(getText("IGUI_PhunInteriors_Confirm_Recapture", slot.index, self.roomId),
+        function()
+            Core.admin("remanifest", {room = self.roomId, index = slot.index})
+        end, self)
+end
+
+--- Put the slot back to its blueprint now, whoever holds it.
+---
+--- Unlike Reset it keeps the lease, which is what a hub wants: the same room,
+--- cleaned. It does not ask who is standing in it, so what they have dropped
+--- goes too; the confirm says so.
+function UI:onScrubClick()
+    local slot = self:selectedSlot()
+    if not slot or not self.roomId then
+        return
+    end
+    local tools = require "PhunInteriors/ui/ui_utils"
+    tools.confirm(getText("IGUI_PhunInteriors_Confirm_Scrub", slot.index, self.roomId),
+        function()
+            Core.admin("scrub", {room = self.roomId, index = slot.index})
         end, self)
 end
 

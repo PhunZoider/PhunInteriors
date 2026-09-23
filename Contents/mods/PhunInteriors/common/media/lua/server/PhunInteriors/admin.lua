@@ -350,13 +350,14 @@ local function occupancyIndex()
     return holder, quarantined, occupied, lease
 end
 
---- Which items reach `roomId`, for a room bound to world objects rather than
---- vehicles. Core.scriptsForRoom answers the vehicle half; nothing answered
---- this one, so a tent room showed "reachable by nothing" in the list.
-local function itemsForRoom(roomId)
+--- Which items, or which sprites, reach `roomId`, for a room bound to world
+--- objects rather than vehicles. Core.scriptsForRoom answers the vehicle half;
+--- nothing answered this one, so a tent room showed "reachable by nothing" in
+--- the list. `field` is "items" or "sprites".
+local function objectsForRoom(roomId, field)
     local items, seen = {}, {}
     for _, binding in pairs(Core.bindings) do
-        local names = binding.kind == "object" and binding.items or nil
+        local names = binding.kind == "object" and binding[field] or nil
         if names then
             for _, roomName in ipairs(binding.rooms) do
                 if roomName == roomId then
@@ -396,6 +397,11 @@ local function contractOf(room)
         } or nil,
         selfPowered = room.selfPowered and true or false,
         singleUse = room.singleUse and true or false,
+        shared = room.shared and true or false,
+        -- nil, true or false, and nil means "follow the server". Sent as it
+        -- is: a nil field simply does not cross the wire, which is the same
+        -- answer.
+        hardenShell = room.hardenShell,
         reservoir = room.reservoir ~= false,
         baseWeight = room.baseWeight or 0
     }
@@ -434,7 +440,8 @@ function Admin.roomState(player)
         -- never reaches the override file.
         entry.closed = not Slots.isOpen(id)
         entry.scripts = scripts
-        entry.items = itemsForRoom(id)
+        entry.items = objectsForRoom(id, "items")
+        entry.sprites = objectsForRoom(id, "sprites")
         entry.matchers = matchers
         -- Where this room sits in the allocation order: which of them
         -- `Slots.acquire` would spend first. Sent rather than derived, because
@@ -561,6 +568,8 @@ function Admin.bindingState()
             source = binding.source,
             scripts = binding.scripts or {},
             items = binding.items or {},
+            sprites = binding.sprites or {},
+            permanent = binding.permanent or nil,
             rooms = binding.rooms or {},
             -- A predicate cannot be sent and cannot be edited -- it is a Lua
             -- function in somebody else's file. Saying it is there is the most
@@ -591,6 +600,9 @@ actions.rooms = function(args, player)
             local reach = table.concat(room.scripts, ", ")
             if #room.items > 0 then
                 reach = (reach == "" and "" or reach .. ", ") .. table.concat(room.items, ", ")
+            end
+            if #room.sprites > 0 then
+                reach = (reach == "" and "" or reach .. ", ") .. table.concat(room.sprites, ", ")
             end
             if room.matchers > 0 then
                 reach = (reach == "" and "" or reach .. ", ") .. room.matchers .. " matcher(s)"
@@ -637,6 +649,11 @@ function Admin.roomMatches(room, filter)
             return true
         end
     end
+    for _, sprite in ipairs(room.sprites or {}) do
+        if string.find(string.lower(sprite), filter, 1, true) then
+            return true
+        end
+    end
     return false
 end
 
@@ -647,6 +664,9 @@ actions.bindings = function()
         local reach = table.concat(binding.scripts, ", ")
         if #binding.items > 0 then
             reach = (reach == "" and "" or reach .. ", ") .. table.concat(binding.items, ", ")
+        end
+        if #binding.sprites > 0 then
+            reach = (reach == "" and "" or reach .. ", ") .. table.concat(binding.sprites, ", ")
         end
         if binding.matcher then
             reach = (reach == "" and "" or reach .. ", ") .. "a matcher"
@@ -994,6 +1014,11 @@ actions.editBinding = function(args)
         kind = args.kind == "object" and "object" or "vehicle",
         scripts = args.scripts,
         items = args.items,
+        sprites = args.sprites,
+        -- Object bindings only. A vehicle binding carrying it would be
+        -- harmless, since only the object walk reads it, but it would read in
+        -- the file as though it did something.
+        permanent = (args.kind == "object" and args.permanent == true) or nil,
         rooms = args.rooms
     })
     if not ok then
@@ -1034,6 +1059,29 @@ actions.revertAll = function()
     return lines
 end
 
+--- Send the override document to one client, or to every client with nil.
+---
+--- Nothing to do when the client and server are one Lua state -- single
+--- player -- because the registry the edit changed is the client's too.
+function Admin.pushOverrides(player)
+    if Core.isLocal then
+        return
+    end
+    local args = {doc = Core.overrideDocument()}
+    if player then
+        sendServerCommand(player, Core.name, Core.commands.overrides, args)
+    else
+        sendServerCommand(Core.name, Core.commands.overrides, args)
+    end
+end
+
+-- The actions that change the registry, and so have to reach every client.
+local PUSHES = {
+    editRoom = true,
+    editBinding = true,
+    revertAll = true
+}
+
 -- player is passed through because some actions are about the caller rather
 -- than about the world: porting into a room puts *you* in it, and the room
 -- list marks the slot *you* hold. Actions that do not care simply ignore it.
@@ -1051,6 +1099,12 @@ function Admin.run(action, args, player)
     if not ok then
         Core.logLn("admin action " .. tostring(action) .. " failed: " .. tostring(result))
         return {"that failed, check the server log"}
+    end
+    -- Pushed whether or not the action said it succeeded. A refused edit
+    -- changed nothing, so the push is redundant rather than wrong, and
+    -- reading success back out of a list of English lines would be a guess.
+    if PUSHES[action] then
+        Admin.pushOverrides()
     end
     return result
 end

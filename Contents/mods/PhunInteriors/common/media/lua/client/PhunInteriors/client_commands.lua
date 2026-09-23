@@ -21,6 +21,19 @@ Commands[Core.commands.state] = function(arguments)
     Client.noExit = Client.inside and arguments.noExit and true or false
 end
 
+-- The server's override document. A client boots only the shipped registry,
+-- so this is how an editor-made binding reaches the object menu and the
+-- permanent guard, both of which answer here and nowhere else.
+Commands[Core.commands.overrides] = function(arguments)
+    if not arguments or type(arguments.doc) ~= "table" then
+        return
+    end
+    local problems = Core.syncOverrides(arguments.doc)
+    for _, complaint in ipairs(problems or {}) do
+        Core.logLn("overrides from the server: " .. tostring(complaint))
+    end
+end
+
 Commands[Core.commands.notify] = function(arguments)
     Client.notify(arguments)
 end

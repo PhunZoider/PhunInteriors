@@ -36,7 +36,7 @@ module PhunInteriors
         time = 400,
         Tags = InHandCraft;CanBeDoneFromFloor,
         category = Carpentry,
-        SkillRequired = Woodwork:5,
+        SkillRequired = Woodwork:5;Mechanics:2,
         xpAward = Woodwork:40,
         inputs
         {

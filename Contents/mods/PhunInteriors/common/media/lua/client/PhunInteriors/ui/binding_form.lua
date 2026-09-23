@@ -10,9 +10,10 @@ local BindingForm = {}
 Core.ui.binding_form = BindingForm
 
 -- ---------------------------------------------------------------------------
--- A binding: which game scripts, or which moveable items, reach which rooms.
+-- A binding: which game scripts, or which moveable items or sprites, reach
+-- which rooms.
 --
--- Three list fields rather than three text boxes, because every entry is one
+-- List fields rather than three text boxes, because every entry is one
 -- exact string out of somebody else's mod and a comma separated box is how a
 -- stray space becomes a script nothing matches. A list also makes the
 -- one-per-line reality of the data visible.
@@ -85,6 +86,10 @@ function BindingForm.open(player, bindingId)
     for _, name in ipairs(binding and binding.items or {}) do
         table.insert(items, name)
     end
+    local sprites = {}
+    for _, name in ipairs(binding and binding.sprites or {}) do
+        table.insert(sprites, name)
+    end
     local rooms = {}
     for _, name in ipairs(binding and binding.rooms or {}) do
         table.insert(rooms, name)
@@ -96,7 +101,7 @@ function BindingForm.open(player, bindingId)
             getText("IGUI_PhunInteriors_Form_EditBinding", bindingId),
         width = math.floor(440 * FormPanel.FONT_SCALE),
         onApply = function(f)
-            BindingForm.apply(bindingId, f, scripts, items, rooms)
+            BindingForm.apply(bindingId, f, scripts, items, sprites, rooms)
         end
     })
     -- FormPanel takes no player, and ISContextMenu.get needs a player NUMBER
@@ -124,46 +129,19 @@ function BindingForm.open(player, bindingId)
             local isObject = form:getFieldValue("kind") == "object"
             form:setFieldVisible("scripts", not isObject)
             form:setFieldVisible("items", isObject)
+            form:setFieldVisible("sprites", isObject)
+            form:setFieldVisible("permanent", isObject)
         end
     })
 
-    form:addListField("scripts", getText("IGUI_PhunInteriors_Fld_Scripts"), {
-        items = scripts,
-        rows = 5,
-        hint = getText("IGUI_PhunInteriors_Hint_Scripts"),
-        conditional = true,
-        onAdd = function()
-            askFor(form, getText("IGUI_PhunInteriors_Ask_Script"), function(text)
-                table.insert(scripts, text)
-                form:setListItems("scripts", scripts)
-            end)
-        end,
-        onRemove = function(_, index)
-            table.remove(scripts, index)
-            form:setListItems("scripts", scripts)
-        end
-    })
-
-    form:addListField("items", getText("IGUI_PhunInteriors_Fld_Items"), {
-        items = items,
-        rows = 5,
-        hint = getText("IGUI_PhunInteriors_Hint_Items"),
-        conditional = true,
-        onAdd = function()
-            askFor(form, getText("IGUI_PhunInteriors_Ask_Item"), function(text)
-                table.insert(items, text)
-                form:setListItems("items", items)
-            end)
-        end,
-        onRemove = function(_, index)
-            table.remove(items, index)
-            form:setListItems("items", items)
-        end
-    })
-
+    -- Rooms first, straight under the kind. It is the one list every binding
+    -- must fill, and the form scrolls rather than grows past 90% of the
+    -- screen, hiding whatever does not fit. Last in the form it was the field
+    -- that fell off the bottom of an object binding, which carries items,
+    -- sprites and a checkbox above it.
     form:addListField("rooms", getText("IGUI_PhunInteriors_Fld_Rooms"), {
         items = rooms,
-        rows = 6,
+        rows = 3,
         hint = getText("IGUI_PhunInteriors_Hint_BindingRooms"),
         required = true,
         onAdd = function()
@@ -183,10 +161,72 @@ function BindingForm.open(player, bindingId)
         end
     })
 
+    form:addListField("scripts", getText("IGUI_PhunInteriors_Fld_Scripts"), {
+        items = scripts,
+        rows = 3,
+        hint = getText("IGUI_PhunInteriors_Hint_Scripts"),
+        conditional = true,
+        onAdd = function()
+            askFor(form, getText("IGUI_PhunInteriors_Ask_Script"), function(text)
+                table.insert(scripts, text)
+                form:setListItems("scripts", scripts)
+            end)
+        end,
+        onRemove = function(_, index)
+            table.remove(scripts, index)
+            form:setListItems("scripts", scripts)
+        end
+    })
+
+    form:addListField("items", getText("IGUI_PhunInteriors_Fld_Items"), {
+        items = items,
+        rows = 3,
+        hint = getText("IGUI_PhunInteriors_Hint_Items"),
+        conditional = true,
+        onAdd = function()
+            askFor(form, getText("IGUI_PhunInteriors_Ask_Item"), function(text)
+                table.insert(items, text)
+                form:setListItems("items", items)
+            end)
+        end,
+        onRemove = function(_, index)
+            table.remove(items, index)
+            form:setListItems("items", items)
+        end
+    })
+
+    -- Sprites beside items rather than instead of them. An item covers every
+    -- sprite of a tent in one string; a sprite is what the debug tools show,
+    -- and reaches a fixture no item stands behind at all.
+    form:addListField("sprites", getText("IGUI_PhunInteriors_Fld_Sprites"), {
+        items = sprites,
+        rows = 3,
+        hint = getText("IGUI_PhunInteriors_Hint_Sprites"),
+        conditional = true,
+        onAdd = function()
+            askFor(form, getText("IGUI_PhunInteriors_Ask_Sprite"), function(text)
+                table.insert(sprites, text)
+                form:setListItems("sprites", sprites)
+            end)
+        end,
+        onRemove = function(_, index)
+            table.remove(sprites, index)
+            form:setListItems("sprites", sprites)
+        end
+    })
+
+    form:addCheckField("permanent", getText("IGUI_PhunInteriors_Fld_Permanent"), {
+        checked = binding and binding.permanent or false,
+        hint = getText("IGUI_PhunInteriors_Hint_Permanent"),
+        conditional = true
+    })
+
     form:initialise()
     local isObject = (binding and binding.kind == "object") or false
     form:setFieldVisible("scripts", not isObject)
     form:setFieldVisible("items", isObject)
+    form:setFieldVisible("sprites", isObject)
+    form:setFieldVisible("permanent", isObject)
     form:addToUIManager()
     form:bringToTop()
     return form
@@ -225,7 +265,7 @@ end
 --- here meant a binding always saved as kind "vehicle" whatever the combo said
 --- -- so an object binding made in the window would have been registered
 --- through registerVehicles and reached by no tent.
-function BindingForm.apply(bindingId, form, scripts, items, rooms)
+function BindingForm.apply(bindingId, form, scripts, items, sprites, rooms)
     local id = bindingId or (form:getFieldValue("id") or ""):gsub("^%s+", ""):gsub("%s+$", "")
     if not id or id == "" then
         return
@@ -248,6 +288,8 @@ function BindingForm.apply(bindingId, form, scripts, items, rooms)
         -- ordered by items no vehicle can ever present.
         scripts = kind == "vehicle" and scripts or nil,
         items = kind == "object" and items or nil,
+        sprites = kind == "object" and sprites or nil,
+        permanent = kind == "object" and (form:getFieldValue("permanent") and true or false) or nil,
         rooms = rooms
     })
     form:close()

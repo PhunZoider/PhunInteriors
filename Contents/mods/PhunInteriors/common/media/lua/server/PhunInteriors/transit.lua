@@ -661,6 +661,34 @@ function Transit.enterObject(player, object, anchor)
         end
     end
 
+    -- A hub. Every object reaching a shared room opens onto the one lease in
+    -- it, so this object does not hold a lease of its own and mints no id.
+    -- Checked before the id is minted for exactly that reason.
+    --
+    -- They come back out where they stood to go in, not on the object's
+    -- square: a toilet is solid, and the player was standing beside it within
+    -- reach a moment ago, which is ground known to be walkable.
+    for _, roomId in ipairs(Core.roomsForObject(object)) do
+        local room = Core.rooms[roomId]
+        if room and room.shared then
+            local ok, why = Transit.enterRoom(player, roomId, {
+                reason = "object",
+                share = true,
+                returnTo = {
+                    x = math.floor(player:getX()),
+                    y = math.floor(player:getY()),
+                    z = math.floor(player:getZ())
+                }
+            })
+            if not ok then
+                Core.logLn(string.format("%s refused the hub %s: %s", tostring(key), roomId, tostring(why)))
+                notify(player, Slots.isOpen(roomId) and "IGUI_PhunInteriors_NoFreeRoom" or
+                    "IGUI_PhunInteriors_RoomClosed", true)
+            end
+            return ok
+        end
+    end
+
     -- Minted here rather than on placement, so an object nobody has ever used
     -- carries nothing of ours and a world full of tents costs nothing.
     local holderId = Core.objectKey(Core.objectId(object, true))
@@ -728,7 +756,7 @@ function Transit.enterObject(player, object, anchor)
     Core.setObjectLock(object, "occupied")
 
     Core.debugLn(string.format("%s entered %s#%s through %s", tostring(key), assignment.room,
-        tostring(assignment.index), tostring(Core.moveableItemOf(object))))
+        tostring(assignment.index), tostring(Core.holderIdentity(object))))
     return true
 end
 
@@ -919,12 +947,20 @@ end
 -- Only leases of our own kind: a vehicle's slot in the same room belongs to
 -- that vehicle's owner, and walking a stranger into it is a different feature.
 -- A slot claimed as a safehouse is joined only by somebody the claim lets in.
-local function joinableLease(roomId, player)
+--
+-- `together` takes the lowest index instead, whatever its count. That is a
+-- hub: everybody is meant to be in the same room, so balancing them across
+-- slots would be exactly wrong.
+local function joinableLease(roomId, player, together)
     local room = Core.rooms[roomId]
     local occupied = Slots.store().occupied[roomId] or {}
     local best, bestCount
     for _, index in ipairs(room.indices) do
         local holder = occupied[tostring(index)]
+        if together and holder and Core.holderKind(holder) == "room" and
+            not Slots.trespassOn(roomId, index, player) then
+            return holder
+        end
         if holder and Core.holderKind(holder) == "room" and not Slots.trespassOn(roomId, index, player) then
             local count = occupantCount(holder)
             if not best or count < bestCount then
@@ -1048,10 +1084,23 @@ function Transit.enterRoom(player, roomId, opts)
     end
 
     -- A fresh lease if there is a slot to spare, else a share of one.
+    --
+    -- A shared room the other way round: join the one lease everybody is in,
+    -- and only take a slot when there is none yet. That is what makes a hub
+    -- one room rather than as many rooms as it has slots.
     local holder = Core.roomKey(getRandomUUID())
-    local assignment, refusal, dirty = Slots.acquireIn(holder, roomId, nil)
+    local assignment, refusal, dirty
     local joined = false
-    if not assignment and opts.share then
+    if room.shared then
+        local shared = joinableLease(roomId, player, true)
+        if shared then
+            holder, assignment, dirty, joined = shared, Slots.find(shared), false, true
+        end
+    end
+    if not assignment then
+        assignment, refusal, dirty = Slots.acquireIn(holder, roomId, nil)
+    end
+    if not assignment and opts.share and not joined then
         local shared = joinableLease(roomId, player)
         if shared then
             holder, assignment, dirty, joined = shared, Slots.find(shared), false, true

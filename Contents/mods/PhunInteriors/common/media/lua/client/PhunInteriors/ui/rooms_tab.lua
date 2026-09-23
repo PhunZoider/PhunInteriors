@@ -101,6 +101,9 @@ local function reachText(room)
     for _, item in ipairs(room.items or {}) do
         table.insert(parts, item)
     end
+    for _, sprite in ipairs(room.sprites or {}) do
+        table.insert(parts, sprite)
+    end
     if (room.matchers or 0) > 0 then
         -- A matcher covers an unbounded set, so rendering it as nothing would
         -- say "no vehicle can reach this room" about the room anything can.

@@ -84,6 +84,109 @@ end
 -- sprite names per colour.
 -- ---------------------------------------------------------------------------
 
+-- Sprite name -> full item type, for moveables whose tile carries no
+-- CustomItem. Built once, on first use, because the item scripts are complete
+-- long before anybody right clicks anything.
+local worldSpriteItems = nil
+
+--- Which item script names this sprite as its WorldObjectSprite, or nil.
+--
+-- CustomItem is only one of the two ways an item and a tile are tied together,
+-- and it is the rarer. Most furniture is the other way round: the generated
+-- `Mov_*` items in scripts/generated/items/moveable.txt carry
+-- `WorldObjectSprite = fixtures_bathroom_01_0` and the tile says nothing about
+-- them at all -- `Mov_FancyToilet` appears in no .tiles file. So an object
+-- binding naming one matched nothing, silently, and the menu never offered it.
+--
+-- `Item.getWorldObjectSprite` has no vanilla lua uses, which by the rule in
+-- CLAUDE.md is a reason to guard rather than trust; it is a plain getter over
+-- the script field and every failure here falls back to "not a moveable".
+-- Where two items share a sprite the lowest full type wins, so the answer does
+-- not depend on script load order.
+--
+-- And WorldObjectSprite names ONE facing. A toilet turned to face another way
+-- is another sprite, related to the first only by its tile properties:
+-- `Facing` plus `Noffset`/`Woffset`/`Soffset`/`Eoffset`, each an offset in the
+-- same sheet to the sprite for that face. That is how vanilla finds them
+-- (ISMoveableSpriteProps:getFaces), so every face is indexed too -- below any
+-- item that names that face directly.
+local FACE_OFFSETS = {"Noffset", "Woffset", "Soffset", "Eoffset"}
+
+local function facesOf(spriteName)
+    local out = {}
+    local sheet, id = string.match(spriteName, "^(.-)(%d+)$")
+    if not sheet or not getSprite then
+        return out
+    end
+    local ok, sprite = pcall(getSprite, spriteName)
+    local props = ok and sprite and sprite:getProperties()
+    if not props then
+        return out
+    end
+    for _, key in ipairs(FACE_OFFSETS) do
+        if props:has(key) then
+            local offset = tonumber(props:get(key))
+            if offset and offset ~= 0 then
+                table.insert(out, sheet .. tostring(tonumber(id) + offset))
+            end
+        end
+    end
+    return out
+end
+
+local function claim(map, spriteName, fullType)
+    local known = map[spriteName]
+    if not known or fullType < known then
+        map[spriteName] = fullType
+    end
+end
+
+function Core.worldSpriteItem(spriteName)
+    if not spriteName then
+        return nil
+    end
+    if not worldSpriteItems then
+        local direct, faces = {}, {}
+        local ok, items = pcall(function()
+            return getScriptManager():getAllItems()
+        end)
+        if ok and items then
+            for i = 0, items:size() - 1 do
+                local item = items:get(i)
+                local okSprite, sprite = pcall(function()
+                    return item:getWorldObjectSprite()
+                end)
+                if okSprite and type(sprite) == "string" and sprite ~= "" then
+                    local fullType = item:getFullName()
+                    claim(direct, sprite, fullType)
+                    for _, face in ipairs(facesOf(sprite)) do
+                        claim(faces, face, fullType)
+                    end
+                end
+            end
+        end
+        worldSpriteItems = direct
+        local count, extra = 0, 0
+        for _ in pairs(direct) do
+            count = count + 1
+        end
+        for face, fullType in pairs(faces) do
+            if not direct[face] then
+                direct[face] = fullType
+                extra = extra + 1
+            end
+        end
+        print(string.format("[PhunInteriors] indexed %d world object sprites, %d more by facing (%s)",
+            count, extra, ok and "ok" or tostring(items)))
+    end
+    return worldSpriteItems[spriteName]
+end
+
+--- Forget the sprite index. For the specs, which swap the item scripts.
+function Core.resetWorldSpriteItems()
+    worldSpriteItems = nil
+end
+
 --- The moveable item type this object was placed from, or nil.
 function Core.moveableItemOf(object)
     if not object or not object.getSprite then
@@ -94,14 +197,83 @@ function Core.moveableItemOf(object)
         return nil
     end
     local props = sprite:getProperties()
-    if not props or not props:has("CustomItem") then
+    if props and props:has("CustomItem") then
+        local item = props:get("CustomItem")
+        if type(item) == "string" and item ~= "" then
+            return item
+        end
+    end
+    return Core.worldSpriteItem(sprite.getName and sprite:getName())
+end
+
+--- The anchor sprite's name of a multi-tile object, or nil for a single tile.
+--
+-- getAnchorSprite():getName() is exactly how vanilla compares two grids
+-- (ISMoveableSpriteProps.lua:960), so every tile of one bed answers the same.
+local function anchorNameOf(sprite)
+    local ok, name = pcall(function()
+        local grid = sprite:getSpriteGrid()
+        local anchor = grid and grid:getAnchorSprite()
+        return anchor and anchor:getName()
+    end)
+    if ok and type(name) == "string" and name ~= "" then
+        return name
+    end
+    return nil
+end
+
+--- Every sprite name a binding could name this object by.
+--
+-- Its own sprite, its other facings, and for a multi-tile object the anchor
+-- of its grid and the anchor's facings. So a binding naming
+-- `fixtures_bathroom_01_0` still reaches the toilet after somebody rotates it,
+-- and a binding naming a bed's anchor reaches whichever tile was clicked. The
+-- same two relations the item fallback above follows, from the other end.
+function Core.spriteNamesOf(object)
+    local out, seen = {}, {}
+    local function add(name)
+        if name and not seen[name] then
+            seen[name] = true
+            table.insert(out, name)
+        end
+    end
+    local sprite = object and object.getSprite and object:getSprite()
+    local name = sprite and sprite.getName and sprite:getName()
+    if not name then
+        return out
+    end
+    add(name)
+    for _, face in ipairs(facesOf(name)) do
+        add(face)
+    end
+    local anchor = anchorNameOf(sprite)
+    if anchor then
+        add(anchor)
+        for _, face in ipairs(facesOf(anchor)) do
+            add(face)
+        end
+    end
+    return out
+end
+
+--- What makes two tiles parts of the same placed thing.
+--
+-- The moveable item when there is one, which is what a tent has always used.
+-- A sprite binding reaches objects with no item at all -- a fixture a map
+-- author placed -- and for those the grid's anchor names the design, or the
+-- sprite itself for a single tile. Without this a bed bound by sprite would
+-- have been one tile wide as far as the lease id is concerned, and a second
+-- tile clicked would mint a second id and take a second room.
+function Core.holderIdentity(object)
+    local item = Core.moveableItemOf(object)
+    if item then
+        return item
+    end
+    local sprite = object and object.getSprite and object:getSprite()
+    if not sprite then
         return nil
     end
-    local item = props:get("CustomItem")
-    if type(item) ~= "string" or item == "" then
-        return nil
-    end
-    return item
+    return anchorNameOf(sprite) or (sprite.getName and sprite:getName()) or nil
 end
 
 --- Where a multi-tile moveable's north-west corner is, and every object in it.
@@ -149,12 +321,12 @@ end
 
 --- Every object making up this placed moveable, the clicked one included.
 --
--- Matched by moveable item type rather than by walking the grid's sprite list,
--- because a tile may hold several objects and only one of them is the tent.
--- Single-tile objects come back as a list of one.
+-- Matched by identity rather than by walking the grid's sprite list, because a
+-- tile may hold several objects and only one of them is the tent. Single-tile
+-- objects come back as a list of one.
 function Core.moveableTiles(object)
     local out = {}
-    local item = Core.moveableItemOf(object)
+    local item = Core.holderIdentity(object)
     if not item then
         return out
     end
@@ -173,7 +345,7 @@ function Core.moveableTiles(object)
                 local objects = square and square:getObjects()
                 for i = 0, (objects and objects:size() or 0) - 1 do
                     local candidate = objects:get(i)
-                    if candidate and Core.moveableItemOf(candidate) == item then
+                    if candidate and Core.holderIdentity(candidate) == item then
                         table.insert(out, candidate)
                     end
                 end

@@ -40,7 +40,7 @@
     "Sandbox_PhunInteriors_ScrubKeepsLoot_tooltip": "If yes, loot in a reclaimed room is salvaged rather than destroyed when the room is reset",
 
     "Sandbox_PhunInteriors_HardenShell": "Unbreakable Outer Walls",
-    "Sandbox_PhunInteriors_HardenShell_tooltip": "If yes, the outer shell of a room cannot be destroyed or burned. Containment does not depend on this",
+    "Sandbox_PhunInteriors_HardenShell_tooltip": "If yes, the outer shell of a room cannot be destroyed or burned. A room can override this either way in the room editor. Containment does not depend on this",
 
     "Sandbox_PhunInteriors_BreachEjects": "Breaching Ejects You",
     "Sandbox_PhunInteriors_BreachEjects_tooltip": "If yes, leaving the room any way other than the door puts you back at the vehicle. If no, you are simply moved back inside",

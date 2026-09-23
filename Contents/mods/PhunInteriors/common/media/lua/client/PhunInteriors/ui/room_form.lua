@@ -38,6 +38,20 @@ Core.ui.room_form = RoomForm
 -- first option rather than a blank.
 local EDGES = {"none", "north", "south", "east", "west"}
 
+-- The three answers for hardenShell, in the order the combo shows them. The
+-- first is nil on the wire, which is what makes "follow the server" a real
+-- third state rather than a false that happens to match today's setting.
+local HARDEN = {"server", "always", "never"}
+
+local function hardenIndex(value)
+    if value == true then
+        return 2
+    elseif value == false then
+        return 3
+    end
+    return 1
+end
+
 local function edgeIndex(front)
     for i, edge in ipairs(EDGES) do
         if edge == front then
@@ -277,6 +291,17 @@ function RoomForm.open(player, roomId)
         hint = getText("IGUI_PhunInteriors_Hint_SingleUse"),
         section = "other"
     })
+    form:addCheckField("shared", label(room, "shared", getText("IGUI_PhunInteriors_Fld_Shared")), {
+        checked = room and room.shared or false,
+        hint = getText("IGUI_PhunInteriors_Hint_Shared"),
+        section = "other"
+    })
+    form:addComboField("hardenShell", label(room, "hardenShell", getText("IGUI_PhunInteriors_Fld_HardenShell")), {
+        options = HARDEN,
+        selected = hardenIndex(room and room.hardenShell),
+        hint = getText("IGUI_PhunInteriors_Hint_HardenShell"),
+        section = "other"
+    })
     form:addTextField("priority", label(room, "priority", getText("IGUI_PhunInteriors_Fld_Priority")), {
         default = tostring(room and room.priority or 0),
         numeric = true,
@@ -343,6 +368,7 @@ function RoomForm.apply(roomId, creating, form)
         cab = form:getFieldValue("cab") and true or false,
         selfPowered = form:getFieldValue("selfPowered") and true or false,
         singleUse = form:getFieldValue("singleUse") and true or false,
+        shared = form:getFieldValue("shared") and true or false,
         reservoir = form:getFieldValue("reservoir") and true or false,
         priority = num(form, "priority") or 0,
         baseWeight = num(form, "baseWeight") or 0,
@@ -358,6 +384,18 @@ function RoomForm.apply(roomId, creating, form)
         table.insert(args.clear, "front")
     else
         args.front = front
+    end
+
+    -- "server" is a clear rather than a false, for the reason `front`'s
+    -- "none" is: omitting the field would mean "no opinion" and leave an
+    -- earlier always or never in place.
+    local harden = form:getFieldValue("hardenShell")
+    if harden == "always" then
+        args.hardenShell = true
+    elseif harden == "never" then
+        args.hardenShell = false
+    else
+        table.insert(args.clear, "hardenShell")
     end
 
     if form:getFieldValue("hasGenerator") then

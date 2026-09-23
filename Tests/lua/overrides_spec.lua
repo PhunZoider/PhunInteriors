@@ -298,6 +298,62 @@ Core.setBindingOverride("t.objbind", {
 local stillOne = Core.roomsForVehicle(vehicle("Base.TestVan"))
 check("an object binding does not reach a vehicle", #stillOne, 1)
 
+-- Sprites have to survive the override path as well as items: the apply step
+-- builds its payload field by field, so a list it does not name is dropped
+-- and the binding reaches nothing it was edited to reach.
+Core.setBindingOverride("t.spritebind", {
+    kind = "object",
+    sprites = {"fixtures_bathroom_01_0"},
+    rooms = {"t.ship"}
+})
+check("an edited sprite binding keeps its sprites",
+    (Core.bindings["t.spritebind"].sprites or {})[1], "fixtures_bathroom_01_0")
+Core.setBindingOverride("t.spritebind", {
+    kind = "object",
+    sprites = {"fixtures_bathroom_01_0"},
+    rooms = {"t.ship"},
+    permanent = true
+})
+check("and its permanent flag", Core.bindings["t.spritebind"].permanent, true)
+
+-- A client is sent the whole document on login and after every edit. What the
+-- last one had and this one does not has to come OFF, or a binding an admin
+-- deleted keeps working on every client that saw it.
+Core.syncOverrides({version = 1, rooms = {}, bindings = {
+    ["t.fromserver"] = {kind = "object", items = {"Base.Chair"}, rooms = {"t.ship"}}
+}})
+check("a synced binding is registered", Core.bindings["t.fromserver"] ~= nil, true)
+check("one the server no longer has is taken off", Core.bindings["t.spritebind"], nil)
+check("and a client never believes it has unsaved edits", Core.unsavedEdits, false)
+Core.syncOverrides({version = 1, rooms = {}, bindings = {}})
+check("an empty document clears the rest", Core.bindings["t.fromserver"], nil)
+
+-- hardenShell has THREE states and nil is one of them, so false must survive
+-- every hop that a careless `x and y or nil` would turn into nil.
+require "PhunInteriors/bounds"
+local savedHarden = Core.settings.HardenShell
+Core.settings.HardenShell = true
+check("a room stating nothing follows the server", Core.shellHardened("t.ship"), true)
+Core.settings.HardenShell = false
+check("either way", Core.shellHardened("t.ship"), false)
+
+check("always is accepted", Core.setRoomOverride("t.ship", {hardenShell = true}), true)
+check("and hardens on a server that does not", Core.shellHardened("t.ship"), true)
+
+Core.settings.HardenShell = true
+check("never is accepted", Core.setRoomOverride("t.ship", {hardenShell = false}), true)
+check("never is stored as false, not dropped", Core.rooms["t.ship"].hardenShell, false)
+check("and softens on a server that hardens", Core.shellHardened("t.ship"), false)
+
+check("clearing it goes back to the server", Core.setRoomOverride("t.ship", {clear = {hardenShell = true}}), true)
+check("so it follows again", Core.shellHardened("t.ship"), true)
+check("and the room states nothing", Core.rooms["t.ship"].hardenShell, nil)
+
+local parsed = Core.readRoomPatch("t.ship", {hardenShell = false})
+check("the file reader keeps a false", parsed and parsed.hardenShell, false)
+Core.setRoomOverride("t.ship", nil)
+Core.settings.HardenShell = savedHarden
+
 check("binding dropped", Core.setBindingOverride("t.bind", nil), true)
 check("dropped binding is gone", Core.bindings["t.bind"], nil)
 check("and no longer reaches", #Core.roomsForVehicle(vehicle("Base.TestVan")), 0)

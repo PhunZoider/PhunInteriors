@@ -146,6 +146,15 @@ local RELATIVE = {
 }
 
 --- An edge name, or nil plus a warning if it is not one.
+--- true, false, or nil for anything else. For a field where nil is itself an
+--- answer ("follow the server"), so false has to come through as false.
+local function triState(value)
+    if value == true or value == false then
+        return value
+    end
+    return nil
+end
+
 local function normaliseEdge(id, edge)
     if edge == nil then
         return nil
@@ -344,6 +353,24 @@ function Core.registerRoom(id, def)
         -- actually run, because the room is loaded while somebody stands in
         -- it and nobody is near a room that was released for being unused.
         singleUse = def.singleUse == true,
+        -- A room everybody shares: a hub. Every world object that reaches it
+        -- leads into ONE lease, whichever object it is and wherever it
+        -- stands, so a toilet in Louisville and one in Rosewood open onto the
+        -- same floor. Each tenant comes back out where they went in.
+        --
+        -- The lease is a `room:` key, as Core.enterRoom mints, and it is never
+        -- reclaimed and never allocated to a holder of its own -- Slots.acquire
+        -- skips a shared room entirely -- so nothing but an admin ever scrubs
+        -- it. That is the point: what people leave in a hub stays there.
+        shared = def.shared == true,
+        -- Whether this room's shell is unbreakable, overriding the
+        -- HardenShell sandbox option. THREE states and nil is one of them: nil
+        -- follows the server, true always hardens, false never does. A hub
+        -- wants true on a server that lets vehicle rooms be smashed open.
+        -- Read through Core.shellHardened and never directly, so nothing can
+        -- mistake nil for false. Not written `x and y or nil`: with y false
+        -- that answers nil, and "never" would quietly become "follow".
+        hardenShell = triState(def.hardenShell),
         -- There is deliberately no `requires`. A def carrying one is ignored
         -- rather than refused, so an old third party room set still loads;
         -- see the note above Core.vehicleMotionAllows for why it went.
@@ -482,6 +509,14 @@ function Core.registerVehicles(def)
         -- is global: a tent room and a van room never compete for a slot, but
         -- they are sorted against each other all the same.
         items = def.items or {},
+        -- Sprite names, for a world object with no item behind it, or when the
+        -- sprite is simply what the admin could read off the thing. Matched
+        -- against every facing and the grid anchor -- see Core.spriteNamesOf.
+        sprites = def.sprites or {},
+        -- Every object this binding matches refuses to be picked up,
+        -- disassembled or destroyed. Object bindings only; see
+        -- Core.objectIsPermanent for why it lives here and not on the object.
+        permanent = def.permanent == true,
         -- Only ever ADDS to the script list. It beats maintaining every
         -- StepVan livery in the game, at the cost of claiming modded ones
         -- sight unseen. The room's own `requires` used to filter those back
@@ -493,24 +528,29 @@ function Core.registerVehicles(def)
     }
 
     dirty = true
-    Core.debugLn("bound " .. #(def.scripts or {}) .. " script(s) and " .. #(def.items or {}) ..
-                     " item(s) to " .. table.concat(rooms, ", ") .. " as '" .. id .. "'")
+    Core.debugLn("bound " .. #(def.scripts or {}) .. " script(s), " .. #(def.items or {}) ..
+                     " item(s) and " .. #(def.sprites or {}) .. " sprite(s) to " .. table.concat(rooms, ", ") .. " as '" .. id .. "'")
     return Core.bindings[id]
 end
 
---- Bind placed world objects to rooms, by the moveable item they came from.
+--- Bind placed world objects to rooms, by item, by sprite, or both.
 --
 --     Core.registerObjects{
---         id    = "phun.tent",
---         items = {"Base.TentGreen", "Base.TentBlue"},
---         rooms = {"phun.tent.small"},
+--         id      = "phun.tent",
+--         items   = {"Base.TentGreen", "Base.TentBlue"},
+--         sprites = {"fixtures_bathroom_01_0"},
+--         rooms   = {"phun.tent.small"},
 --     }
 --
--- The item type rather than a sprite name, because a sprite name is not the
--- identity: a green tent is thirty-two sprites and every one of them carries
--- `CustomItem = Base.TentGreen` as a tile property. One string a third party
--- can write down against thirty-two they would have to look up, and it is the
--- string vanilla's own pickup path keys on.
+-- Either list reaches, and a binding may use both. They answer different
+-- needs. An ITEM is the right key for a thing a player carries about: a green
+-- tent is thirty-two sprites and every one of them resolves to
+-- `Base.TentGreen`, so one string covers all of them. A SPRITE is the right key
+-- for everything else: it is what the debug tools show, so an admin can read
+-- it off the object in front of them, and it reaches things no item stands
+-- behind at all, like a fixture a map author placed. A sprite matches every
+-- facing of itself and, for a multi-tile object, the grid's anchor, so neither
+-- rotating the thing nor clicking a different tile of it loses the binding.
 --
 -- Everything else is registerVehicles: the same table, the same union across
 -- bindings, the same optional `match` that only ever adds. A predicate here is
@@ -526,6 +566,8 @@ function Core.registerObjects(def)
         rooms = def.rooms,
         room = def.room,
         items = def.items or {},
+        sprites = def.sprites or {},
+        permanent = def.permanent,
         scripts = {},
         match = def.match,
         source = def.source or "unknown"
@@ -710,30 +752,43 @@ function Core.vehicleHasRooms(vehicle)
     return #Core.roomsForVehicle(vehicle) > 0
 end
 
---- Which rooms a placed world object may lease.
+--- Every binding that reaches this placed world object, whatever named it.
 --
--- The same walk as roomsForVehicle against the other lookup. Keyed on the
--- moveable item the object was placed from, which is a tile property and so
--- is true of every sprite of a multi-tile object -- any corner of a tent gives
--- the same answer.
-function Core.roomsForObject(object)
+-- The same walk as roomsForVehicle against the other lookups. An item is a
+-- tile property or an item script's WorldObjectSprite, so it is true of every
+-- sprite of a multi-tile object; a sprite matches every facing and the grid's
+-- anchor. Either way any corner of a tent gives the same answer.
+--
+-- Bindings rather than rooms, because two questions are asked of this set:
+-- which rooms (roomsForObject) and whether the thing may be moved
+-- (objectIsPermanent). Walked once here so the two cannot disagree about
+-- which bindings count.
+local function bindingsForObject(object)
     local item = Core.moveableItemOf and Core.moveableItemOf(object)
     indexed()
 
-    local wanted = {}
-    local function take(binding)
-        for _, roomId in ipairs(binding.rooms) do
-            if Core.rooms[roomId] then
-                wanted[roomId] = true
-            end
+    local found, out = {}, {}
+    local function take(bindingId)
+        local binding = Core.bindings[bindingId]
+        if binding and not found[bindingId] then
+            found[bindingId] = true
+            table.insert(out, binding)
         end
     end
 
     if item then
         for bindingId in pairs(Core.itemLookup[string.lower(item)] or {}) do
-            local binding = Core.bindings[bindingId]
-            if binding then
-                take(binding)
+            take(bindingId)
+        end
+    end
+
+    -- Only when some binding names a sprite at all, because working out an
+    -- object's facings and anchor is a sprite lookup per face, and this runs
+    -- for every object on a right clicked square.
+    if not Core.tools.isEmpty(Core.spriteLookup) and Core.spriteNamesOf then
+        for _, name in ipairs(Core.spriteNamesOf(object)) do
+            for bindingId in pairs(Core.spriteLookup[string.lower(name)] or {}) do
+                take(bindingId)
             end
         end
     end
@@ -741,11 +796,25 @@ function Core.roomsForObject(object)
     -- A matcher on an object binding is handed the object, not a vehicle. Only
     -- bindings that name items at all are asked, so a vehicle matcher is never
     -- shown an IsoObject it would have to guard against.
-    for _, binding in pairs(Core.bindings) do
-        if binding.match and binding.kind == "object" then
+    for bindingId, binding in pairs(Core.bindings) do
+        if binding.match and binding.kind == "object" and not found[bindingId] then
             local ok, matched = pcall(binding.match, object)
             if ok and matched then
-                take(binding)
+                take(bindingId)
+            end
+        end
+    end
+
+    return out
+end
+
+--- Which rooms a placed world object may lease.
+function Core.roomsForObject(object)
+    local wanted = {}
+    for _, binding in ipairs(bindingsForObject(object)) do
+        for _, roomId in ipairs(binding.rooms) do
+            if Core.rooms[roomId] then
+                wanted[roomId] = true
             end
         end
     end
@@ -763,6 +832,51 @@ end
 
 function Core.objectHasRooms(object)
     return #Core.roomsForObject(object) > 0
+end
+
+--- May this object never be picked up, disassembled or destroyed?
+--
+-- True when ANY binding reaching it says `permanent`. On the binding rather
+-- than on the object, so every object a binding matches behaves the same: a
+-- per-object flag would leave some toilets movable and others not, for no
+-- reason a player could see. The price is that it is as broad as the binding,
+-- which is why the editor's hint says to use a sprite nothing else uses.
+--
+-- Deliberately does not ask whether the binding's rooms exist. A hub whose
+-- room is closed, or whose map pack is missing, is still a fixture somebody
+-- placed on purpose.
+function Core.objectIsPermanent(object)
+    indexed()
+    if not Core.hasPermanentBinding or not object then
+        return false
+    end
+    for _, binding in ipairs(bindingsForObject(object)) do
+        if binding.permanent then
+            return true
+        end
+    end
+    return false
+end
+
+--- The permanent object on this square, or nil.
+--
+-- By square for the same reason Core.lockedObjectOn is: canPickUpMoveable's
+-- multi-sprite path hands the guard nil for some tiles, and the square is the
+-- one argument that is always there. Any tile of a permanent bed answers,
+-- because a sprite binding matches through the grid's anchor.
+function Core.permanentObjectOn(square)
+    indexed()
+    if not Core.hasPermanentBinding or not square then
+        return nil
+    end
+    local objects = square:getObjects()
+    for i = 0, (objects and objects:size() or 0) - 1 do
+        local object = objects:get(i)
+        if object and Core.objectIsPermanent(object) then
+            return object
+        end
+    end
+    return nil
 end
 
 --- Which rooms this holder may lease, whatever kind of holder it is.
@@ -1035,6 +1149,16 @@ local function rebuild()
         end
     end
 
+    -- And again for sprite names, in a third lookup for the same reason.
+    local sprites = {}
+    for bindingId, binding in pairs(Core.bindings) do
+        for _, sprite in ipairs(binding.sprites or {}) do
+            local key = string.lower(sprite)
+            sprites[key] = sprites[key] or {}
+            sprites[key][bindingId] = true
+        end
+    end
+
     -- How many distinct SCRIPTS can reach a room is its specificity, and
     -- allocation drains the most specialised room first.
     --
@@ -1061,7 +1185,7 @@ local function rebuild()
     for bindingId, binding in pairs(Core.bindings) do
         for _, roomId in ipairs(binding.rooms) do
             if Core.rooms[roomId] then
-                reach[roomId] = reach[roomId] or {scripts = {}, items = {}, matchers = 0}
+                reach[roomId] = reach[roomId] or {scripts = {}, items = {}, sprites = {}, matchers = 0}
                 for _, script in ipairs(binding.scripts or {}) do
                     -- Keyed lowercase so two spellings of one script count
                     -- once, valued as written so anything showing the list to
@@ -1075,6 +1199,9 @@ local function rebuild()
                 -- different questions to anybody reading the answer.
                 for _, item in ipairs(binding.items or {}) do
                     reach[roomId].items[string.lower(item)] = item
+                end
+                for _, sprite in ipairs(binding.sprites or {}) do
+                    reach[roomId].sprites[string.lower(sprite)] = sprite
                 end
                 if binding.match then
                     reach[roomId].matchers = reach[roomId].matchers + 1
@@ -1118,6 +1245,17 @@ local function rebuild()
         table.sort(itemNames, function(a, b)
             return string.lower(a) < string.lower(b)
         end)
+        -- A sprite counts as one thing that can reach the room, like an item.
+        -- One bound toilet sprite does stand for four facings, but they are
+        -- one object turned round, not four different ones.
+        local spriteNames = {}
+        for _, sprite in pairs(r.sprites or {}) do
+            n = n + 1
+            table.insert(spriteNames, sprite)
+        end
+        table.sort(spriteNames, function(a, b)
+            return string.lower(a) < string.lower(b)
+        end)
         -- Case insensitively, because the spelling kept is whichever binding
         -- the hash order reached last and a plain sort would file "Base.Van"
         -- and "base.stepvan" at opposite ends of the list.
@@ -1128,6 +1266,7 @@ local function rebuild()
         scriptsFor[roomId] = {
             scripts = names,
             items = itemNames,
+            sprites = spriteNames,
             matchers = r.matchers
         }
     end
@@ -1187,6 +1326,17 @@ local function rebuild()
 
     Core.scriptLookup = scripts
     Core.itemLookup = items
+    Core.spriteLookup = sprites
+    -- Whether any binding is permanent at all. The pickup guard asks per frame
+    -- under the moveable cursor, so a world with no permanent binding -- most
+    -- of them -- should answer that with one field read.
+    local anyPermanent = false
+    for _, binding in pairs(Core.bindings) do
+        if binding.permanent then
+            anyPermanent = true
+        end
+    end
+    Core.hasPermanentBinding = anyPermanent
     Core.roomsServing = served
     Core.roomScripts = scriptsFor
     Core.roomRank = rank

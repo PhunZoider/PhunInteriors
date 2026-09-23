@@ -79,6 +79,156 @@ r.check("an object with no CustomItem gets nothing", #Core.roomsForObject(plain)
 r.check("objectHasRooms agrees", Core.objectHasRooms(green), true)
 r.check("objectHasRooms agrees for a crate", Core.objectHasRooms(crate), false)
 
+-- Most furniture is tied to its item from the ITEM end: a generated Mov_*
+-- script names the sprite, and the tile carries no CustomItem at all. A
+-- binding naming Base.Mov_FancyToilet matched nothing until this fallback.
+do
+    local function fakeItem(fullName, sprite)
+        return {
+            getFullName = function() return fullName end,
+            getWorldObjectSprite = function() return sprite end
+        }
+    end
+    local list = {
+        fakeItem("Base.Mov_FancyToilet", "fixtures_bathroom_01_0"),
+        fakeItem("Base.Zz_SameSprite", "fixtures_bathroom_01_0"),
+        fakeItem("Base.Hammer", nil)
+    }
+    -- _0 names its south face as _1, the way vanilla's facing offsets do.
+    local savedSprite = getSprite
+    getSprite = function(name)
+        if name ~= "fixtures_bathroom_01_0" then
+            return nil
+        end
+        return {
+            getProperties = function()
+                return {
+                    has = function(_, key) return key == "Soffset" end,
+                    get = function(_, key) return key == "Soffset" and "1" or nil end
+                }
+            end
+        }
+    end
+    local saved = getScriptManager
+    getScriptManager = function()
+        return {
+            getAllItems = function()
+                return {
+                    size = function() return #list end,
+                    get = function(_, i) return list[i + 1] end
+                }
+            end
+        }
+    end
+    Core.resetWorldSpriteItems()
+
+    room("t.warehouse")
+    Core.registerObjects({
+        id = "t.toilets",
+        items = {"Base.Mov_FancyToilet"},
+        rooms = {"t.warehouse"}
+    })
+
+    local toilet = fakeObject("fixtures_bathroom_01_0", nil)
+    r.check("a sprite named by an item's WorldObjectSprite resolves to it",
+        Core.moveableItemOf(toilet), "Base.Mov_FancyToilet")
+    r.check("two items on one sprite resolve to the lowest full type",
+        Core.worldSpriteItem("fixtures_bathroom_01_0"), "Base.Mov_FancyToilet")
+    r.check("the toilet reaches its room", Core.roomsForObject(toilet)[1], "t.warehouse")
+    r.check("CustomItem still wins over the sprite index",
+        Core.moveableItemOf(fakeObject("fixtures_bathroom_01_0", "Base.TentGreen")), "Base.TentGreen")
+    r.check("another facing of the same item resolves to it",
+        Core.moveableItemOf(fakeObject("fixtures_bathroom_01_1", nil)), "Base.Mov_FancyToilet")
+    r.check("a sprite no item names is still nothing", Core.moveableItemOf(plain), nil)
+
+    getScriptManager = saved
+    getSprite = savedSprite
+    Core.resetWorldSpriteItems()
+end
+
+-- Bound by SPRITE, for things no item stands behind or when the sprite is what
+-- the admin could read off the object. Any facing reaches, and so does any tile
+-- of a multi-tile object whose anchor is named.
+do
+    local savedSprite = getSprite
+    -- _0 and _1 are two facings of one fixture, each naming the other.
+    getSprite = function(name)
+        local offsets = {fixture_01_0 = {Soffset = "1"}, fixture_01_1 = {Noffset = "-1"}}
+        local mine = offsets[name]
+        if not mine then
+            return nil
+        end
+        return {
+            getProperties = function()
+                return {
+                    has = function(_, key) return mine[key] ~= nil end,
+                    get = function(_, key) return mine[key] end
+                }
+            end
+        }
+    end
+
+    room("t.hub")
+    Core.registerObjects({
+        id = "t.fixtures",
+        sprites = {"fixture_01_0", "bed_01_0"},
+        rooms = {"t.hub"}
+    })
+
+    local facingNorth = fakeObject("fixture_01_0", nil)
+    local facingSouth = fakeObject("fixture_01_1", nil)
+    r.check("a bound sprite reaches its room", Core.roomsForObject(facingNorth)[1], "t.hub")
+    r.check("another facing of a bound sprite reaches it too", Core.roomsForObject(facingSouth)[1], "t.hub")
+    r.check("an unbound sprite still reaches nothing", #Core.roomsForObject(plain), 0)
+    r.check("sprite case does not matter",
+        Core.roomsForObject(fakeObject("FIXTURE_01_0", nil))[1], "t.hub")
+
+    -- A bed: the clicked tile is bed_01_3, its grid's anchor is bed_01_0.
+    local bedGrid = {
+        getAnchorSprite = function() return fakeSprite("bed_01_0", nil) end
+    }
+    local bedTile = fakeObject("bed_01_3", nil, bedGrid)
+    r.check("any tile of a multi-tile object reaches through its anchor",
+        Core.roomsForObject(bedTile)[1], "t.hub")
+    r.check("tiles of an itemless object share the anchor as identity",
+        Core.holderIdentity(bedTile), "bed_01_0")
+    r.check("a single itemless tile is identified by its own sprite",
+        Core.holderIdentity(facingNorth), "fixture_01_0")
+    r.check("an item still wins as identity", Core.holderIdentity(green), "Base.TentGreen")
+
+    r.check("each sprite counts once toward specificity", Core.servingCount("t.hub"), 2)
+    r.check("the room lists its sprites", #Core.roomScripts["t.hub"].sprites, 2)
+
+    -- Permanent is a binding's answer, so every object it matches agrees.
+    r.check("nothing is permanent while no binding says so", Core.objectIsPermanent(facingNorth), false)
+    Core.registerObjects({
+        id = "t.fixed",
+        sprites = {"fixture_01_0"},
+        rooms = {"t.hub"},
+        permanent = true
+    })
+    r.check("a permanent binding nails its object down", Core.objectIsPermanent(facingNorth), true)
+    r.check("in every facing", Core.objectIsPermanent(facingSouth), true)
+    r.check("but not what it does not match", Core.objectIsPermanent(bedTile), false)
+    r.check("nor a tent bound elsewhere", Core.objectIsPermanent(green), false)
+    local square = {
+        getObjects = function()
+            return {
+                size = function() return 2 end,
+                get = function(_, i) return i == 0 and plain or facingSouth end
+            }
+        end
+    }
+    r.check("the square guard finds it among other objects", Core.permanentObjectOn(square), facingSouth)
+    Core.bindings["t.fixed"] = nil
+    Core.markRegistryDirty()
+    r.check("and lets it go when the binding does", Core.permanentObjectOn(square), nil)
+
+    getSprite = savedSprite
+    Core.bindings["t.fixtures"] = nil
+    Core.markRegistryDirty()
+end
+
 -- Case, because a binding is written by hand and CustomItem comes off a tile.
 local shouty = fakeObject("camping_04_100", "BASE.TENTGREEN")
 r.check("item lookup is case insensitive", Core.roomsForObject(shouty)[1], "t.tent")

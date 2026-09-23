@@ -220,4 +220,66 @@ check("which it does", Transit.occupancyOf(h).noExit, true)
 check("sendTo still gets them out", Transit.sendTo(h, {x = 5, y = 5}, "picked", true), true)
 check("and hands the room back", Slots.find(hHolder), nil)
 
+-- ---------------------------------------------------------------------------
+-- A shared room: a hub. Everybody lands in ONE lease however many slots the
+-- room has, nothing reclaims it, no holder leases a slot of its own in it,
+-- and any object bound to it leads in without taking a lease itself.
+-- ---------------------------------------------------------------------------
+Core.registerRoom("hub", {
+    size = {w = 3, h = 4},
+    spawn = {x = 1, y = 1},
+    shared = true,
+    locations = {[0] = {9000, 9000, 0}, [1] = {9100, 9000, 0}, [2] = {9200, 9000, 0}}
+})
+local hubA, hubB = player("hubA", 11, 12, 0), player("hubB", 13, 14, 0)
+check("the first into a hub takes its first slot", select(2, Transit.enterRoom(hubA, "hub", {share = true})),
+    "hub#0")
+check("the second joins it rather than taking a free slot",
+    select(2, Transit.enterRoom(hubB, "hub", {share = true})), "hub#0")
+local hubHolder = holderOf(hubA)
+check("under the same lease", holderOf(hubB), hubHolder)
+
+Slots.age(hubHolder, 9999)
+Transit.setOccupancy(hubA, nil)
+Transit.setOccupancy(hubB, nil)
+check("an empty, ancient hub is still not reclaimable",
+    Slots.isReclaimable(hubHolder, Slots.find(hubHolder)), false)
+
+-- A vehicle bound to a hub must not carve a private room out of it.
+Core.registerVehicles({id = "t.hubvan", scripts = {"Base.HubVan"}, rooms = {"hub"}})
+local hubVan = {
+    getScript = function()
+        return {
+            getFullName = function() return "Base.HubVan" end,
+            getName = function() return "HubVan" end
+        }
+    end
+}
+check("a vehicle is given no slot of a shared room", Slots.acquire("hub-van-uuid", hubVan), nil)
+
+-- An object bound to the hub goes in through the shared lease.
+Core.registerObjects({id = "t.hubobj", items = {"Base.HubToilet"}, rooms = {"hub"}})
+local objMd = {}
+local toilet = {
+    getSprite = function()
+        return {
+            getName = function() return "hub_toilet_0" end,
+            getProperties = function()
+                return {
+                    has = function(_, k) return k == "CustomItem" end,
+                    get = function(_, k) return k == "CustomItem" and "Base.HubToilet" or nil end
+                }
+            end
+        }
+    end,
+    getSquare = function() return nil end,
+    getModData = function() return objMd end,
+    hasModData = function() return false end
+}
+local hubC = player("hubC", 21, 22, 0)
+check("entering a hub object succeeds", Transit.enterObject(hubC, toilet, {x = 20, y = 22, z = 0}), true)
+check("into the one hub lease", holderOf(hubC), hubHolder)
+check("coming back out where they stood, not on the object", Transit.occupancyOf(hubC).returnTo.x, 21)
+check("and the object holds no lease of its own", Core.objectId(toilet, false), nil)
+
 os.exit(report.finish("enterroom") == 0 and 0 or 1)

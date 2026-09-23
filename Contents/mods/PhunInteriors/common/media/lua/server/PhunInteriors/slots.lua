@@ -266,6 +266,12 @@ end
 -- it as a safehouse. Whether anybody actually needs it is the caller's
 -- question; this only says it is allowed.
 function Slots.isReclaimable(vehicleId, assignment)
+    -- A hub is never taken. What people leave there is meant to stay, and the
+    -- only way its floor is cleared is an admin asking.
+    local room = Core.rooms[assignment.room]
+    if room and room.shared then
+        return false
+    end
     local now = Core.now()
     return (now - (assignment.lastSeen or now)) >= protectedHours()
         and not isOccupied(vehicleId)
@@ -436,7 +442,15 @@ function Slots.acquire(vehicleId, vehicle)
 
         -- A closed room is not a candidate at all, and is left out of
         -- allowedRooms too, so the reclaim below cannot reach into one either.
-        if Slots.isOpen(roomId) then
+        --
+        -- Nor is a shared one. Its slots are for the one lease everybody
+        -- joins, which Transit.enterRoom hands out; a holder leasing one of
+        -- its own would be a private room carved out of the hub. An object
+        -- bound to a shared room never gets here -- Transit.enterObject routes
+        -- it -- so this is what stops a VEHICLE binding doing that.
+        if room.shared then
+            anyOpen = true
+        elseif Slots.isOpen(roomId) then
             anyOpen = true
 
             -- Every candidate is allowed. A room used to be able to state demands

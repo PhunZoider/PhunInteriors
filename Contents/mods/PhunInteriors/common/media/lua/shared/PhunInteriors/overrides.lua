@@ -61,6 +61,8 @@ Core.roomPatchFields = {
     generator = {kind = "offset"},
     selfPowered = {kind = "boolean"},
     singleUse = {kind = "boolean"},
+    shared = {kind = "boolean"},
+    hardenShell = {kind = "boolean"},
     reservoir = {kind = "boolean"},
     baseWeight = {kind = "number"},
     locations = {kind = "locations"}
@@ -459,6 +461,8 @@ function Core.applyBindingOverride(id)
         rooms = def.rooms or {},
         scripts = def.scripts,
         items = def.items,
+        sprites = def.sprites,
+        permanent = def.permanent,
         source = def.source or "PhunInteriors.json"
     }
 
@@ -525,6 +529,37 @@ function Core.overrideDocument()
     end
 
     return doc
+end
+
+--- Bring a CLIENT's registry into line with the server's override document.
+---
+--- installOverrides only ever applies what it finds, which is right at boot
+--- and wrong here: a client that was sent a document yesterday still carries
+--- a binding the admin has since deleted. So whatever the previous document
+--- had and this one does not is taken back off first, through the same two
+--- calls the editor's own delete and revert use.
+---
+--- A binding lua registered and an admin deleted comes back on the server's
+--- next boot and not before; a client that took it off here gets it back the
+--- same way, on its next login. The two agree.
+function Core.syncOverrides(doc)
+    if type(doc) ~= "table" then
+        return {"the override document is not a table"}
+    end
+    for id in pairs(Core.overrides.bindings) do
+        if not (doc.bindings and doc.bindings[id]) then
+            Core.setBindingOverride(id, nil)
+        end
+    end
+    for id in pairs(Core.overrides.rooms) do
+        if not (doc.rooms and doc.rooms[id]) then
+            Core.setRoomOverride(id, nil)
+        end
+    end
+    local problems = Core.installOverrides(doc)
+    -- Nothing on a client is unsaved: the file is the server's.
+    Core.unsavedEdits = false
+    return problems
 end
 
 --- Install a decoded document and put every patch in it on.

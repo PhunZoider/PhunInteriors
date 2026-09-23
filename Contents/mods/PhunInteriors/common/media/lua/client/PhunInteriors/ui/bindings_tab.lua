@@ -64,6 +64,9 @@ local function reachText(binding)
     for _, item in ipairs(binding.items or {}) do
         table.insert(parts, item)
     end
+    for _, sprite in ipairs(binding.sprites or {}) do
+        table.insert(parts, sprite)
+    end
     if binding.matcher then
         -- A predicate is a Lua function in somebody's file: it cannot be sent,
         -- shown or edited, and it claims an unbounded set. Saying nothing
@@ -74,7 +77,13 @@ local function reachText(binding)
     if #parts == 0 then
         return getText("IGUI_PhunInteriors_Rooms_Unreachable")
     end
-    return table.concat(parts, ", ")
+    local text = table.concat(parts, ", ")
+    -- Said on the row, because it is the one binding setting that changes the
+    -- world outside the room: every object it matches is nailed down.
+    if binding.permanent then
+        text = getText("IGUI_PhunInteriors_Binding_Permanent", text)
+    end
+    return text
 end
 
 ---------------------------------------------------------------------------

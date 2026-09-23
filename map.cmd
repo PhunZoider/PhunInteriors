@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 rem ---------------------------------------------------------------------------
 rem PhunInteriors map iteration: export -> repo -> check -> deploy -> reset.
-rem   setx PI_TESTSAVE "Sandbox\2026-09-21_05-51-06"
+rem   setx PI_TESTSAVE "Sandbox\2026-09-20_09-45-13"
 rem   map.cmd                      sync, check, deploy, reset %PI_TESTSAVE%
 rem   map.cmd Sandbox\maptest      same, resetting that save instead
 rem   map.cmd -                    sync, check, deploy; reset nothing
