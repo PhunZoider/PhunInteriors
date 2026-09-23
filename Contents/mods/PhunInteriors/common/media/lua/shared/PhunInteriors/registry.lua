@@ -347,8 +347,7 @@ function Core.registerRoom(id, def)
         -- scrubbed there and then, so the next arrival never inherits what
         -- this one left.
         --
-        -- It overrides the ordinary lifecycle rather than ScrubKeepsLoot:
-        -- everywhere else a room keeps its tenant's things until a full pool
+        -- It overrides the ordinary lifecycle: everywhere else a room keeps its tenant's things until a full pool
         -- reclaims it, and scrubbing on EXIT is the only moment it can
         -- actually run, because the room is loaded while somebody stands in
         -- it and nobody is near a room that was released for being unused.

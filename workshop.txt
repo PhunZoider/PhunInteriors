@@ -3,17 +3,43 @@ id=
 title=PhunInteriors
 description=Instanced vehicle interiors that recycle their space, contain the player, and cost something to use.
 description=
-description=[H2]How it is different[/H2]
+description=Go inside your van. Right click it, walk in at the door, and you are standing in a room that belongs to that van: a mechanic's workshop, a mail sorting room, a caravan, a classroom in the back of a school bus. Leave something there and it is still there next time. Drive off with a friend in the back and they come out wherever you parked.
+description=
+description=[h2]Features[/h2]
 description=[list]
-description=[*]Rooms are leased, not permanently assigned. Destroy the vehicle and the room comes back into the pool instead of leaking a slot forever
-description=[*]You come out where your vehicle actually is, resolved live, not where it was up to a minute ago
-description=[*]Loot stored inside adds weight to the vehicle, so the interior is not a bottomless boot
-description=[*]Zombies near the vehicle accumulate while you are inside, so waiting out the night costs you something
-description=[*]Every constraint is a sandbox option. Turn any of them off if it is taking away the phun
+description=[*][b]83 furnished rooms[/b] for vans, step vans, ambulances, buses, trucks, semi trailers, caravans, RVs, shipping containers and tents, with loot to match. Vehicles from several popular vehicle mods are covered too, and only get a room when that mod is installed.
+description=[*][b]Walk in, walk out.[/b] Board at the back of a van or the door of a caravan. Leave by walking out of the room. Which way you walk out decides which side of the vehicle you land on, and rooms with a cab can put you straight into a free seat.
+description=[*][b]Your room is yours.[/b] A room is only ever given to somebody else when every room is taken and yours has gone unused for two weeks. You are told if it happens. Claim it as a safehouse and it is never reused.
+description=[*][b]It costs something.[/b] What you store adds to the weight of the vehicle. The lights run off the vehicle battery, so a flat battery means a dark room. Zombies gather outside while you wait in there.
+description=[*][b]Coming out is survivable.[/b] You cannot see what you are stepping into, so the ground around you is cleared as you land. The crowd is not removed; you just get a moment to see it.
+description=[*][b]No escape hatch.[/b] You cannot climb in with zombies close, from a moving vehicle, or from behind the wheel.
+description=[*][b]Rain water.[/b] Craft a Rain Reservoir Kit and put barrels on your room's roof for a plumbed sink.
+description=[*][b]Tents[/b] open onto a room too, lit by a generator you park beside them.
+description=[*][b]Walls that hold.[/b] Room walls cannot be broken and fires inside are put out, unless the server says otherwise.
+description=[*][b]Multiplayer first.[/b] One code path for single player and multiplayer, tested on a real dedicated server, including towing and passengers climbing into the back of a moving van.
 description=[/list]
 description=
-description=[H2]For mod authors[/H2]
-description=Rooms and the vehicles that reach them are registered, not hard coded. Hook the vanilla OnInitGlobalModData event and call PhunInteriors.registerRoom and PhunInteriors.registerVehicles to add your own interiors for your own vehicles, or registerObjects to hang one off a placed item like a tent. Bindings name ordinary game script names, so you never need an id of ours. Ids are namespaced so nothing collides, and bindings are unioned rather than overridden, so adding rooms for a vehicle somebody else already covers takes nothing away from them.
+description=[h2]For server owners[/h2]
+description=[list]
+description=[*]Every constraint is a sandbox option: entry time, zombie gathering, the weight factor, battery drain, how long a room is kept, unbreakable walls. Turn off whatever is taking the phun out of it.
+description=[*]An in-game room window for admins: see every room and slot, port into any of them, reset or scrub one, and edit rooms and bindings live. Changes are saved to PhunInteriors.json when you press Save.
+description=[*]No required mods. PhunServer2 adds an /interiors chat command if you have it.
+description=[/list]
+description=
+description=[h2]For mod authors[/h2]
+description=Rooms and the vehicles that reach them are registered, not hard coded. Hook the vanilla OnInitGlobalModData event and call PhunInteriors.registerRoom and PhunInteriors.registerVehicles to add interiors for your own vehicles, or registerObjects to put one behind a placed object. Bindings name ordinary game script names, so you never need an id of ours, and they add to each other rather than replacing, so covering a vehicle somebody else already covers takes nothing away from them.
+description=
+description=[h2]Compatibility[/h2]
+description=Build 42 only. The mod ships its own map block (cells 87,46 to 91,48 and 89,49 to 91,49); another map mod using those cells will conflict. Server zombie distribution should not be set to Uniform.
+description=
+description=[h2]Documentation[/h2]
+description=[list]
+description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/playing.md]Playing[/url]: getting in, getting out, power, water, tents
+description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicles.md]Supported vehicles[/url]: which vehicle gets which room
+description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/sandbox-options.md]Sandbox options[/url]: every option and its default
+description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/admin.md]Running a server[/url]: the room window, editor and console commands
+description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/modding.md]Adding rooms and vehicles[/url]: the API for other mods
+description=[/list]
 description=
 description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
 tags=Build 42;Vehicles;Multiplayer

@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 # What a map cell's zombie density actually is, read out of the lotheader.
 #
-#   perl Docs/zombies.pl <X_Y.lotheader> [...]      # tally per cell
-#   perl Docs/zombies.pl -v <X_Y.lotheader>         # and the 32x32 grid
+#   perl scripts/zombies.pl <X_Y.lotheader> [...]      # tally per cell
+#   perl scripts/zombies.pl -v <X_Y.lotheader>         # and the 32x32 grid
 #
 # Density is per meta chunk and lives in a 1024 byte tail on the .lotheader --
 # one byte per chunk, 32 x 32, written straight after the building defs.
@@ -25,7 +25,7 @@
 # Point, 50_7 Louisville, and all three are plainly non-zero.
 #
 #   P="/d/Steam/steamapps/common/ProjectZomboid/media/maps/Muldraugh, KY"
-#   perl Docs/zombies.pl "$P/42_38.lotheader"
+#   perl scripts/zombies.pl "$P/42_38.lotheader"
 
 use strict;
 use warnings;

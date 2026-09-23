@@ -135,7 +135,23 @@ Core.occupants["sam"] = {room = "a.room", index = 2, vehicleId = "veh-2"}
 local busy = Admin.run("release", {room = "a.room", index = 2}, nil)
 check("an occupied slot is refused", string.find(busy[1], "inside") ~= nil, true)
 check("its lease survived", Slots.find("veh-2") ~= nil, true)
+
+-- free is the same act addressed by vehicle id, and used to skip both guards.
+local busyFree = Admin.run("free", {vehicleId = "veh-2"}, nil)
+check("free refuses an occupied slot too", string.find(busyFree[1], "inside") ~= nil, true)
+check("and the lease survived free", Slots.find("veh-2") ~= nil, true)
 Core.occupants["sam"] = nil
+
+claimSlot("a.room", 2, "kim")
+local claimedFree = Admin.run("free", {vehicleId = "veh-2"}, nil)
+check("free refuses a claimed slot", string.find(claimedFree[1], "safehouse") ~= nil, true)
+check("and names the owner", string.find(claimedFree[1], "kim") ~= nil, true)
+check("the claimed lease survived free", Slots.find("veh-2") ~= nil, true)
+claims = {}
+
+local freed = Admin.run("free", {vehicleId = "veh-2"}, nil)
+check("with nobody in it and no claim, free releases", string.find(freed[1], "released") ~= nil, true)
+check("the freed lease is gone", Slots.find("veh-2"), nil)
 
 ---------------------------------------------------------------------------
 -- 4. The room filter, shared with the window

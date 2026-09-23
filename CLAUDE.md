@@ -10,7 +10,7 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 **The registry was reshaped and has not run in game since.** Rooms, bindings
 and blueprints all changed shape -- see "A room is a contract" in Architecture.
-`Tests/run.sh` is green across 735 checks, which is real verification of the
+`Tests/run.sh` is green across 742 checks, which is real verification of the
 logic and no verification at all that PZ agrees. Everything below describes
 what was proven *before* that change; the mechanics are the same, but the
 registry underneath them is not.
@@ -28,11 +28,12 @@ holder's nose -- plus `cab` as a boolean on that edge, and `Core.relativeFor`
 derives `front`/`rear`/`left`/`right` from the edge the leash saw crossed.
 `Client.groundBeside` takes that relative direction instead of a vehicle area
 name. **This is the exit path, which is the one that strands a player when it
-is wrong**, so it is the first thing to watch. Four rooms deliberately register
-*no* front -- `2x4_campingstorage` and the three `*_camping` caravans, whose
-doors are in the side -- so their tenants land beside the vehicle until
-somebody says which way a caravan points. `selfPowered` is new and has never
-run either.
+is wrong**, so it is the first thing to watch. Every room in
+`Docs/pi-assigned.csv` now states a front, the campers and caravans included
+(`north`, the VW camper `south`), so no shipped tenant lands merely "beside"
+the vehicle any more. That was not always so: the caravans once registered
+none because their doors are in the side, and older notes further down this
+file still say they do. `selfPowered` is new and has never run either.
 
 **And `Core.enterRoom`, putting a player in a room with no holder, is new and
 has never run.** PhunSpawn's arrival room depends on it. Known gaps #16.
@@ -214,15 +215,32 @@ It is **not** a mock of the game — anything needing an `IsoGridSquare` is
 tested in game or not at all. Add to it when you change registry, allocation or
 emitter logic; do not try to grow it into a simulator.
 
+**Every tool lives in `scripts/`**: the three `.cmd` wrappers and every
+`.pl` except `Tests/shadow.pl`, which belongs to the test suite. They moved
+out of `Docs/` and the repo root on 2026-09-23. Each `.cmd` resolves the repo
+root as the folder above itself, and the perl tools expect to be run FROM the
+root (`perl scripts/roomcheck.pl`), because they read `Docs/pi-*.csv`,
+`Tests/lua/stubs.lua` and `Contents/...` by relative path. PhunSpawn's and
+PhunHub's `map.cmd` call `%PI_REPO%\scripts\*.pl`, so renaming or moving a
+tool here breaks their map loop; each of those repos also carries its own
+copy of `tighten.pl` in its own `Docs/`, which is theirs and not a reference
+to ours.
+
+`scripts/` is kept out of the Workshop staging trees by an `rmdir` in
+`deploy.cmd`, NOT by an `xclude` entry: xcopy matches exclusions as a
+substring of the whole path, and `scripts` would also match
+`media\scripts\PhunInteriors.txt` and ship a mod with no items.
+
 Deployment is VS Code `emeraldwalk.runonsave`
-(see `.vscode/settings.json`), which runs `deploy.cmd` on every save. That
-builds four trees: `~/Zomboid/mods/PhunInteriors`, the test-id variant
+(see `.vscode/settings.json`), which runs `scripts/deploy.cmd` on every save.
+That builds four trees: `~/Zomboid/mods/PhunInteriors`, the test-id variant
 `PhunInteriorsTest` (the live mod overlaid with `Tests/root/PhunInteriors/`),
 and Workshop upload staging for each. `xclude` is the xcopy exclude list for
 the staging copies.
 
-`map.cmd` is the map loop: it copies the editor export (`PI_MAPSRC`) into the
-repo without touching `map.info`, runs `roomcheck.pl`, calls `deploy.cmd`, and
+`scripts/map.cmd` is the map loop: it copies the editor export (`PI_MAPSRC`)
+into the repo without touching `map.info`, runs `roomcheck.pl`, calls
+`deploy.cmd`, and
 deletes our cells plus `global_mod_data.bin` from a test save (`PI_TESTSAVE`,
 or the first argument; `-` skips it). Quit the world to the main menu first --
 the game writes loaded chunks back on the way out. The VS Code task "Map: sync,
@@ -280,6 +298,19 @@ Tests/root/PhunInteriors/common/   overlay carrying the test ids, applied by
                                    path must mirror the live mod folder or the
                                    overlay silently does nothing.
 Tests/workshop.txt                 dev Workshop item text
+
+scripts/                           deploy.cmd, map.cmd, tighten.cmd and every
+                                   perl tool (roomcheck, fencecheck, tiles,
+                                   rooms, zombies, cells, methods, body,
+                                   gendefaults, vehicledoc, tighten,
+                                   blackroof). Run from the repo root.
+Docs/*.md                          user-facing docs, linked from README.md
+                                   and workshop.txt
+Docs/pi-*.csv                      the room, mapping and vehicle sheets that
+                                   gendefaults.pl reads. GITIGNORED and not
+                                   in the repo: they live on the author's
+                                   machine, so a fresh clone cannot
+                                   regenerate defaults.lua or vehicles.md
 ```
 
 House style, taken from PhunCure and PhunLewt 2.1:
@@ -300,6 +331,12 @@ House style, taken from PhunCure and PhunLewt 2.1:
   the field names out of the `PhunInteriors = {` literal and refuses any file
   that defines a function over one of them.
 - Settings cached via `Core.getOption` and refreshed on `EveryTenMinutes`.
+  `Core.defaults` in `core.lua` is only the fallback for an option the game
+  does not report; `media/sandbox-options.txt` is what a server actually gets.
+  Keep the two equal: they had drifted to `EntryDelay` 15 against 1 and
+  `EntryZombieRadius` 4 against 10, and `Debug` shipped on. `Debug` ships
+  **off**; `Docs/sandbox-options.md` lists every default for players and has
+  to follow any change here.
 - **No em dashes. Anywhere.** Not in this file, not in code comments, not in
   commit messages, not in anything written for a player to read, and not in a
   reply. Where one would go, use `--` as the newer half of this file already
@@ -1378,6 +1415,14 @@ vehicle moves between rooms and how `removal.lua` frees a scrapped wreck --
 refusing there would leave a claimed slot leased to a vehicle that no longer
 exists.
 
+**`admin("free")` makes the same two refusals**, through the same
+`releaseRefusal` in `admin.lua`. It is `release` addressed by vehicle id, and
+until 2026-09-23 it skipped both checks, which made it the one admin route
+that could still strand a tenant or scrub a claimed room. `admin_spec.lua`
+covers both refusals on `free`, and they were confirmed to fail with the guard
+removed. Any new admin action that drops a lease should go through
+`releaseRefusal` too.
+
 The slot list shows **how long since anybody was in, and who**, rather than the
 holder id. That is what decides whether a slot is worth resetting, and it is
 the same `lastSeen` measurement `Slots.isReclaimable` makes against
@@ -1535,7 +1580,7 @@ The server side calls other mods use, all plain-English on refusal:
 
 **An edit is a patch, kept beside the registration rather than inside it.**
 The registry is code, and `defaults.lua` is *generated* from three CSVs by
-`Docs/gendefaults.pl` — so an edit written back into it is lost on the next
+`scripts/gendefaults.pl` — so an edit written back into it is lost on the next
 run, and an edit written anywhere else in the lua needs a redeploy and a
 restart. Neither is a loop an admin can run while standing in the room being
 fixed. So `shared/PhunInteriors/overrides.lua` keeps what changed in
@@ -1897,7 +1942,7 @@ B41 tutorial applies.
 | An object's behaviour lives in its class, and `IsoObject.new` always returns a plain `IsoObject` — a restored light switch is a picture of a switch. The class comes from `getSprite(name):getType()`, and vanilla constructs the right one in `ISMoveableSpriteProps.lua:2175-2196`: `IsoLightSwitch.new(getCell(), square, sprite, square:getRoomID())` then `addLightSourceFromSprite()`, with sibling branches on `IsoFlagType.doorN/windowN/WallN` for doors, windows and walls. | `Scrub.createFromSprite` mirrors the light switch branch. Two separate lessons: recreating an object from a sprite name alone loses its behaviour, **and** "vanilla never does X" was wrong here — a `grep` for `IsoLightSwitch` found only `instanceof` tests because the constructor call is 2000 lines into a Moveables file. Search for the *constructor*, not just the class name. |
 | `IsoGridSquare` has **no `getContainer()`** and no `getDeadBody()`. Containers hang off the object (`isoObject:getContainer()`); bodies come from `square:getDeadBodys()`, plural, returning a list. `getDeadBody(index)` is a *hutch* method. Vanilla removes a body with `removeFromWorld()` then `removeFromSquare()`, in that order. | Both were wrong in `Scrub.clearSquare` and threw `Object tried to call nil` the first time a scrub ever ran. Note the jar check passes for both: a class's constant pool contains method names it **calls** as well as ones it owns, so "present" proves nothing on its own — cross-check against vanilla usage. |
 | **Vehicle battery charge.** The part is `vehicle:getBattery()` (declared on `VehiclePartOwner`, not `BaseVehicle`); the charge is `getCurrentUsesFloat()` / `setCurrentUsesFloat()` on its inventory item, both on `InventoryItem` itself. **`getUsedDelta()` does not exist** in B42 outside `Clothing` — a car battery is a `DrainableComboItem`, which declares `setUsedDelta` and **no getter at all**. `setUsedDelta` is a one-line alias for `setCurrentUsesFloat`. A server-side write must be followed by **`vehicle:transmitPartUsedDelta(part)`** or it never reaches clients. The whole pattern is `VehicleUtils.chargeBattery` in `Vehicles.lua`. | Ported from RV Interior and it threw on the first entry: the write worked, the read did not. Vanilla's own asymmetry hides it — `Vehicles.lua` writes with `setUsedDelta` and reads with `getCurrentUsesFloat`, so grepping for either alone tells you the wrong half. A working B41 mod is not evidence about B42, and a setter existing says nothing about its getter. Copy the whole vanilla function, not the one line you were looking for. |
-| **Electricity, settled from the bytecode.** `haveElectricity()` reads no field at all: it is `chunk:isGeneratorPoweringSquare(x, y, z)`, with an early `false` for an exterior square when `AllowExteriorGenerator` is off. **`setHaveElectricity(boolean)` does not set anything** — it ignores its argument entirely and calls `update()` on any `IsoLightSwitch` on the square. It is a refresh with a setter's name. `hasGridPower()` is `not isNoPower() and doesPowerGridExist()`; `isNoPower()` is `isDerelict() or isUserDefinedRoom()` or the square sitting in a map zone of type `"NoPower"` or `"NoPowerOrWater"`. | Generator power is only ever a **real, active `IsoGenerator` in the chunk** — it cannot be faked with a flag, which is why RV Interior places one. The mains cannot be switched off from Lua, but it *can* on the map: a **`NoPower` zone painted over the interior block** makes `hasGridPower` false there permanently, leaving the generator as the only source. That is a map authoring job, and `admin("power")` reports whether it has been done. Note this row replaced an earlier, wrong one that reasoned from method names — hence `Docs/body.pl`. |
+| **Electricity, settled from the bytecode.** `haveElectricity()` reads no field at all: it is `chunk:isGeneratorPoweringSquare(x, y, z)`, with an early `false` for an exterior square when `AllowExteriorGenerator` is off. **`setHaveElectricity(boolean)` does not set anything** — it ignores its argument entirely and calls `update()` on any `IsoLightSwitch` on the square. It is a refresh with a setter's name. `hasGridPower()` is `not isNoPower() and doesPowerGridExist()`; `isNoPower()` is `isDerelict() or isUserDefinedRoom()` or the square sitting in a map zone of type `"NoPower"` or `"NoPowerOrWater"`. | Generator power is only ever a **real, active `IsoGenerator` in the chunk** — it cannot be faked with a flag, which is why RV Interior places one. The mains cannot be switched off from Lua, but it *can* on the map: a **`NoPower` zone painted over the interior block** makes `hasGridPower` false there permanently, leaving the generator as the only source. That is a map authoring job, and `admin("power")` reports whether it has been done. Note this row replaced an earlier, wrong one that reasoned from method names — hence `scripts/body.pl`. |
 | **"Is this vehicle moving" is `vehicle:isStopped()`, not a speed threshold.** A stationary vehicle *under tow* reports a non-zero `getCurrentSpeedKmHour()` — the coupling never quite settles — so any epsilon is a guess about physics jitter. `isStopped()` is what vanilla gates vehicle interaction on (`ISExitVehicle:isValid`, `ISVehicleMenu.lua:185`). | Confirmed in game: a parked towed van refused boarding while telling the player it was moving. Seated players were unaffected, because `isAtTheWheel` short-circuits before the speed test — which is exactly the asymmetry that identified the cause. |
 | Putting out a fire is `square:stopFire()` **then** `square:transmitStopFire()`, which is what vanilla's fire brush does (`FireBrushUI.lua:265`). `IsoFire.extinctFire()` and `IsoFireManager.RemoveAllOn(square)` are both declared and both read exactly right — and both have **zero** uses in vanilla lua. | `Harden.sweepFire` used `fire:removeFromWorld()` on the object from `square:getFire()`. That is `IsoObject`'s generic removal: the engine answered every call with `IsoFireManager.Remove unknown fire, ignoring`, so the same fires were re-found and "doused" on every sweep, forever, while still burning. The log said it worked. A plausible-looking declared method with no vanilla uses is the tell, and here there were *two* of them next to the right answer. |
 | `IsoGridSquare` has **no `setBloodSplatLifetime`**. Vanilla `ISCleanBlood:complete()` uses `square:removeBlood(false, false)` then `square:removeGrime()`. | Confirmed absent from the jar. |
@@ -1948,22 +1993,22 @@ perl -e 'local $/; open($f,"<:raw",shift); $d=<$f>; %s=();
 ```
 
 For a conclusive answer, parse the method table rather than the constant
-pool. `Docs/methods.pl` prints what a class actually declares, with real
+pool. `scripts/methods.pl` prints what a class actually declares, with real
 signatures:
 
 ```bash
-perl Docs/methods.pl /tmp/pzchk/zombie/iso/objects/IsoLightSwitch.class "<init>"
+perl scripts/methods.pl /tmp/pzchk/zombie/iso/objects/IsoLightSwitch.class "<init>"
 #   public <init> (IsoCell, IsoGridSquare, IsoSprite, long) -> void
 ```
 
 **And when a declared method does not behave the way its name reads, disassemble
-it.** `Docs/body.pl` dumps a single method body, resolving field and method
+it.** `scripts/body.pl` dumps a single method body, resolving field and method
 references and string constants. The game ships a JRE, so there is no `javap`;
 this needs no JDK.
 
 ```bash
-perl Docs/body.pl /tmp/pzchk/zombie/iso/IsoGridSquare.class haveElectricity
-perl Docs/body.pl /tmp/pzchk/zombie/iso/IsoGridSquare.class hasGridPower "()Z"
+perl scripts/body.pl /tmp/pzchk/zombie/iso/IsoGridSquare.class haveElectricity
+perl scripts/body.pl /tmp/pzchk/zombie/iso/IsoGridSquare.class hasGridPower "()Z"
 ```
 
 Reach for it the moment behaviour contradicts a name. `setHaveElectricity` was
@@ -1997,7 +2042,7 @@ entry in the class file) and the interfaces, or grep the whole package:
 
 ```bash
 for f in zombie/vehicles/*.class; do
-  perl Docs/methods.pl "$f" 2>/dev/null | grep -q " getBattery " && echo "$f"
+  perl scripts/methods.pl "$f" 2>/dev/null | grep -q " getBattery " && echo "$f"
 done
 ```
 
@@ -2008,13 +2053,13 @@ vanilla uses of a plausible-sounding method is the tell that it was invented.
 
 ### Checking what a map actually contains
 
-`Docs/tiles.pl` reads a cell straight out of the lotpack — a tally by default,
+`scripts/tiles.pl` reads a cell straight out of the lotpack — a tally by default,
 or the world coordinates of one tile if you name it:
 
 ```bash
 M=Contents/mods/PhunInteriors/common/media/maps/phuninteriors
-perl Docs/tiles.pl $M/world_88_46.lotpack
-perl Docs/tiles.pl $M/world_88_46.lotpack appliances_misc_01_0
+perl scripts/tiles.pl $M/world_88_46.lotpack
+perl scripts/tiles.pl $M/world_88_46.lotpack appliances_misc_01_0
 ```
 
 It has paid for itself three times.
@@ -2048,11 +2093,11 @@ The standing lesson: **check the data before the code** when the symptom is
 "the world looks wrong" rather than "the logic is wrong". The log line saying
 we placed one generator was already conclusive and took thirty seconds to find.
 
-`Docs/roomcheck.pl` answers the question those two cannot: **does the registry
+`scripts/roomcheck.pl` answers the question those two cannot: **does the registry
 describe the map that ships?**
 
 ```bash
-perl Docs/roomcheck.pl
+perl scripts/roomcheck.pl
 #   18 cells, 990 registered slots, 14540 interior squares, 1330 door squares,
 #   990 slots with a front
 #   the registry matches the map
@@ -2102,7 +2147,7 @@ puts that repo's lua on the require path, requires its `PhunSpawn/interiors`
 and adds its cells to the scan:
 
 ```bash
-perl Docs/roomcheck.pl --mod ../PhunSpawn --mod ../PhunHub
+perl scripts/roomcheck.pl --mod ../PhunSpawn --mod ../PhunHub
 ```
 
 The two halves cannot be separated. Those mods call `registerRoom` into OUR
@@ -2114,7 +2159,7 @@ because the game merges every enabled mod's lua into one namespace and so does
 the registry. It also fires `OnInitGlobalModData`, since that is the hook the
 author docs tell a third party to register from.
 
-**`Docs/fencecheck.pl` DERIVES the perimeter rather than listing it**, and that
+**`scripts/fencecheck.pl` DERIVES the perimeter rather than listing it**, and that
 is the second lesson of the carve. It was a hand-written table of segments and
 corners, correct for a rectangle, and it had to be rewritten by hand the moment
 the block became an L. Now it reads which cells ship, works out what is inside
@@ -2133,12 +2178,12 @@ cell-local lines 0 and 255 missed the boundary at **254**, which is where it
 falls when a last row is excluded, so the entire new south fence came back as
 "not required" and the check passed with a hole in it.
 
-`Docs/rooms.pl` dumps one cell's room DEFS — name, level and each rect in
+`scripts/rooms.pl` dumps one cell's room DEFS — name, level and each rect in
 world coordinates — which is what `tiles.pl` cannot see and what decides both a
 room's loot and its shape:
 
 ```bash
-perl Docs/rooms.pl $M/87_48.lotheader
+perl scripts/rooms.pl $M/87_48.lotheader
 #   0  empty  z=0 rects=4 [22286,12292 6x2] ...      <- the shell ring
 #   1  empty  z=0 rects=1 [22288,12294 2x3]          <- the room itself
 ```
@@ -2149,13 +2194,13 @@ ground; and 87,48's rows 0-1 are 2x3 floors at 22288,12294, which is where the
 tent room is registered from rather than from arithmetic. A shell is a ring of
 four rects, the room is the single rect, and a 1x1 is the roof generator box.
 
-`Docs/zombies.pl` is its sibling for the other half of a cell — the zombie
+`scripts/zombies.pl` is its sibling for the other half of a cell — the zombie
 density block, which lives in the lotheader rather than the lotpack:
 
 ```bash
-perl Docs/zombies.pl $M/87_46.lotheader $M/88_46.lotheader
+perl scripts/zombies.pl $M/87_46.lotheader $M/88_46.lotheader
 #   all 1024 chunks zero -- nothing spawns here
-perl Docs/zombies.pl -v "$PZ/Muldraugh, KY/42_38.lotheader"
+perl scripts/zombies.pl -v "$PZ/Muldraugh, KY/42_38.lotheader"
 #   692 of 1024 chunks populated, max 4  (0 x332, 1 x230, 2 x432, ...)
 #   and the 32x32 grid, which draws the town
 ```
@@ -2239,7 +2284,7 @@ cells are actually towns.
    zero.** Density is per meta chunk (`IsoMetaChunk.setZombieIntensity`), and
    the loader reads it as a **1024 byte tail on the `.lotheader`** — one byte
    per chunk, 32x32, straight after the building defs, with an `EOFException`
-   if it is short. That is the block `Docs/tiles.pl` does not model and the
+   if it is short. That is the block `scripts/tiles.pl` does not model and the
    one unaccounted-for chunk in a lotheader parse.
 
    `IsoMetaGrid$MetaGridLoaderThread.loadCell` then evaluates
@@ -2334,8 +2379,8 @@ cells are actually towns.
    Lua global if you want to flush one while testing.
 
 1. **The map is cut and `defaults.lua` matches it** — verified, not asserted:
-   `perl Docs/roomcheck.pl` compares the two and is the only thing that does.
-   Both it and `Docs/fencecheck.pl` are green as of 2026-09-20, against the
+   `perl scripts/roomcheck.pl` compares the two and is the only thing that does.
+   Both it and `scripts/fencecheck.pl` are green as of 2026-09-20, against the
    export taken after 87,49 and 88,49 were carved out. **Everything in the
    rest of this item below the next few paragraphs still describes the
    superseded two-cell, two-room map and needs a pass.** The top of
@@ -2360,7 +2405,7 @@ cells are actually towns.
    warning**.
    87,49's only registered room went with it -- `Spawn`, an 8x9 garage stamped
    once at a floor corner rather than on the grid, bound to `Base.CarTaxi` --
-   and 88,49 held nothing but ground and fence. `Docs/cells.pl` is what checks
+   and 88,49 held nothing but ground and fence. `scripts/cells.pl` is what checks
    nobody else has claimed a cell.
 
    `gendefaults.pl` keeps the `Floor X` / `Floor Y` columns that room needed,
@@ -2456,7 +2501,7 @@ cells are actually towns.
    ground.
 
    Registry side that is two constants: `$OFF_X` and `$OFF_Y` in
-   `Docs/gendefaults.pl` went 16 -> 15 and 6 -> 5, and the file was
+   `scripts/gendefaults.pl` went 16 -> 15 and 6 -> 5, and the file was
    regenerated. Every room moved one square north-west; **slot indices did not
    change**, so nothing re-points.
 
@@ -2878,7 +2923,7 @@ cells are actually towns.
    roof is where the rain barrels go when plumbing lands; it has **nothing to
    do with power**. Both cells hold 60 generators at the identical offset,
    `{x = 0, y = 17, z = 0}`, on exterior squares — read out of the lotpack
-   with `Docs/tiles.pl`, not guessed. An
+   with `scripts/tiles.pl`, not guessed. An
    earlier revision of this file had `phun.van.plain` marked as unpowered
    on the theory that the z=1 platform was the generator's home; it was not.
 
@@ -2962,7 +3007,7 @@ cells are actually towns.
    GIMP sources are in `Docs/images/` and are deliberately untracked.
 3. **`workshop.txt` has an empty `id=`.** Fill on first publish.
 4. **The registry is fully populated.** `defaults.lua` registers 83 rooms, 78
-   vehicle bindings and one object binding, generated by `Docs/gendefaults.pl`
+   vehicle bindings and one object binding, generated by `scripts/gendefaults.pl`
    from the three CSVs. There is no `phun.van` binding any more -- every
    binding is `phun.vehicles.*` and the matcher is gone, so the sandbox
    script-override option that named it has been removed too. The mechanism
@@ -2971,7 +3016,7 @@ cells are actually towns.
    about.
 5. **The reshaped registry has never run in game.** Rooms, bindings, per-slot
    blueprint capture and the nullable generator are all
-   covered by `Tests/lua/` -- 735 checks, all green -- which is real verification
+   covered by `Tests/lua/` -- 742 checks, all green -- which is real verification
    of the logic and no verification at all that PZ agrees. In particular:
    - **Capture is now load bearing and has never succeeded on this map.** The
      `bounds.z + 1` sweep used to count a nil square above the room as a
@@ -3357,19 +3402,18 @@ cells are actually towns.
       action completes rather than when it starts** -- `Client.beginEnter`
       tests only the motion rule, and the zombie test is in `Transit.canEnter`,
       reached from the request `perform()` sends. So you cannot begin clear and
-      finish surrounded. `EntryDelay` then makes that fifteen seconds of
-      standing still, interruptible on walk, run and aim. Anybody who has had
-      that did not need rescuing.
+      finish surrounded. `EntryDelay` then makes that a stretch of standing
+      still, interruptible on walk, run and aim -- one second by default,
+      which is short, and is why the radius is the half doing the work.
       So the case the shove actually fires in is the one it was built for: you
       went in clear and the street repopulated while you could not see it.
-      One edge survives, and it is the only one: the shove radius is **6**
-      against an entry radius of **4**. Equal radii would be a clean invariant
-      -- the shove could never clear more ground than entry already required to
-      be clear -- and the two square difference is ground it clears that entry
-      never demanded. It needs a zombie to walk into that ring during the
-      second or two of a round trip, so it is small; matching the numbers is
-      the fix if it ever matters, and a server that turns the entry gate off
-      loses the whole argument at once.
+      With the shipped defaults the invariant holds outright: the shove radius
+      is **6** against an entry radius of **10**, so the shove never clears
+      ground that entry did not already demand be clear. (It was 6 against 4
+      while `core.lua`'s fallback and the sandbox file disagreed; the file is
+      what ships.) A server that lowers the entry radius below the shove
+      radius reopens that ring, and one that turns the entry gate off loses
+      the whole argument at once.
     - **An admin port and `rescueStranded` get no shove**, because neither
       files arrival paperwork. That is a real hole rather than an oversight:
       closing it means a fourth arrival shape, or a second command meaning
@@ -3497,11 +3541,15 @@ was the means.
 
 ## Open questions
 
-- Should reclaimed-room loot survive by default? Currently `ScrubKeepsLoot=false`.
-  It was the most complaint-generating behaviour in the design while leases
-  expired on a clock. Reclaiming on demand means loot is only ever lost on a
-  full server, to a room unused past `RoomProtectedDays`, and the owner is told
-  -- so the question matters much less than it did.
+- Should reclaimed-room loot survive at all? **There is no option for it now.**
+  `ScrubKeepsLoot` existed and never worked: `Scrub.slot` gathered the items
+  into a table it returned and no caller read, so the loot was destroyed with
+  the option on or off. It was removed on 2026-09-23 rather than finished,
+  because where salvage would *go* -- a crate beside the vehicle, the vehicle's
+  own trunk, the owner's next room -- is an undecided design question, not a
+  missing line. It matters much less than it did anyway: reclaiming on demand
+  means loot is only ever lost on a full server, to a room unused past
+  `RoomProtectedDays`, and the owner is told.
 - Is `WeightFactor=50` right? It is a guess and needs an overloaded van to
   calibrate against.
 - ~~Should entering from the driver's seat make you climb out?~~ **Answered:
@@ -3514,3 +3562,13 @@ was the means.
 
 Full rationale, including the analysis of the reference mod this reacts to:
 https://claude.ai/code/artifact/67264759-901c-4bdb-9790-3681d200ccd0
+
+## User-facing docs
+
+`README.md` links out to `Docs/playing.md`, `vehicles.md`,
+`sandbox-options.md`, `admin.md`, `modding.md` and `how-it-works.md`, and
+`workshop.txt` links to the same pages on GitHub. They describe behaviour and
+defaults, so a change to a sandbox option, an admin action, a registry field or
+the room list needs them updated too. `Docs/vehicles.md` is generated from the
+two CSVs by `perl scripts/vehicledoc.pl > Docs/vehicles.md`; rerun it when a
+binding moves. None of them may contain an em dash.

@@ -3,7 +3,7 @@ VERSION = 1,
 option PhunInteriors.Debug
 {
     type = boolean,
-    default = true,
+    default = false,
     page = PhunInteriors,
     translation = PhunInteriors_Debug,
 }
@@ -90,14 +90,6 @@ option PhunInteriors.RoomProtectedDays
     max = 99999999,
     page = PhunInteriors,
     translation = PhunInteriors_RoomProtectedDays,
-}
-
-option PhunInteriors.ScrubKeepsLoot
-{
-    type = boolean,
-    default = false,
-    page = PhunInteriors,
-    translation = PhunInteriors_ScrubKeepsLoot,
 }
 
 option PhunInteriors.HardenShell

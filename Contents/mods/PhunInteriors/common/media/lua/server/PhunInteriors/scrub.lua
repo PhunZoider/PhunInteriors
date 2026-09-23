@@ -21,20 +21,20 @@ Core.modules.scrub = Scrub
 -- every room, rebuilding from a manifest is equivalent in practice.
 -- ---------------------------------------------------------------------------
 
---- Empty an object's container, salvaging first if asked.
-local function drain(object, keepLoot, salvage)
+--- Empty an object's container.
+--
+-- There used to be a ScrubKeepsLoot option here that "salvaged" what it
+-- removed. It collected the items into a table nothing ever read, so the loot
+-- was destroyed either way and the option only claimed otherwise. Removed
+-- rather than finished: where salvage would go (a crate, the vehicle, the
+-- tenant) is an undecided design question, not a missing line.
+local function drain(object)
     -- Containers hang off the object, never off the square.
     -- square:getContainer() does not exist and threw on the first scrub that
     -- ever ran; vanilla only ever calls getContainer() on an IsoObject.
     local container = object:getContainer()
     if not container then
         return
-    end
-    local items = container:getItems()
-    if keepLoot and salvage and items then
-        for i = 0, items:size() - 1 do
-            table.insert(salvage, items:get(i))
-        end
     end
     container:removeAllItems()
 end
@@ -125,7 +125,7 @@ end
 --
 -- It is also more idempotent than the rebuild was, not less: a second pass
 -- over a restored room touches nothing at all.
-local function reconcileSquare(square, wanted, keepLoot, salvage)
+local function reconcileSquare(square, wanted)
     local floor = square:getFloor()
 
     -- Sprites can legitimately repeat on one square, so count them rather
@@ -146,15 +146,9 @@ local function reconcileSquare(square, wanted, keepLoot, salvage)
                 -- Part of the room. Keep the object, empty anything the
                 -- tenant stashed in it.
                 needed[name] = needed[name] - 1
-                drain(object, keepLoot, salvage)
+                drain(object)
             else
-                if keepLoot and salvage and instanceof(object, "IsoWorldInventoryObject") then
-                    local item = object:getItem()
-                    if item then
-                        table.insert(salvage, item)
-                    end
-                end
-                drain(object, keepLoot, salvage)
+                drain(object)
                 square:transmitRemoveItemFromSquare(object)
                 square:RemoveTileObject(object)
             end
@@ -195,7 +189,7 @@ local function reconcileSquare(square, wanted, keepLoot, salvage)
 end
 
 --- Rebuild one slot from the manifest of its room.
--- Returns true plus any salvaged loot, or false plus a reason.
+-- Returns true, or false plus a reason.
 function Scrub.slot(roomId, index)
     local room = Core.rooms[roomId]
     if not room then
@@ -227,8 +221,6 @@ function Scrub.slot(roomId, index)
     if not bounds then
         return false, "no such slot in this room"
     end
-    local keepLoot = Core.settings.ScrubKeepsLoot
-    local salvage = keepLoot and {} or nil
     local touched = 0
 
     -- Verify the slot is loaded before mutating any of it, so a scrub is never
@@ -258,7 +250,7 @@ function Scrub.slot(roomId, index)
                     -- format: v2 stores palette indices, v1 stored names. nil
                     -- is meaningful: the blueprint says this square holds
                     -- nothing.
-                    reconcileSquare(square, Manifest.spritesAt(manifest, key), keepLoot, salvage)
+                    reconcileSquare(square, Manifest.spritesAt(manifest, key))
                     touched = touched + 1
                 end
             end
@@ -267,7 +259,7 @@ function Scrub.slot(roomId, index)
 
     Core.logLn("scrubbed " .. roomId .. "#" .. index .. " (" .. touched ..
         " squares, from its " .. tostring(source) .. " blueprint)")
-    return true, salvage
+    return true
 end
 
 --- Reasons a deferral is the NORMAL state of a quarantined slot rather than

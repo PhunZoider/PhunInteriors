@@ -11,9 +11,9 @@
 #   * a corner square claimed by two different lots, where one wall face wins
 #     and the other is lost, leaving a hole with no WallNW post.
 #
-#   perl Docs/fencecheck.pl                  # PhunInteriors' map
-#   perl Docs/fencecheck.pl <dir>            # any map folder
-#   perl Docs/fencecheck.pl --tiles <prefix> <dir>
+#   perl scripts/fencecheck.pl                  # PhunInteriors' map
+#   perl scripts/fencecheck.pl <dir>            # any map folder
+#   perl scripts/fencecheck.pl --tiles <prefix> <dir>
 #
 # THE PERIMETER IS DERIVED, not listed. It used to be a hand-written table of
 # segments and corners, which was right for a rectangle and had to be rewritten
@@ -38,7 +38,7 @@ while (@ARGV) {
 my $M = shift(@argv)
      // "Contents/mods/PhunInteriors/common/media/maps/phuninteriors";
 
-# $0 arrives as Docs\fencecheck.pl from cmd and Docs/fencecheck.pl from a
+# $0 arrives as scripts\fencecheck.pl from cmd and scripts/fencecheck.pl from a
 # shell, and File::Basename does not treat a backslash as a separator -- so
 # without this it looks for tiles.pl in the wrong place, every subprocess
 # produces nothing, and that reads as the whole fence being missing.

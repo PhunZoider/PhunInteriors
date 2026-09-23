@@ -17,7 +17,7 @@ rem back to the save on the way out, so a reset done mid-game is overwritten.
 rem The game itself can stay running: lotpacks load lazily per cell, and only
 rem a rebuilt .pack needs a restart.
 rem
-rem RUN `perl Docs\tighten.pl` BEFORE EXPORTING, after any WorldEd session.
+rem RUN `perl scripts\tighten.pl` BEFORE EXPORTING, after any WorldEd session.
 rem WorldEd rewrites each border lot rect to the building plus one every time it
 rem saves a cell, and that extra square blanks the neighbouring cell's first
 rem fence wall -- one new gap per cell you touched. This script runs tighten
@@ -25,7 +25,9 @@ rem too, but by then the lotpacks are already written, so it can only repair
 rem the project for the next export and tell you this one is stale.
 rem ---------------------------------------------------------------------------
 
-set SRC=%~dp0
+rem This file lives in scripts, one below the repo root, and every path
+rem below is relative to the root.
+for %%I in ("%~dp0..") do set "SRC=%%~fI\"
 set MAPS=%SRC%Contents\mods\PhunInteriors\common\media\maps\phuninteriors
 pushd "%SRC%"
 
@@ -57,15 +59,15 @@ if not defined HOME set HOME=%USERPROFILE%
 if not defined PERL (
     echo [map] *** perl not found, roomcheck NOT run ***
 ) else (
-    "!PERL!" Docs\roomcheck.pl
+    "!PERL!" scripts\roomcheck.pl
     if errorlevel 1 echo [map] *** roomcheck FAILED -- the registry does not match this map ***
 
     rem The border fence, read out of the lotpacks that just landed. A gap here
     rem is a hole a zombie walks through, and it is invisible from the editor.
-    "!PERL!" Docs\fencecheck.pl >nul 2>&1
+    "!PERL!" scripts\fencecheck.pl >nul 2>&1
     if errorlevel 1 (
         echo [map] *** fencecheck FAILED -- gaps in the border fence ***
-        "!PERL!" Docs\fencecheck.pl 2>nul | findstr /C:"gaps" /C:"cell " /C:"WallNW"
+        "!PERL!" scripts\fencecheck.pl 2>nul | findstr /C:"gaps" /C:"cell " /C:"WallNW"
     )
 
     rem WorldEd rewrites every border lot rect to the building PLUS ONE on save,
@@ -76,12 +78,12 @@ if not defined PERL (
     rem it repairs the project for the NEXT export, and a non-zero exit is the
     rem news that the lotpacks just copied were built from spilled rects.
     rem Re-export and run map.cmd again when it fires.
-    "!PERL!" Docs\tighten.pl --detect
+    "!PERL!" scripts\tighten.pl --detect
     if errorlevel 2 echo [map] *** lot rects were spilled -- THIS export is stale, re-export and re-run ***
 )
 
 rem --- Deploy ----------------------------------------------------------------
-call "%SRC%deploy.cmd"
+call "%~dp0deploy.cmd"
 
 rem --- Reset -----------------------------------------------------------------
 set SAVE=%~1

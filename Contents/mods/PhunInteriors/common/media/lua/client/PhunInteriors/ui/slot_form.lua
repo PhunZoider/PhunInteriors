@@ -22,7 +22,7 @@ Core.ui.slot_form = SlotForm
 -- Nothing here checks that the position is on a floor, or inside a cell the
 -- map ships, because a client cannot: the chunk is almost certainly not
 -- loaded, and a cell that exists is a question about a lotpack. That check is
--- Docs/roomcheck.pl, run against the shipped map, and it is the only thing
+-- scripts/roomcheck.pl, run against the shipped map, and it is the only thing
 -- that compares the registry to the map. An edit made here and saved should be
 -- followed by a run of it.
 -- ---------------------------------------------------------------------------

@@ -16,7 +16,7 @@
             // map.cmd does.
             "label": "Map: tighten lot rects (before exporting)",
             "type": "shell",
-            "command": "${workspaceFolder}\\tighten.cmd",
+            "command": "${workspaceFolder}\\scripts\\tighten.cmd",
             "options": {
                 "shell": {
                     "executable": "cmd.exe",
@@ -32,7 +32,7 @@
         {
             "label": "Map: sync, check, deploy, reset",
             "type": "shell",
-            "command": "${workspaceFolder}\\map.cmd",
+            "command": "${workspaceFolder}\\scripts\\map.cmd",
             "options": {
                 "shell": {
                     "executable": "cmd.exe",

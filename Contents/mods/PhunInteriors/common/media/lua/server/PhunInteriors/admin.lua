@@ -119,10 +119,53 @@ actions.weight = function()
     return require("PhunInteriors/weight").report()
 end
 
+--- Why an admin may not take this lease back, or nil when they may.
+---
+--- Shared by release and free, which are the same act reached two ways. free
+--- used to skip both checks, so it was the one route that could pull a lease
+--- out from under somebody standing in the room or quarantine a slot somebody
+--- had claimed -- exactly what release was taught to refuse.
+local function releaseRefusal(vehicleId)
+    -- Somebody standing in it has a lease, a return position and a leash
+    -- reading both. Pulling it out from under them would leave the leash
+    -- ejecting them to nowhere.
+    for key, occupancy in pairs(Core.occupants) do
+        if occupancy.vehicleId == vehicleId then
+            return "somebody is inside that room right now (" .. tostring(key) ..
+                "); evict them first"
+        end
+    end
+
+    -- A safehouse claim makes a room permanent for as long as it stands, and
+    -- every other path already respects that: Scrub.slot refuses one,
+    -- isReclaimable refuses one, and Slots.acquire skips it. An admin reset
+    -- would otherwise drop the lease and quarantine the slot, so the owner
+    -- loses the room they claimed and everything in it gets scrubbed when it
+    -- is next handed out.
+    --
+    -- Guarded here rather than inside Slots.release, because that is also how
+    -- a vehicle moves between rooms and how removal.lua frees a scrapped
+    -- wreck; refusing there would leave a claimed slot leased to a vehicle
+    -- that no longer exists.
+    local assignment = Slots.find(vehicleId)
+    if assignment then
+        local claim = Slots.safehouseOn(assignment.room, assignment.index)
+        if claim then
+            return string.format("%s#%s is claimed as a safehouse by %s; that claim has to go first",
+                assignment.room, tostring(assignment.index), tostring(claim:getOwner()))
+        end
+    end
+    return nil
+end
+
 actions.free = function(args)
     local vehicleId = args.vehicleId
     if not vehicleId then
         return {"free needs a vehicleId"}
+    end
+    local refusal = releaseRefusal(vehicleId)
+    if refusal then
+        return {refusal}
     end
     if Slots.release(vehicleId, "admin") then
         return {"released the room leased to " .. tostring(vehicleId)}
@@ -137,7 +180,7 @@ end
 -- the tool that settled how B42 electricity actually works. The jar answered
 -- it in the end; this reports the state so a room can be checked in game.
 --
--- Three facts, all read out of the bytecode (Docs/body.pl):
+-- Three facts, all read out of the bytecode (scripts/body.pl):
 --
 --   haveElectricity() ignores every field. It is
 --     chunk:isGeneratorPoweringSquare(x, y, z), with an early false for an
@@ -721,34 +764,9 @@ actions.release = function(args, player)
         return {"release needs a vehicleId, or a room and an index"}
     end
 
-    -- Somebody standing in it has a lease, a return position and a leash
-    -- reading both. Pulling it out from under them would leave the leash
-    -- ejecting them to nowhere.
-    for key, occupancy in pairs(Core.occupants) do
-        if occupancy.vehicleId == vehicleId then
-            return {"somebody is inside that room right now (" .. tostring(key) ..
-                "); evict them first"}
-        end
-    end
-
-    -- A safehouse claim makes a room permanent for as long as it stands, and
-    -- every other path already respects that: Scrub.slot refuses one,
-    -- isReclaimable refuses one, and Slots.acquire skips it. This was the hole
-    -- -- an admin reset would drop the lease and quarantine the slot, so the
-    -- owner loses the room they claimed and everything in it gets scrubbed
-    -- when it is next handed out.
-    --
-    -- Guarded here rather than inside Slots.release, because that is also how
-    -- a vehicle moves between rooms and how removal.lua frees a scrapped
-    -- wreck; refusing there would leave a claimed slot leased to a vehicle
-    -- that no longer exists.
-    local assignment = Slots.find(vehicleId)
-    if assignment then
-        local claim = Slots.safehouseOn(assignment.room, assignment.index)
-        if claim then
-            return {string.format("%s#%s is claimed as a safehouse by %s; that claim has to go first",
-                assignment.room, tostring(assignment.index), tostring(claim:getOwner()))}
-        end
+    local refusal = releaseRefusal(vehicleId)
+    if refusal then
+        return {refusal}
     end
 
     if Slots.release(vehicleId, "admin") then

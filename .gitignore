@@ -18,3 +18,8 @@ Docs/images/
 *.bak
 *.orig
 *.tmp
+
+# The room, mapping and vehicle sheets (Docs/pi-*.csv). They are the source
+# scripts/gendefaults.pl builds defaults.lua from, and they stay on the author's
+# machine rather than in the repo; the generated defaults.lua is what ships.
+*.csv

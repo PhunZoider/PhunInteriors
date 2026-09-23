@@ -4,7 +4,7 @@
         "commands": [
             {
                 "match": ".*",
-                "cmd": "${workspaceFolder}\\deploy.cmd"
+                "cmd": "${workspaceFolder}\\scripts\\deploy.cmd"
             }
         ]
     },

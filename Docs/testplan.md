@@ -58,7 +58,7 @@ result means anything.
 static checks and the syntax pass. A failure here makes every phase below
 untrustworthy.
 
-**2. `perl Docs/roomcheck.pl`** compares `defaults.lua` against the shipped
+**2. `perl scripts/roomcheck.pl`** compares `defaults.lua` against the shipped
 lotpacks, and it is the only thing that does.
 
 It currently **exits 1**, and the shape of the failure matters, because it is

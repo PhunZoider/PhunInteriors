@@ -184,7 +184,7 @@
     "IGUI_PhunInteriors_Hint_BindingRooms": "Adds these rooms to what the scripts above can reach. It never takes a vehicle away from another binding.",
     "IGUI_PhunInteriors_Hint_SlotIndex": "The index is what a lease remembers and cannot be changed. Delete and add to renumber.",
     "IGUI_PhunInteriors_Hint_NewSlotIndex": "The next unused index. Never re-use a deleted one: a lease may still name it.",
-    "IGUI_PhunInteriors_Hint_SlotPosition": "The north-west corner of the footprint, in world coordinates. Run Docs/roomcheck.pl against the map after saving.",
+    "IGUI_PhunInteriors_Hint_SlotPosition": "The north-west corner of the footprint, in world coordinates. Run scripts/roomcheck.pl against the map after saving.",
     "IGUI_PhunInteriors_Hint_Inherited": "inherited from %1",
 
     "IGUI_PhunInteriors_Ask_Script": "Vehicle script name, eg Base.StepVan",

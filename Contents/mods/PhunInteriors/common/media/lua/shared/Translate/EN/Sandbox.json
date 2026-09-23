@@ -36,9 +36,6 @@
     "Sandbox_PhunInteriors_PowerDrainFactor": "Interior power drain (%%)",
     "Sandbox_PhunInteriors_PowerDrainFactor_tooltip": "How much battery charge the room costs, as a percentage of what the generator burns. 100 is one full battery per full tank. 0 means the lights are free.",
 
-    "Sandbox_PhunInteriors_ScrubKeepsLoot": "Keep Loot On Reset",
-    "Sandbox_PhunInteriors_ScrubKeepsLoot_tooltip": "If yes, loot in a reclaimed room is salvaged rather than destroyed when the room is reset",
-
     "Sandbox_PhunInteriors_HardenShell": "Unbreakable Outer Walls",
     "Sandbox_PhunInteriors_HardenShell_tooltip": "If yes, the outer shell of a room cannot be destroyed or burned. A room can override this either way in the room editor. Containment does not depend on this",
 

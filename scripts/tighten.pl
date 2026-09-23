@@ -1,9 +1,9 @@
 #!/usr/bin/perl
 # Size every border lot rect to its building, in the WorldEd project file.
 #
-#   perl Docs/tighten.pl                    # $PI_MAPSRC/.. , or the dir below
-#   perl Docs/tighten.pl <dir or .pzw>
-#   perl Docs/tighten.pl --detect           # exit 2 if anything needed fixing
+#   perl scripts/tighten.pl                    # $PI_MAPSRC/.. , or the dir below
+#   perl scripts/tighten.pl <dir or .pzw>
+#   perl scripts/tighten.pl --detect           # exit 2 if anything needed fixing
 #
 # WorldEd stores a lot rect as the building PLUS ONE in each axis, and rewrites
 # it on every save -- so this is a normalisation step, not a one-off fix. For a
@@ -19,7 +19,7 @@
 # Run it AFTER any WorldEd session and BEFORE exporting. `map.cmd` also runs it,
 # but that is after the fact -- there it repairs the file for the NEXT export
 # and tells you the one you just made was built from spilled rects.
-# `Docs/fencecheck.pl` is what checks the lotpacks that actually shipped.
+# `scripts/fencecheck.pl` is what checks the lotpacks that actually shipped.
 #
 # Exit status is 0 when nothing needed changing, 2 when something did.
 use strict;

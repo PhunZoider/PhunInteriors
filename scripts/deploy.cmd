@@ -17,7 +17,9 @@ rem ---------------------------------------------------------------------------
 
 set MODS=PhunInteriors
 
-set SRC=%~dp0
+rem This file lives in scripts, one below the repo root, and every path
+rem below is relative to the root.
+for %%I in ("%~dp0..") do set "SRC=%%~fI\"
 set MODDIR=%USERPROFILE%\Zomboid\mods
 set WS=%USERPROFILE%\Zomboid\Workshop\PhunInteriors
 set WSTEST=%USERPROFILE%\Zomboid\Workshop\PhunInteriorsTest
@@ -64,6 +66,7 @@ rem exist without them, so a Workshop build that drops them has no rooms.
 rmdir /S /Q "%WS%" 2>nul
 xcopy "%SRC%" "%WS%" /Y /I /E /F /Q /EXCLUDE:%SRC%xclude >nul
 rmdir /S /Q "%WS%\Tests" 2>nul
+rmdir /S /Q "%WS%\scripts" 2>nul
 rmdir /S /Q "%WS%\Contents" 2>nul
 for %%M in (%MODS%) do (
     xcopy "%MODDIR%\%%M" "%WS%\Contents\mods\%%M" /Y /I /E /F /Q >nul
@@ -75,6 +78,7 @@ rem workshop.txt / preview.png come from Tests\.
 rmdir /S /Q "%WSTEST%" 2>nul
 xcopy "%SRC%" "%WSTEST%" /Y /I /E /F /Q /EXCLUDE:%SRC%xclude >nul
 rmdir /S /Q "%WSTEST%\Tests" 2>nul
+rmdir /S /Q "%WSTEST%\scripts" 2>nul
 rmdir /S /Q "%WSTEST%\Contents" 2>nul
 for %%M in (%MODS%) do (
     xcopy "%MODDIR%\%%MTest" "%WSTEST%\Contents\mods\%%M" /Y /I /E /F /Q >nul

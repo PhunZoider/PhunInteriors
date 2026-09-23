@@ -7,7 +7,7 @@ local tools = Core.tools
 -- What the admin editor changed, and how it is put back on.
 --
 -- The registry is code. `defaults.lua` is GENERATED from three CSVs by
--- Docs/gendefaults.pl, so an edit written back into it is lost on the next run
+-- scripts/gendefaults.pl, so an edit written back into it is lost on the next run
 -- and an edit written anywhere else in the lua needs a redeploy and a restart.
 -- Neither is a loop an admin can run while standing in the room being fixed.
 --

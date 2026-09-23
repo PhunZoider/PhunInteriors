@@ -10,10 +10,10 @@
 # The grouping identity is the map DIRECTORY name, not title=; see
 # MapGroups.findGroupWithAnyOfTheseDirectories.
 #
-#   perl Docs/cells.pl                     # tally, grouped
-#   perl Docs/cells.pl --find 2x1          # free homes for a 2x1 map
-#   perl Docs/cells.pl --grid              # ascii occupancy
-#   PZ=/path/to/ProjectZomboid perl Docs/cells.pl extra/map/dir
+#   perl scripts/cells.pl                     # tally, grouped
+#   perl scripts/cells.pl --find 2x1          # free homes for a 2x1 map
+#   perl scripts/cells.pl --grid              # ascii occupancy
+#   PZ=/path/to/ProjectZomboid perl scripts/cells.pl extra/map/dir
 use strict;
 use warnings;
 

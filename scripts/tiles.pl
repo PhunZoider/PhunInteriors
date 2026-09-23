@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 # What a map cell actually contains, read straight out of the lotpack.
 #
-#   perl Docs/tiles.pl <world_X_Y.lotpack>              # tally every tile
-#   perl Docs/tiles.pl <world_X_Y.lotpack> <tile_name>  # and where they are
+#   perl scripts/tiles.pl <world_X_Y.lotpack>              # tally every tile
+#   perl scripts/tiles.pl <world_X_Y.lotpack> <tile_name>  # and where they are
 #
 # The lotheader beside it is found automatically, and the cell origin comes
 # from the filename, so world coordinates come out directly.
