@@ -19,7 +19,7 @@
 # segments and corners, which was right for a rectangle and had to be rewritten
 # by hand the moment the block became an L. Deriving it means the check follows
 # the map: carve a cell out, add one, or point it at a one-cell map like
-# PhunSpawn's, and it asks the right question with no edit here.
+# PhunTaxi's, and it asks the right question with no edit here.
 use strict;
 use warnings;
 use File::Basename qw(dirname);

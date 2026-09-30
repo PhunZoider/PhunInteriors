@@ -51,7 +51,7 @@ if (-d $arg) {
     my @pzw = grep { /\.pzw$/ and -f "$arg/$_" } readdir $dh;
     closedir $dh;
     # EVERY project in the folder, not just phuninteriors.pzw. pi5 now holds
-    # three -- phunspawn and phunhub took the cells that were 87,49 and 88,49
+    # three -- phuntaxi and phunrooms took the cells that were 87,49 and 88,49
     # -- and they share buildings/_, so they have the same border lots and
     # WorldEd spills their rects on save exactly the same way. Tightening one
     # and leaving the others is how a fence comes back with a hole in it.

@@ -19,6 +19,7 @@ local Harden = require "PhunInteriors/harden"
 local Author = require "PhunInteriors/author"
 local Removal = require "PhunInteriors/removal"
 local Store = require "PhunInteriors/store"
+local Transit = require "PhunInteriors/transit"
 
 local started = false
 
@@ -91,6 +92,8 @@ Events.OnTick.Add(function()
     Leash.tick()
     -- One nil compare unless an admin has just removed a leased vehicle.
     Removal.tick()
+    -- One nil compare unless somebody landed in the last few seconds.
+    Transit.tickLandings()
 end)
 
 -- Work the quarantine queue. Needs loaded chunks, so it retries rather than

@@ -127,8 +127,8 @@ function stubs.install(root)
     -- source trees the game merges.
     --
     -- A LIST of trees rather than one, because the game merges every enabled
-    -- mod's lua into one namespace and so does the registry: PhunSpawn and
-    -- PhunHub call PhunInteriors.registerRoom from their own files, so a check
+    -- mod's lua into one namespace and so does the registry: PhunTaxi and
+    -- PhunRooms call PhunInteriors.registerRoom from their own files, so a check
     -- that wants to see their rooms has to load their lua beside ours.
     -- `stubs.addRoot` is how a caller says so; nothing changes for a caller
     -- that does not.

@@ -132,6 +132,19 @@ tileset
         RenderLayer = Floor
         attachedFloor = 
     }
+    // phuninteriors_01_25
+    tile
+    {
+        xy = 1,3
+        CustomItem = PhunInteriors.Manhole
+        CustomName = Manhole
+        Facing = E
+        GroupName = Manhole
+        IsMoveAble = 
+        MoveType = FloorRug
+        RenderLayer = Floor
+        attachedFloor = 
+    }
     // phuninteriors_01_28
     tile
     {
@@ -162,39 +175,65 @@ tileset
     tile
     {
         xy = 0,4
-        CantClimb = 
-        HitByCar = 
-        StopCar = 
-        solid = 
+        CustomName = HubLadders
+        Facing = E
+        GroupName = SewerLadder
+        IsMoveAble = 
+        MaterialType = Metal
+        MoveType = WallObject
+        PickUpWeight = 300
+        ScrapUseSkill = 
+        ScrapUseTool = 
+        attachedW = 
+        forceFade = 
     }
     // phuninteriors_01_33
     tile
     {
         xy = 1,4
-        CantClimb = 
-        HitByCar = 
-        StopCar = 
-        solid = 
+        CustomName = HubLadders
+        Facing = S
+        GroupName = SewerLadder
+        IsMoveAble = 
+        MaterialType = Metal
+        MoveType = WallObject
+        PickUpWeight = 300
+        ScrapUseSkill = 
+        ScrapUseTool = 
+        attachedN = 
+        forceFade = 
     }
     // phuninteriors_01_34
     tile
     {
         xy = 2,4
-        CantClimb = 
-        HitByCar = 
-        IsHigh = 
-        StopCar = 
-        solid = 
+        CustomName = HubLadders
+        Facing = E
+        GroupName = SewerLadder
+        IsMoveAble = 
+        MaterialType = Metal
+        MoveType = WallObject
+        PickUpWeight = 300
+        ScrapUseSkill = 
+        ScrapUseTool = 
+        attachedW = 
+        forceFade = 
     }
     // phuninteriors_01_35
     tile
     {
         xy = 3,4
-        CantClimb = 
-        HitByCar = 
-        IsHigh = 
-        StopCar = 
-        solid = 
+        CustomName = HubLadders
+        Facing = S
+        GroupName = SewerLadder
+        IsMoveAble = 
+        MaterialType = Metal
+        MoveType = WallObject
+        PickUpWeight = 300
+        ScrapUseSkill = 
+        ScrapUseTool = 
+        attachedN = 
+        forceFade = 
     }
     // phuninteriors_01_36
     tile

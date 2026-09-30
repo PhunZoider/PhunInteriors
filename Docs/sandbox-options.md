@@ -21,8 +21,9 @@ server, turn it off.
 
 | Option | Default | Range | What it does |
 |---|---|---|---|
-| Zombies Accumulate | on | | Zombies near the vehicle build up while you are inside, so you come out to a bigger crowd than you left. Off lets you wait out the night for free. |
-| Accumulation Rate | 2 | 0 to 50 | Extra zombies per hour spent inside. |
+| Zombies Gather Outside | on | | A few zombies gather around the vehicle while you are inside, and are waiting a short way off, just past the cleared ground, when you come out. Off lets you wait out the night for free. |
+| Gathering Rate | 4 | 0 to 48 | Zombies that gather per in-game day inside, rounded down, so a short visit adds none. At 4, a night inside adds one. |
+| Most That Gather | 3 | 0 to 20 | The most that can gather in one visit, however long it lasts. 0 turns gathering off. |
 | Exit Clears Zombies | 6 | 0 to 30 | Squares of ground cleared around you as you land. Anything inside is pushed to the edge of the ring, as far as walls allow. Nothing is removed. 0 turns it off. |
 | Breaching Ejects You | on | | Leaving the room any way other than the door (a broken wall, say) puts you back at the vehicle. Off moves you back inside instead. |
 
@@ -52,6 +53,12 @@ above: every shipped room relies on a generator 17 squares away.
 | Option | Default | Range | What it does |
 |---|---|---|---|
 | Unbreakable Outer Walls | on | | Room walls and light switches refuse to be destroyed, and fires in a room are put out. Individual rooms can override this either way in the room editor. Containment does not depend on it. |
+
+## Other mods
+
+| Option | Default | Range | What it does |
+|---|---|---|---|
+| Patch Whennyago Initiative Performance | on | | Only matters if [Whennyago Initiative](https://steamcommunity.com/sharedfiles/filedetails/?id=3790153201) is installed. Its solar and generator upkeep scans about 40,000 squares around every player each in-game minute, and in multiplayer runs on the clients rather than the server. With this on, the server does the same upkeep from the list of loaded vehicles instead. If Whennyago changes in a way the patch does not recognise, the patch stands itself down, says so in the server console, and Whennyago runs exactly as shipped. |
 
 ## Admin and debugging
 

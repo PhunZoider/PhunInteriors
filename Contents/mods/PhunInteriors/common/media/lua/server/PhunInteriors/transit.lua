@@ -95,7 +95,7 @@ local function zombiesWithin(x, y, z, radius)
     return found
 end
 
---- Count zombies near a point. Used for both the entry gate and the exit tax.
+--- Count zombies near a point, for the entry gate.
 local function zombiesNear(x, y, z, radius)
     return #zombiesWithin(x, y, z, radius)
 end
@@ -240,6 +240,159 @@ function Transit.shoveZombies(x, y, z, radius)
     return moved
 end
 
+-- How long the bubble is held after landing, and how often it is re-swept.
+--
+-- One pass at the arrival report was not enough, and it failed in game
+-- exactly as Known gaps #14 feared: the report goes up the moment the landing
+-- square exists, but a freshly loaded chunk's zombies are realised by the
+-- population manager a beat later, so the sweep found an empty street and the
+-- crowd faded in afterwards. And anything it did catch simply walked back in.
+-- Holding the bubble for a few seconds answers both.
+--
+-- Swept hard at first and gently after. A flat 500ms read as a shove about
+-- three seconds late in game: the server loads the landing chunk on its own
+-- schedule, a beat behind the client, and every pass that lands before the
+-- crowd exists costs a whole interval. At the shipped radius a pass is 169
+-- getGridSquare calls, so a tenth of a second for the first moment is cheap.
+local SHOVE_WINDOW_MS = 5000
+local SHOVE_FAST_MS = 1500
+local SHOVE_FAST_EVERY_MS = 100
+local SHOVE_EVERY_MS = 500
+
+-- Landing points still being held clear, keyed by player. Nil when there are
+-- none, so the tick is one nil compare on every other frame.
+local holdingClear = nil
+
+--- Clear a landing now, and keep it clear for SHOVE_WINDOW_MS.
+--
+-- The centre is fixed at the landing rather than following the player: this
+-- is the ground the teleport chose for them, and once they walk off it the
+-- crowd is theirs to deal with like anybody else's.
+function Transit.clearLanding(player, x, y, z, radius)
+    radius = tonumber(radius) or 0
+    if radius <= 0 then
+        return 0
+    end
+    local moved = Transit.shoveZombies(x, y, z, radius)
+    local now = getTimestampMs()
+    holdingClear = holdingClear or {}
+    holdingClear[Core.playerKey(player)] = {
+        x = x,
+        y = y,
+        z = z,
+        radius = radius,
+        nextAt = now + SHOVE_FAST_EVERY_MS,
+        fastUntil = now + SHOVE_FAST_MS,
+        untilAt = now + SHOVE_WINDOW_MS
+    }
+    return moved
+end
+
+--- Re-sweep every landing still inside its window. Called from OnTick.
+function Transit.tickLandings()
+    if not holdingClear then
+        return
+    end
+    local now = getTimestampMs()
+    local done = {}
+    local any = false
+    for key, hold in pairs(holdingClear) do
+        if now >= hold.untilAt then
+            done[#done + 1] = key
+        else
+            any = true
+            if now >= hold.nextAt then
+                hold.nextAt = now + (now < hold.fastUntil and SHOVE_FAST_EVERY_MS or SHOVE_EVERY_MS)
+                Transit.shoveZombies(hold.x, hold.y, hold.z, hold.radius)
+            end
+        end
+    end
+    -- Keys first, then delete: not while walking the table.
+    for _, key in ipairs(done) do
+        holdingClear[key] = nil
+    end
+    if not any then
+        holdingClear = nil
+    end
+end
+
+-- ---------------------------------------------------------------------------
+-- The exit tax: a few zombies gather round a vehicle while its tenant is
+-- inside, so waiting out the night is not free.
+--
+-- Deliberately small. It is counted per in-game DAY and rounded down, so a
+-- short visit costs nothing, a night costs one at the default rate, and no
+-- visit costs more than ExitTaxCap however long it lasts. It is a nudge, not a
+-- horde: the population the tenant walked away from is still out there doing
+-- whatever it was doing, and this only adds the handful that noticed.
+--
+-- It used to be worked out from a count of the crowd at the moment of going
+-- in, and gated on that count being non-zero. That gate made it almost never
+-- fire: the entry gate refuses anybody with a zombie within
+-- EntryZombieRadius, so the crowd at the door is zero by construction.
+-- ---------------------------------------------------------------------------
+
+--- How many zombies a visit of `hours` in-game hours has gathered.
+function Transit.exitTax(hours)
+    if not Core.settings.ExitTax then
+        return 0
+    end
+    local cap = math.floor(tonumber(Core.settings.ExitTaxCap) or 0)
+    local rate = tonumber(Core.settings.ExitTaxGrowth) or 0
+    hours = tonumber(hours) or 0
+    if cap <= 0 or rate <= 0 or hours <= 0 then
+        return 0
+    end
+    return math.min(cap, math.floor(hours * rate / 24))
+end
+
+-- How far past the cleared bubble they stand, and how hard to look for a
+-- square to stand them on before giving that one up.
+local GATHER_BAND = 4
+local GATHER_TRIES = 12
+
+--- Put `count` zombies on the ground a short way out from a point.
+--
+-- Just past the edge of the shove bubble, so the tax never undoes the shove:
+-- they are the crowd the tenant gets a moment to see, not one they land in.
+-- On the arrival report for the same reason the shove is, because there is no
+-- loaded ground to put anything on until the player has arrived, and
+-- addZombiesInOutfit needs a real square.
+--
+-- A square is accepted on the shove's own test -- floor, not solid, not one of
+-- our rooms -- plus isFree(false), so nothing is spawned into furniture. One
+-- that finds no square in GATHER_TRIES is skipped rather than forced: the tax
+-- is small enough that one fewer is no loss, and one inside a wall would be.
+function Transit.gatherZombies(x, y, z, count, inner)
+    count = math.floor(tonumber(count) or 0)
+    if count <= 0 then
+        return 0
+    end
+    z = math.floor(z)
+    inner = math.max(tonumber(inner) or 0, 2) + 2
+
+    local cell = getCell()
+    local placed = 0
+    for _ = 1, count do
+        for _ = 1, GATHER_TRIES do
+            local angle = ZombRand(360) * math.pi / 180
+            local distance = inner + ZombRand(GATHER_BAND + 1)
+            local sx = math.floor(x + math.cos(angle) * distance)
+            local sy = math.floor(y + math.sin(angle) * distance)
+            local square = cell:getGridSquare(sx, sy, z)
+            if shovable(square, nil) and square:isFree(false) then
+                addZombiesInOutfit(sx, sy, z, 1, nil, 50)
+                placed = placed + 1
+                break
+            end
+        end
+    end
+
+    Core.debugLn(string.format("exit tax: %d of %d zombie(s) gathered %d-%d squares from %d,%d,%d", placed, count,
+        inner, inner + GATHER_BAND, math.floor(x), math.floor(y), z))
+    return placed
+end
+
 --- Can this player enter this vehicle right now?
 -- Returns true, or false plus a translation key.
 function Transit.canEnter(player, vehicle)
@@ -379,7 +532,31 @@ function Transit.anyoneInside()
     return occupants > 0
 end
 
-local function placeInside(player, assignment, occupancy)
+-- What OnEnter and OnExit hand a listener, after the player: one table rather
+-- than positional arguments, so a field can be added later without moving
+-- every other one under somebody's handler. The four here are always present
+-- (holder and kind may be nil on a rescue, which has no lease); each call site
+-- adds what only it knows.
+--
+-- `holder` is the lease key and is safe to compare across calls. It is NOT a
+-- vehicle id a listener can resolve: a vehicle's is our UUID in its modData,
+-- which is never transmitted to a client. The loaded vehicle itself rides
+-- along as `vehicle` when there is one to hand over.
+local function visitInfo(occupancy, extra)
+    local info = {
+        room = occupancy.room,
+        index = occupancy.index,
+        holder = occupancy.vehicleId,
+        kind = occupancy.vehicleId and Core.holderKind(occupancy.vehicleId) or nil
+    }
+    for k, v in pairs(extra or {}) do
+        info[k] = v
+    end
+    return info
+end
+
+-- `extra` is only for the OnEnter payload; see visitInfo.
+local function placeInside(player, assignment, occupancy, extra)
     local room = Core.rooms[assignment.room]
     local spawn = Core.slotSpawn(room, assignment.index)
     if not spawn then
@@ -468,6 +645,13 @@ local function placeInside(player, assignment, occupancy)
         -- No "Step outside" in the menu. See Transit.enterRoom's `exit`.
         noExit = occupancy.noExit or nil
     })
+
+    -- Here rather than in each entry path, because this is the one place all
+    -- five pass through and the only one that knows the entry happened. It
+    -- used to fire from Transit.enter alone, so a tent, an admin port and
+    -- Core.enterRoom were all invisible to a listener. Last, so a handler
+    -- that throws cannot leave a half built occupancy behind it.
+    triggerEvent(Core.events.OnEnter, player, visitInfo(occupancy, extra))
     return true
 end
 
@@ -585,13 +769,6 @@ function Transit.enter(player, vehicle, seat, standSeat)
         requestedDoor = -1
     end
 
-    -- Snapshot the crowd we are walking away from. The exit tax grows this
-    -- while the player is inside, so waiting out the night costs something.
-    local snapshot = 0
-    if Core.settings.ExitTax then
-        snapshot = zombiesNear(vehicle:getX(), vehicle:getY(), vehicle:getZ(), 15)
-    end
-
     -- Getting the player out of the seat happens client side, with the
     -- teleport, because vanilla only ever exits a vehicle from a client timed
     -- action. The seat is already captured above.
@@ -602,17 +779,15 @@ function Transit.enter(player, vehicle, seat, standSeat)
         seat = requestedSeat,
         standSeat = requestedDoor,
         scrubOnArrival = scrubOnArrival or nil,
-        zombieSnapshot = snapshot,
         returnTo = {
             x = vehicle:getX(),
             y = vehicle:getY(),
             z = vehicle:getZ()
         }
-    }) then
+    }, {vehicle = vehicle}) then
         return false
     end
 
-    triggerEvent(Core.events.OnEnter, player, vehicle, assignment)
     Core.debugLn(tostring(key) .. " entered " .. assignment.room .. "#" .. assignment.index ..
         " from seat " .. tostring(requestedSeat) .. ", door " .. tostring(requestedDoor))
     return true
@@ -744,9 +919,8 @@ function Transit.enterObject(player, object, anchor)
         seat = -1,
         standSeat = -1,
         scrubOnArrival = scrubOnArrival or nil,
-        zombieSnapshot = 0,
         returnTo = assignment.lastKnownVehiclePos
-    }) then
+    }, {object = object}) then
         return false
     end
 
@@ -886,7 +1060,6 @@ function Transit.adminEnter(player, roomId, index)
         seat = -1,
         standSeat = -1,
         scrubOnArrival = scrubOnArrival or nil,
-        zombieSnapshot = 0,
         returnTo = assignment.lastKnownVehiclePos
     }) then
         return false, "that room has nowhere to put you; check the log"
@@ -901,7 +1074,7 @@ end
 -- ---------------------------------------------------------------------------
 -- A room with no holder.
 --
--- For another mod that decides WHO goes into a room -- PhunSpawn's arrival
+-- For another mod that decides WHO goes into a room -- PhunTaxi's arrival
 -- room is the first -- where there is no vehicle, no tent and no admin: the
 -- room is simply where new characters start. Built from the admin port,
 -- because the admin port already is "a real lease on a named room with
@@ -1008,7 +1181,7 @@ function Transit.recoverInPlace(player, roomId, index, noExit)
     assignment.lastUser = Core.playerKey(player)
     -- No enteredFrom: the entrance in their modData is still the one from
     -- when they first went in, and this is the same visit.
-    Transit.setOccupancy(player, {
+    local occupancy = {
         vehicleId = holder,
         room = roomId,
         index = index,
@@ -1017,8 +1190,9 @@ function Transit.recoverInPlace(player, roomId, index, noExit)
         seat = -1,
         standSeat = -1,
         enteredAt = Core.now(),
-        zombieSnapshot = 0
-    })
+    }
+    Transit.setOccupancy(player, occupancy)
+    triggerEvent(Core.events.OnEnter, player, visitInfo(occupancy, {recovered = true}))
     Core.logLn(string.format("recovered %s inside %s#%s on a fresh lease; the last one was handed back",
         tostring(Core.playerKey(player)), roomId, tostring(index)))
     return true
@@ -1027,7 +1201,7 @@ end
 --- Put a player into a named room with nothing holding it. SERVER side.
 --
 --     local ok, why = PhunInteriors.enterRoom(player, "phun.spawn.arrival", {
---         reason = "phunspawn",
+--         reason = "phuntaxi",
 --         share = true,          -- join an occupied slot when none is free
 --         exit = false,          -- no way out but PhunInteriors.sendTo
 --         returnTo = {x, y, z}   -- where a rescue or an eviction puts them
@@ -1140,13 +1314,12 @@ function Transit.enterRoom(player, roomId, opts)
         seat = -1,
         standSeat = -1,
         scrubOnArrival = scrubOnArrival or nil,
-        zombieSnapshot = 0,
         -- Deliberately not lastKnownVehiclePos: that is one field on a lease
         -- several people share. Per occupancy, and via the entrance in their
         -- own modData, which is what rescueStranded reads.
         returnTo = returnTo,
         enteredFrom = returnTo
-    }) then
+    }, {reason = reason}) then
         if not joined and not Slots.isOccupied(holder) then
             Slots.release(holder, "nowhere to put them")
         end
@@ -1608,9 +1781,20 @@ function Transit.leave(player, reason, via, sendTo)
     -- needs the destination loaded and so still waits for the report. The
     -- weight is not applied at all; Weight.apply composes over the stored
     -- delta, so the next ordinary exit from this holder corrects it.
+    --
+    -- The exit tax rides the vehicle's paperwork: a few zombies gathered
+    -- round it while the tenant was out of sight. Worked out here, where the
+    -- length of the visit is known, and spent on the report, where there is
+    -- loaded ground to put them on. Sent somewhere else, nothing was
+    -- gathering there; a tent or an admin port has no vehicle to gather at.
+    local owed = 0
+    if not sendTo and not occupancy.noVehicle then
+        owed = Transit.exitTax(Core.now() - (occupancy.enteredAt or Core.now()))
+    end
     if sendTo then
         pendingArrivals[key] = {
             shoveOnly = true,
+            landing = sendTo,
             expires = getTimestampMs() + ARRIVAL_TIMEOUT_MS
         }
     elseif not occupancy.noVehicle then
@@ -1626,6 +1810,7 @@ function Transit.leave(player, reason, via, sendTo)
             cab = cabExit or nil,
             room = cabExit and occupancy.room or nil,
             index = cabExit and occupancy.index or nil,
+            gather = owed > 0 and owed or nil,
             expires = getTimestampMs() + ARRIVAL_TIMEOUT_MS
         }
     elseif Core.holderKind(occupancy.vehicleId) == "object" then
@@ -1643,17 +1828,6 @@ function Transit.leave(player, reason, via, sendTo)
             at = destination,
             expires = getTimestampMs() + ARRIVAL_TIMEOUT_MS
         }
-    end
-
-    -- The exit tax. Zombies accumulate rather than despawning, so you come out
-    -- into a bigger crowd than you left.
-    local owed = 0
-    if Core.settings.ExitTax and occupancy.zombieSnapshot > 0 then
-        local hours = Core.now() - (occupancy.enteredAt or Core.now())
-        local growth = tonumber(Core.settings.ExitTaxGrowth) or 0
-        owed = math.floor(occupancy.zombieSnapshot + (hours * growth))
-        Core.debugLn(string.format("exit tax: snapshot %d over %.1fh -> %d",
-            occupancy.zombieSnapshot, hours, owed))
     end
 
     Transit.setOccupancy(player, nil)
@@ -1707,7 +1881,20 @@ function Transit.leave(player, reason, via, sendTo)
         Core.debugLn("leave: vehicle not loaded here; waiting for the arrival report")
     end
 
-    triggerEvent(Core.events.OnExit, player, reason, owed)
+    -- `destination` is where the teleport was aimed, which for a vehicle exit
+    -- is the vehicle and not the square they land on: the client resolves the
+    -- door, because only the client has the vehicle loaded. `cab` is a request
+    -- that can still bounce, in which case OnEnter follows with reason
+    -- "cabFull". `exitTax` is how many zombies will be gathered on arrival.
+    triggerEvent(Core.events.OnExit, player, visitInfo(occupancy, {
+        reason = reason,
+        destination = destination,
+        vehicle = vehicle,
+        cab = cabExit or nil,
+        sentTo = sendTo and true or nil,
+        handedBack = handBack and true or nil,
+        exitTax = owed
+    }))
     Core.debugLn(tostring(key) .. " left via " .. tostring(reason))
     return true, owed
 end
@@ -1715,7 +1902,7 @@ end
 --- Put a player at a position the way an exit would: out of any room they
 --- are in, and onto cleared ground.
 --
--- For another mod that decides WHERE somebody goes -- PhunSpawn's picker is
+-- For another mod that decides WHERE somebody goes -- PhunTaxi's picker is
 -- the first -- and wants the rest of an exit rather than a bare teleport.
 -- A bare teleport out of a room leaves the occupancy, the lease, the leash
 -- and the client's "Step outside" all believing the player is still in it,
@@ -1761,6 +1948,7 @@ function Transit.sendTo(player, destination, reason, release)
 
     pendingArrivals[Core.playerKey(player)] = {
         shoveOnly = true,
+        landing = target,
         expires = getTimestampMs() + ARRIVAL_TIMEOUT_MS
     }
     Core.respond(player, Core.commands.teleport, {
@@ -1778,7 +1966,7 @@ end
 
 --- The public face of Transit.sendTo, SERVER side only.
 --
---     PhunInteriors.sendTo(player, {x = 10608, y = 9698, z = 0}, "phunspawn", true)
+--     PhunInteriors.sendTo(player, {x = 10608, y = 9698, z = 0}, "phuntaxi", true)
 --
 -- Returns true, or false plus a reason in plain English.
 function Core.sendTo(player, destination, reason, release)
@@ -1824,9 +2012,9 @@ end
 
 --- Open or close a room, SERVER side.
 --
---     PhunInteriors.setRoomOpen("phunhub.room.market", false, {evict = true, scrub = true})
+--     PhunInteriors.setRoomOpen("phunrooms.room.market", false, {evict = true, scrub = true})
 --
--- For whatever decides WHEN a room is available -- PhunHub's opening hours are
+-- For whatever decides WHEN a room is available -- PhunRooms's opening hours are
 -- the first -- while this mod keeps deciding what that means. A closed room
 -- takes no new tenant, is never reclaimed into, and refuses somebody who
 -- already holds a lease in it; see Slots.isOpen.
@@ -1922,7 +2110,27 @@ function Transit.arrived(player, handle, seated)
     -- no zombies there at all, because a zombie only exists as an object in a
     -- loaded chunk. The player arriving is what loads it, and this report is
     -- the first moment the server knows they have.
-    Transit.shoveZombies(player:getX(), player:getY(), player:getZ(), Core.settings.ExitShoveRadius)
+    -- Held for a few seconds rather than swept once: see SHOVE_WINDOW_MS.
+    --
+    -- Centred on the square sendTo chose when there is one. On a server the
+    -- report can overtake the client's position update, and then getX() is
+    -- still the room they left: the whole window would guard the wrong
+    -- ground. A vehicle exit's landing is resolved client side, so that one
+    -- still has only the player's position to go on.
+    local landing = record.landing
+    if landing then
+        Transit.clearLanding(player, landing.x + 0.5, landing.y + 0.5, landing.z, Core.settings.ExitShoveRadius)
+    else
+        Transit.clearLanding(player, player:getX(), player:getY(), player:getZ(), Core.settings.ExitShoveRadius)
+    end
+
+    -- Then the few that gathered while they were inside, just past the edge
+    -- of what was cleared. Not on a cab exit that bounced: that tenant is
+    -- about to be put straight back in, so they never really came out.
+    if record.gather and not (record.cab and not seated) then
+        Transit.gatherZombies(player:getX(), player:getY(), player:getZ(), record.gather,
+            Core.settings.ExitShoveRadius)
+    end
 
     -- Transit.sendTo's arrival. No holder at the destination, so clearing the
     -- ground was the whole of what was owed, and going on would look for a
@@ -1965,8 +2173,7 @@ function Transit.arrived(player, handle, seated)
                 vehicleHandle = handle,
                 seat = -1,
                 standSeat = -1,
-                zombieSnapshot = 0
-            })
+            }, {reason = "cabFull"})
         else
             -- Their lease went while they were in transit, which is a strange
             -- thing to have happened but not a reason to teleport them into a
@@ -2075,6 +2282,13 @@ function Transit.rescueStranded(player)
         z = at.z,
         inside = false
     })
+    -- No OnEnter preceded this in this session, but a listener that kept
+    -- state across the restart is owed the other half. No holder: the lease
+    -- is gone, which is why they are being rescued.
+    triggerEvent(Core.events.OnExit, player, visitInfo({room = roomId, index = index}, {
+        reason = "stranded",
+        destination = at
+    }))
     return true
 end
 
@@ -2095,7 +2309,7 @@ function Transit.recover(player)
             -- nothing and left standing in the shell.
             local bounds = Core.slotBounds(room, assignment.index)
             if Core.inBounds(bounds, x, y, z) then
-                Transit.setOccupancy(player, {
+                local occupancy = {
                     vehicleId = vehicleId,
                     room = assignment.room,
                     index = assignment.index,
@@ -2106,9 +2320,13 @@ function Transit.recover(player)
                     noExit = assignment.noExit or nil,
                     seat = -1,
                     enteredAt = Core.now(),
-                    zombieSnapshot = 0,
                     returnTo = assignment.lastKnownVehiclePos
-                })
+                }
+                Transit.setOccupancy(player, occupancy)
+                -- A reconnect, or a restart that forgot who was inside. Not a
+                -- new visit, but a listener that holds per player state only
+                -- in memory lost it with the server and needs telling again.
+                triggerEvent(Core.events.OnEnter, player, visitInfo(occupancy, {recovered = true}))
                 Core.logLn("recovered " .. tostring(Core.playerKey(player)) ..
                     " inside " .. assignment.room .. "#" .. assignment.index)
                 return true

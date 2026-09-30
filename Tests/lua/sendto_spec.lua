@@ -3,7 +3,7 @@
 --
 -- The failure this exists to prevent is silent. A teleport that bypasses the
 -- occupancy leaves the leash, the lease and the client's "Step outside" all
--- believing the player is still in the room, and nothing errors: PhunSpawn's
+-- believing the player is still in the room, and nothing errors: PhunTaxi's
 -- first picker did exactly that. So the checks are on the state left behind,
 -- not on the teleport.
 local ROOT = os.getenv("PI_ROOT") or "."
@@ -86,7 +86,6 @@ Transit.setOccupancy(tenant, {
     index = 0,
     seat = 2,
     standSeat = 1,
-    zombieSnapshot = 0,
     enteredFrom = {x = 1, y = 2, z = 0}
 })
 check("inside a room it succeeds", Transit.sendTo(tenant, {x = 500, y = 600, z = 0}, "test"), true)
@@ -106,7 +105,7 @@ check("the arrival only clears the ground", Transit.arrived(tenant, nil, nil), t
 -- Released: the room goes back to the pool.
 local leaver = player("leaver")
 Slots.store().assignments["v2"] = {room = "gone", index = 1, lastSeen = 0}
-Transit.setOccupancy(leaver, {vehicleId = "v2", room = "gone", index = 1, seat = -1, zombieSnapshot = 0})
+Transit.setOccupancy(leaver, {vehicleId = "v2", room = "gone", index = 1, seat = -1})
 check("a release succeeds", Transit.sendTo(leaver, {x = 5, y = 5}, "test", true), true)
 check("and hands the room back", Slots.find("v2"), nil)
 
@@ -124,7 +123,7 @@ local function queued(roomId, index)
     return false
 end
 local function inside(p, holder, roomId)
-    Transit.setOccupancy(p, {vehicleId = holder, room = roomId, index = 0, seat = -1, zombieSnapshot = 0})
+    Transit.setOccupancy(p, {vehicleId = holder, room = roomId, index = 0, seat = -1})
 end
 
 Core.registerRoom("su.room", {size = {w = 2, h = 2}, singleUse = true, locations = {[0] = {0, 7000, 0}}})

@@ -56,8 +56,10 @@ seat you can go to it; otherwise you wait until it stops.
 
 ## What waits outside
 
-**Zombies gather while you are inside.** The longer you stay, the bigger the
-crowd around the vehicle when you come out. Waiting out the night has a cost.
+**A few zombies gather while you are inside.** Not many: nothing for a short
+visit, about one for a night, and never more than three however long you stay.
+They are waiting a short way off when you come out, just past the ground that
+is cleared for you. Waiting out the night is not quite free.
 
 **The ground around you is cleared as you land.** Coming out is a teleport and
 you cannot see what you are stepping into, so anything standing within 6

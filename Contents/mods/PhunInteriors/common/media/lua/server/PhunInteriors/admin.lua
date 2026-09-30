@@ -807,6 +807,22 @@ actions.shove = function(args, player)
     return {string.format("shoved %d zombie(s) out of %d squares", moved, radius)}
 end
 
+-- The exit tax, on demand and from wherever you are standing: what an exit
+-- after `hours` inside would put on the ground around you, or `count` if
+-- given. Same reason as shove -- the real trigger is a night spent inside.
+actions.gather = function(args, player)
+    if not player then
+        return {"gather needs a player to centre on"}
+    end
+    local count = tonumber(args.count) or Transit.exitTax(tonumber(args.hours) or 24)
+    if count <= 0 then
+        return {"that visit gathers nothing at the current settings; pass {count = 3} to try it anyway"}
+    end
+    local placed = Transit.gatherZombies(player:getX(), player:getY(), player:getZ(), count,
+        Core.settings.ExitShoveRadius)
+    return {string.format("gathered %d of %d zombie(s)", placed, count)}
+end
+
 actions.evict = function(args)
     local username = args.username
     if not username then
@@ -826,7 +842,7 @@ actions.evict = function(args)
     return {"could not evict " .. username .. ": " .. tostring(why)}
 end
 
--- Open or close a room by hand: the same call PhunHub's schedule makes, so an
+-- Open or close a room by hand: the same call PhunRooms's schedule makes, so an
 -- admin can test it without waiting for the hour.
 --
 --     PhunInteriors.admin("close", {room = "...", evict = true, scrub = true})

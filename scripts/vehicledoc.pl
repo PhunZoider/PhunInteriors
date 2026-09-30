@@ -32,8 +32,8 @@ vehicle is given once every slot of its own room is taken. A room with no
 overflow refuses the vehicle when it is full.
 
 A vehicle not listed here has no interior. A server admin can bind one in the
-room editor ([admin.md](admin.md)), and a mod can bind its own
-([modding.md](modding.md)).
+room editor ([remapping.md](remapping.md)), and a vehicle mod can bind its own
+([vehicle-mods.md](vehicle-mods.md)).
 
 | Room | Floor | Vehicles | Overflow |
 |---|---|---|---|

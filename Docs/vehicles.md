@@ -13,8 +13,8 @@ vehicle is given once every slot of its own room is taken. A room with no
 overflow refuses the vehicle when it is full.
 
 A vehicle not listed here has no interior. A server admin can bind one in the
-room editor ([admin.md](admin.md)), and a mod can bind its own
-([modding.md](modding.md)).
+room editor ([remapping.md](remapping.md)), and a vehicle mod can bind its own
+([vehicle-mods.md](vehicle-mods.md)).
 
 | Room | Floor | Vehicles | Overflow |
 |---|---|---|---|
@@ -25,7 +25,7 @@ room editor ([admin.md](admin.md)), and a mod can bind its own
 | Bus - School | 3x9 | `87fordB700school` | Bus |
 | Camper - Dasher | 2x4 | `DashRoamer` |  |
 | Camper - Large | 3x9 | `Trailer54FlyingCloud22` |  |
-| Camper - Medium | 3x5 | `Trailer61Bambi16` |  |
+| Camper - Medium | 3x5 | `Trailer61Airflyte`, `Trailer61Astrodome`, `Trailer61Bambi16` |  |
 | Camper - Mini | 2x3 | `Trailer87Scamp13` |  |
 | Camper - Small | 2x4 | `Trailer87Scamp16` |  |
 | Container - Factory | 3x6 | `isoContainer4`, `TrailerM747lowbed` |  |
@@ -40,7 +40,7 @@ room editor ([admin.md](admin.md)), and a mod can bind its own
 | Semi Trailer - Factory | 3x13 | `SemiTrailerVanCattle` | Semi Trailer - Water |
 | Semi Trailer - Warehouse | 3x13 | `SemiTrailerVan`, `W900_Container` | Semi Trailer - Water |
 | Semi Trailer - Water | 3x13 | `SemiTrailerVan_mil` | Semi Trailer - Warehouse |
-| Step Van | 3x4 | `StepVan` | Van |
+| Step Van | 3x4 | `85chevyStepVan`, `StepVan`, `TrailerK15cargoLarge` | Van |
 | Step Van - Beer | 3x4 | `StepVan_Genuine_Beer` | Step Van |
 | Step Van - Blacksmith | 3x4 | `StepVan_Blacksmith` | Step Van |
 | Step Van - Book | 3x4 | `StepVan_MobileLibrary` | Step Van |
@@ -67,12 +67,12 @@ room editor ([admin.md](admin.md)), and a mod can bind its own
 | Step Van - Tailoring | 3x4 | `StepVan_SmartKut` | Step Van |
 | Step Van - Whiskey | 3x4 | `StepVan_Scarlet` | Step Van |
 | Tent | 2x3 | `TentBlue`, `TentBrown`, `TentGreen`, `TentYellow` |  |
-| Trailer - Livestock | 3x4 | `Trailer_Horsebox`, `Trailer_Livestock` |  |
+| Trailer - Livestock | 3x4 | `Trailer_Horsebox`, `Trailer_Livestock`, `TrailerK15livestock` |  |
 | Trailer - Medium | 3x9 | `SemiTruckBox`, `SemiTruckBox_mil` |  |
 | Trailer - Military | 3x9 | `TrailerM128van`, `TrailerM129van` |  |
 | Truck - Armored | 2x4 | `87fordF700bank` | Van |
 | Truck - Furniture | 3x6 | `87fordF700box` | Van |
-| Van | 2x3 | `Van`, `Van_BugWipers`, `Van_Locksmith`, `VanDeerValley`, `VanJonesFabrication`, `VanMetalheads`, `VanOldMill`, `VanRiversideFabrication`, `VanSeats_Valkyrie` |  |
+| Van | 2x3 | `83gmcG1500aTeam`, `83gmcG1500lwb`, `TrailerK15cargoMedium`, `Van`, `Van_BugWipers`, `Van_Locksmith`, `VanDeerValley`, `VanJonesFabrication`, `VanMetalheads`, `VanOldMill`, `VanRiversideFabrication`, `VanSeats_Valkyrie` |  |
 | Van - Alcohol | 2x3 | `Van_Charlemange_Beer`, `Van_KnoxDisti` | Van |
 | Van - Ambulance | 2x3 | `VanAmbulance` |  |
 | Van - Art Supply | 2x3 | `Van_CraftSupplies` | Van |

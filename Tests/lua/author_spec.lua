@@ -331,9 +331,17 @@ check("and only a room with nothing at all resolves to nil",
 
 -- Re-exporting an unchanged session must produce an identical file, or every
 -- export is a full diff and the emitted lua stops being reviewable.
-local first = assert(io.open(outPath, "r")):read("*a")
+-- Close each read: os.remove on a file still open leaves a .fuse_hidden*
+-- orphan behind on a FUSE mount.
+local function slurp(path)
+    local fh = assert(io.open(path, "r"))
+    local text = fh:read("*a")
+    fh:close()
+    return text
+end
+local first = slurp(outPath)
 Author.run("emit")
-local second = assert(io.open(outPath, "r")):read("*a")
+local second = slurp(outPath)
 check("re-export is byte identical", first == second, true)
 
 if os.getenv("PI_KEEP_SAMPLE") then

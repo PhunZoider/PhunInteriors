@@ -29,11 +29,21 @@ option PhunInteriors.ExitTax
 option PhunInteriors.ExitTaxGrowth
 {
     type = integer,
-    default = 2,
+    default = 4,
     min = 0,
-    max = 50,
+    max = 48,
     page = PhunInteriors,
     translation = PhunInteriors_ExitTaxGrowth,
+}
+
+option PhunInteriors.ExitTaxCap
+{
+    type = integer,
+    default = 3,
+    min = 0,
+    max = 20,
+    page = PhunInteriors,
+    translation = PhunInteriors_ExitTaxCap,
 }
 
 option PhunInteriors.EntryDelay
@@ -132,4 +142,12 @@ option PhunInteriors.PowerDrainFactor
     max = 1000,
     page = PhunInteriors,
     translation = PhunInteriors_PowerDrainFactor,
+}
+
+option PhunInteriors.WhennyagoPatch
+{
+    type = boolean,
+    default = true,
+    page = PhunInteriors,
+    translation = PhunInteriors_WhennyagoPatch,
 }

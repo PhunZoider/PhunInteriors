@@ -1,5 +1,5 @@
 version=1
-id=
+id=3809818391
 title=PhunInteriors [DEV]
 description=[b]DEV BRANCH.[/b] A preview build of PhunInteriors for testing and feedback. It changes often and may break between updates. Use the main release for a real save.
 description=
@@ -7,7 +7,7 @@ description=Go inside your van. Right click it, walk in at the door, and you are
 description=
 description=[h2]Features[/h2]
 description=[list]
-description=[*][b]83 furnished rooms[/b] for vans, step vans, ambulances, buses, trucks, semi trailers, caravans, RVs, shipping containers and tents, with loot to match. Vehicles from several popular vehicle mods are covered too, and only get a room when that mod is installed.
+description=[*][b]1,000 instances of 83 unique interiors[/b] for vans, step vans, ambulances, buses, trucks, semi trailers, caravans, RVs, shipping containers and tents, with loot to match. Vehicles from several popular vehicle mods are covered too, and only get a room when that mod is installed.
 description=[*][b]Walk in, walk out.[/b] Board at the back of a van or the door of a caravan. Leave by walking out of the room. Which way you walk out decides which side of the vehicle you land on, and rooms with a cab can put you straight into a free seat.
 description=[*][b]Your room is yours.[/b] A room is only ever given to somebody else when every room is taken and yours has gone unused for two weeks. You are told if it happens. Claim it as a safehouse and it is never reused.
 description=[*][b]It costs something.[/b] What you store adds to the weight of the vehicle. The lights run off the vehicle battery, so a flat battery means a dark room. Zombies gather outside while you wait in there.
@@ -32,15 +32,20 @@ description=
 description=[h2]Compatibility[/h2]
 description=Build 42 only. The mod ships its own map block (cells 87,46 to 91,48 and 89,49 to 91,49); another map mod using those cells will conflict. Server zombie distribution should not be set to Uniform.
 description=
+description=Running [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3790153201]Whennyago Initiative[/url]? PhunInteriors includes a performance patch for it: that mod's solar and generator upkeep is done by the server from the loaded vehicle list, rather than by every client scanning the squares around them every in-game minute. It turns itself off if Whennyago changes in a way it does not recognise, and there is a sandbox option to turn it off yourself.
+description=
 description=[h2]Documentation[/h2]
 description=[list]
 description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/playing.md]Playing[/url]: getting in, getting out, power, water, tents
 description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicles.md]Supported vehicles[/url]: which vehicle gets which room
 description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/sandbox-options.md]Sandbox options[/url]: every option and its default
 description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/admin.md]Running a server[/url]: the room window, editor and console commands
+description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/remapping.md]Mapping a vehicle or an object to a room[/url]: give anything a room from inside the game, no code
+description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicle-mods.md]Giving your vehicles a room[/url]: for vehicle mod authors, a few lines of Lua
+description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/map-authors.md]Adding rooms from your map[/url]: for map authors
 description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/modding.md]Adding rooms and vehicles[/url]: the API for other mods
 description=[/list]
 description=
 description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
 tags=Build 42;Vehicles;Multiplayer
-visibility=unlisted
+visibility=public

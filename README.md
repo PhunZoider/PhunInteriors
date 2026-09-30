@@ -43,6 +43,9 @@ parked.
 | [Supported vehicles](Docs/vehicles.md) | Which vehicle gets which room |
 | [Sandbox options](Docs/sandbox-options.md) | Server owners: every option and its default |
 | [Running a server](Docs/admin.md) | Admins: the room window, the editor, console commands |
+| [Mapping a vehicle or an object to a room](Docs/remapping.md) | Admins: give any vehicle or placed object a room from inside the game |
+| [Giving your vehicles a room](Docs/vehicle-mods.md) | Vehicle mod authors: bind your vehicles to our rooms in a few lines |
+| [Adding rooms from your map](Docs/map-authors.md) | Map authors: draw your own rooms and register them |
 | [Adding rooms and vehicles](Docs/modding.md) | Mod and map authors: the registry API and map rules |
 | [How it works](Docs/how-it-works.md) | Anybody curious why it behaves the way it does |
 | [Test plan](Docs/testplan.md) | Testers |

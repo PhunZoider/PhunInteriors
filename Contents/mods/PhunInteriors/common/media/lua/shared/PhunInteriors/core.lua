@@ -173,7 +173,11 @@ PhunInteriors = {
     occupants = {},
     settings = {},
     ui = {},
-    modules = {}
+    modules = {},
+    -- Patches for other mods, one entry per mod, each a state table the patch
+    -- keeps current. See compat_whennyago.lua. PhunFixes reads
+    -- compat.whennyago to know to stand aside.
+    compat = {}
 }
 
 local Core = PhunInteriors
@@ -210,7 +214,8 @@ Core.defaults = {
     Debug = false,
     WeightFactor = 50,
     ExitTax = true,
-    ExitTaxGrowth = 2,
+    ExitTaxGrowth = 4,
+    ExitTaxCap = 3,
     EntryDelay = 1,
     EntryAtBoardingPoint = true,
     EntryBlockedByZombies = true,
@@ -222,6 +227,7 @@ Core.defaults = {
     AdminNoClipExempt = true,
     PowerBinding = true,
     PowerDrainFactor = 100,
+    WhennyagoPatch = true,
 }
 
 function Core.getOption(name, default)

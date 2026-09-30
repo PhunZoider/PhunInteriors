@@ -38,6 +38,9 @@ shape, spawn square, exits, generator and flags; add, move or delete its
 stamps; create, edit or delete bindings. Changes apply the moment you make
 them, so you can stand in the room you just changed.
 
+To give a vehicle or placed object a room, step by step, see
+[Mapping a vehicle or an object to a room](remapping.md).
+
 **Nothing autosaves.** Press **Save** to write your changes to
 `PhunInteriors.json` in the server's `Zomboid/Lua` folder, next to the other
 Phun mods' override files. Close the window with unsaved changes and it asks
@@ -100,13 +103,14 @@ PhunServer2 is installed.
 | `admin("reclaim", {room = ...})` | Take the lease a full pool would take next. Room is optional. |
 | `admin("age", {vehicleId = ..., days = ...})` | Make a lease look idle for that many days. |
 | `admin("shove", {radius = ...})` | Run the exit zombie shove where you stand. |
+| `admin("gather", {hours = ...} or {count = ...})` | Spawn the zombies an exit after that many hours inside would gather, around where you stand. Defaults to a full day. |
 
 All are called as `PhunInteriors.admin(...)`. They run on the server, and the result is printed to the console log rather than returned.
 
 ## Testing the rare paths
 
-Two mechanics only happen when a server is busy, so there are commands to
-force them.
+Some mechanics only happen when a server is busy or after hours of play, so
+there are commands to force them.
 
 **Reclaiming.** Enter a room through a vehicle, leave, then:
 
@@ -121,6 +125,9 @@ which is the mechanic working, and the test quietly stops meaning anything.
 
 **The exit shove.** Spawn a horde on yourself and run `admin("shove")`.
 
+**Zombies gathering outside.** Run `admin("gather")` and a few zombies appear
+just past the edge of the cleared ring, as they would after a day inside.
+
 ## Safehouses
 
 Players can claim a room as a safehouse with vanilla's own tools. A claimed
@@ -132,7 +139,7 @@ safehouse. To free one, remove the claim the vanilla way first.
 
 - **PhunServer2**, if installed, adds the `/interiors` chat command. Nothing
   else depends on it.
-- **PhunSpawn** and **PhunHub** register rooms of their own through this mod
+- **PhunTaxi** and **PhunRooms** register rooms of their own through this mod
   and ship map cells beside ours.
 - **Other map mods** must not use cells 87,46 to 91,48 or 89,49 to 91,49.
   Two maps claiming the same cell means one silently loses it.

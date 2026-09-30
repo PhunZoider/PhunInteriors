@@ -1,5 +1,5 @@
 -- Transit.enterRoom: another mod puts somebody into a room with nothing
--- holding it, PhunSpawn's arrival room being the first.
+-- holding it, PhunTaxi's arrival room being the first.
 --
 -- What matters here is the LEASE KEY. It belongs to the lease rather than the
 -- player, so a second tenant sharing a full room is a second occupant of the
@@ -43,6 +43,23 @@ local Slots = require "PhunInteriors/slots"
 local Leash = require "PhunInteriors/leash"
 local report = stubs.reporter()
 local check = report.check
+
+-- What a third party listening on OnEnter / OnExit would have been told.
+local heard = {}
+Events[Core.events.OnEnter].Add(function(p, info)
+    table.insert(heard, {event = "enter", player = p, info = info})
+end)
+Events[Core.events.OnExit].Add(function(p, info)
+    table.insert(heard, {event = "exit", player = p, info = info})
+end)
+local function lastHeard(event, p)
+    for i = #heard, 1, -1 do
+        if heard[i].event == event and heard[i].player == p then
+            return heard[i].info
+        end
+    end
+    return nil
+end
 
 local sent = {}
 Core.respond = function(player, command, args)
@@ -110,6 +127,14 @@ check("returnTo becomes the entrance a rescue reads", Transit.entranceOf(a) and 
 check("and is where an exit goes", Transit.occupancyOf(a).returnTo.y, 8)
 check("the lease is not given a vehicle position", Slots.find(holderOf(a)).lastKnownVehiclePos, nil)
 check("and needs no battery", Slots.find(holderOf(a)).batteryKnown, 1)
+local entered = lastHeard("enter", a)
+check("OnEnter fires for a holderless entry", entered ~= nil, true)
+check("naming the room", entered and entered.room, "arrival")
+check("and the slot", entered and entered.index, 0)
+check("and the lease key", entered and entered.holder, holderOf(a))
+check("and its kind", entered and entered.kind, "room")
+check("and the caller's reason", entered and entered.reason, "test")
+check("and it is not a recovery", entered and entered.recovered, nil)
 
 -- ---------------------------------------------------------------------------
 -- Idempotent: no second lease, no teleport.
@@ -117,8 +142,10 @@ check("and needs no battery", Slots.find(holderOf(a)).batteryKnown, 1)
 local leases = 0
 for _ in pairs(Slots.store().assignments) do leases = leases + 1 end
 sent = {}
+heard = {}
 check("a second call for the same room succeeds", Transit.enterRoom(a, "arrival", {share = true}), true)
 check("without moving them", lastTeleport(a), nil)
+check("or telling anybody they entered again", lastHeard("enter", a), nil)
 local after = 0
 for _ in pairs(Slots.store().assignments) do after = after + 1 end
 check("or leasing another slot", after, leases)
@@ -130,6 +157,7 @@ a.at.x, a.at.y = 1001, 1001
 check("somebody standing in their lease is recovered", Transit.enterRoom(a, "arrival", {share = true}), true)
 check("onto the same lease", holderOf(a), aHolder)
 check("still without a teleport", lastTeleport(a), nil)
+check("OnEnter fires for a recovery", lastHeard("enter", a) and lastHeard("enter", a).recovered, true)
 
 -- ---------------------------------------------------------------------------
 -- Sharing when full.
@@ -156,8 +184,15 @@ check("which is b's", holderOf(d), holderOf(b))
 local shared = holderOf(a)
 check("the first of two out succeeds", Transit.sendTo(c, {x = 5, y = 5}, "test", true), true)
 check("and the room is kept for the one still in it", Slots.find(shared) ~= nil, true)
+local cLeft = lastHeard("exit", c)
+check("OnExit fires for the first out", cLeft ~= nil, true)
+check("naming the lease they left", cLeft and cLeft.holder, shared)
+check("and where they were sent", cLeft and cLeft.destination and cLeft.destination.x, 5)
+check("as a sendTo", cLeft and cLeft.sentTo, true)
+check("without handing the room back", cLeft and cLeft.handedBack, nil)
 check("the last one out succeeds", Transit.sendTo(a, {x = 5, y = 5}, "test", true), true)
 check("and the lease goes with them", Slots.find(shared), nil)
+check("and OnExit says the room was handed back", lastHeard("exit", a) and lastHeard("exit", a).handedBack, true)
 
 -- ---------------------------------------------------------------------------
 -- A lease handed back over the head of somebody logged off inside is
@@ -167,6 +202,7 @@ local e = player("e", 1001, 1002, 0)
 check("a holderless room re-leases in place on recover", Transit.recover(e), true)
 check("on a fresh lease of the slot they are in", Transit.occupancyOf(e).index, 0)
 check("of the holderless kind", Core.holderKind(holderOf(e)), "room")
+check("and OnEnter says it was a recovery", lastHeard("enter", e) and lastHeard("enter", e).recovered, true)
 Transit.sendTo(e, {x = 5, y = 5}, "test", true)
 
 -- ---------------------------------------------------------------------------

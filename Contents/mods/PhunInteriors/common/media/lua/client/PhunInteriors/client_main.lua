@@ -669,6 +669,7 @@ end
 --     PhunInteriors.admin("reload")   -- after changing a sandbox option
 --     PhunInteriors.admin("weight")
 --     PhunInteriors.admin("shove")   -- or {radius = 6}; clears the ground round you
+--     PhunInteriors.admin("gather")  -- or {hours = 10} / {count = 3}; the exit tax round you
 --     PhunInteriors.admin("evict", {username = "..."})
 --
 -- Results come back through Core.commands.adminResult and print to the log,

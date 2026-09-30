@@ -5,6 +5,10 @@ calls described here, and a third party mod can add rooms for its own
 vehicles, bind its vehicles to our rooms, or hang a room off a placed object,
 without depending on us.
 
+This page is the reference. For a walkthrough, start with
+[Giving your vehicles a room](vehicle-mods.md) if you make vehicles, or
+[Adding rooms from your map](map-authors.md) if you make maps.
+
 ## Register from a vanilla event
 
 ```lua
@@ -167,6 +171,67 @@ in plain English.
 | `PhunInteriors.setRoomOpen(roomId, open, {evict, scrub})` | Open or close a room. |
 | `PhunInteriors.isRoomOpen(roomId)` | Whether it is taking tenants. |
 
+## Knowing when somebody goes in or out
+
+Two events, both fired **on the server** (and in single player), for every
+way in and every way out: a vehicle, a tent or other object, an admin port,
+`enterRoom`, `sendTo`, an eviction, a closing room.
+
+| Event | Arguments |
+|---|---|
+| `PhunInteriorsOnEnter` | `player, info` |
+| `PhunInteriorsOnExit` | `player, info` |
+
+`info` always has:
+
+| Field | Meaning |
+|---|---|
+| `room` | The room id. |
+| `index` | Which stamp of it. |
+| `holder` | The lease key. Stable for as long as the lease lasts, so it tells you whether two players are in the same room. It is not a vehicle id you can look anything up by. |
+| `kind` | What holds the lease: `"vehicle"`, `"object"`, `"admin"` or `"room"` (nothing, via `enterRoom`). |
+
+`PhunInteriorsOnEnter` may also carry:
+
+| Field | Meaning |
+|---|---|
+| `vehicle` | The vehicle they got in from, when entering from one. |
+| `object` | The object they got in from, when entering a tent or fixture. |
+| `reason` | The `reason` passed to `enterRoom`, or `"cabFull"` when a cab exit found every seat taken and put them back inside. |
+| `recovered` | `true` when nobody went anywhere: the player logged in already inside and the server has just remembered. Treat it as "is inside", not "has just arrived". |
+
+`PhunInteriorsOnExit` may also carry:
+
+| Field | Meaning |
+|---|---|
+| `reason` | Why they left: `"breach"` for walking out of the room, `"menu"` for "Step outside", `"admin"` for an eviction, or whatever a `sendTo` caller passed. `"stranded"` means their room was gone when they logged in and they were put back where they went in. |
+| `destination` | `{x, y, z}` where they are being sent. For a vehicle exit this is the vehicle, not the exact square they land on. |
+| `vehicle` | The vehicle, if it happens to be loaded. Usually it is not. |
+| `cab` | `true` when they asked for a seat. It can still fail, in which case `PhunInteriorsOnEnter` follows with `reason = "cabFull"`. |
+| `sentTo` | `true` when they left by `sendTo` rather than to their holder. |
+| `handedBack` | `true` when this exit released the room. |
+| `exitTax` | How many zombies will gather round them on arrival. |
+
+The exit fires when the player is sent out, before the teleport lands, so
+they are still standing in the room while your handler runs.
+
+Add your listener the same way you register rooms, inside
+`OnInitGlobalModData`, because `Events.PhunInteriorsOnEnter` does not exist
+until our `core.lua` has loaded:
+
+```lua
+Events.OnInitGlobalModData.Add(function()
+    if not PhunInteriors then return end
+    Events[PhunInteriors.events.OnEnter].Add(function(player, info)
+        if info.recovered then return end
+        print(player:getUsername() .. " went into " .. info.room)
+    end)
+    Events[PhunInteriors.events.OnExit].Add(function(player, info)
+        print(player:getUsername() .. " left " .. info.room .. " via " .. tostring(info.reason))
+    end)
+end)
+```
+
 ## Building the map
 
 A room is a building you draw on your own map cells. What the code expects:
@@ -192,5 +257,5 @@ A room is a building you draw on your own map cells. What the code expects:
   any floor square no registered slot covers, and any slot whose box does not
   match its floor.
 
-Our tiledef (`media/phuninteriors.tiles`, sheet 3050) is used by PhunSpawn and
-PhunHub for their ground and fences. If you use it too, depend on this mod.
+Our tiledef (`media/phuninteriors.tiles`, sheet 3050) is used by PhunTaxi and
+PhunRooms for their ground and fences. If you use it too, depend on this mod.

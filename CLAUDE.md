@@ -10,7 +10,7 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 **The registry was reshaped and has not run in game since.** Rooms, bindings
 and blueprints all changed shape -- see "A room is a contract" in Architecture.
-`Tests/run.sh` is green across 742 checks, which is real verification of the
+`Tests/run.sh` is green across 756 checks, which is real verification of the
 logic and no verification at all that PZ agrees. Everything below describes
 what was proven *before* that change; the mechanics are the same, but the
 registry underneath them is not.
@@ -36,7 +36,7 @@ none because their doors are in the side, and older notes further down this
 file still say they do. `selfPowered` is new and has never run either.
 
 **And `Core.enterRoom`, putting a player in a room with no holder, is new and
-has never run.** PhunSpawn's arrival room depends on it. Known gaps #16.
+has never run.** PhunTaxi's arrival room depends on it. Known gaps #16.
 
 **Playable in single player and on a dedicated server.** Confirmed working in
 game: enter and exit, containment, seat and door restore, translations,
@@ -220,8 +220,8 @@ emitter logic; do not try to grow it into a simulator.
 out of `Docs/` and the repo root on 2026-09-23. Each `.cmd` resolves the repo
 root as the folder above itself, and the perl tools expect to be run FROM the
 root (`perl scripts/roomcheck.pl`), because they read `Docs/pi-*.csv`,
-`Tests/lua/stubs.lua` and `Contents/...` by relative path. PhunSpawn's and
-PhunHub's `map.cmd` call `%PI_REPO%\scripts\*.pl`, so renaming or moving a
+`Tests/lua/stubs.lua` and `Contents/...` by relative path. PhunTaxi's and
+PhunRooms's `map.cmd` call `%PI_REPO%\scripts\*.pl`, so renaming or moving a
 tool here breaks their map loop; each of those repos also carries its own
 copy of `tighten.pl` in its own `Docs/`, which is theirs and not a reference
 to ours.
@@ -257,10 +257,11 @@ Contents/mods/PhunInteriors/common/
   icon.png  poster.png
   media/sandbox-options.txt
   media/lua/shared/PhunInteriors/    core, tools, registry, bounds, defaults,
-                                    reservoir, holders, overrides, json, boarding
+                                    reservoir, holders, overrides, json, boarding,
+                                    compat_whennyago, compat_phunzones
   media/lua/server/PhunInteriors/    slots, transit, leash, manifest, scrub,
                                     weight, power, harden, removal, admin,
-                                    author, rainwater, loot, store,
+                                    author, rainwater, loot, store, phunzones,
                                     server_{commands,events}
   .../server/PhunInteriors/blueprints/  NOT SHIPPED, deleted before release.
                                     Nothing ships a blueprint any more, because
@@ -291,8 +292,10 @@ Tests/lua/*_spec.lua               registry placement/links, allocation order,
                                    the tent pickup lock, the override layer,
                                    the entrance position and its fallback,
                                    the PhunInteriors.json round trip, the
-                                   admin actions the editor drives, sendTo
-                                   and holderless entry (enterRoom)
+                                   admin actions the editor drives, sendTo,
+                                   holderless entry (enterRoom) and the
+                                   exit tax count and its cap, and the
+                                   Whennyago Initiative patch
 Tests/root/PhunInteriors/common/   overlay carrying the test ids, applied by
                                    deploy.cmd to build PhunInteriorsTest. The
                                    path must mirror the live mod folder or the
@@ -713,9 +716,30 @@ one the mechanic took for them, and no amount of skill answers it. So
 landing point out to the edge of that bubble.
 
 A **shove**, never a despawn. The crowd is still there, it is still coming, and
-the exit tax means it is bigger than the one they went in past. What the bubble
+the exit tax adds a few to it. What the bubble
 buys is the second or two of warning somebody walking round a corner on foot
 would have had, which is the thing the teleport took away.
+
+**The exit tax is a nudge, and it is capped so it stays one.**
+`Transit.exitTax(hours)` is `floor(hours * ExitTaxGrowth / 24)`, held to
+`ExitTaxCap`: at the defaults of 4 a day and a cap of 3, a short visit costs
+nothing, a night costs one, and no visit ever costs more than three. The rate
+is per in-game **day** rather than per hour precisely so the increments can be
+that small with an integer option. `Transit.gatherZombies` spends it on the
+same arrival report as the shove, with `addZombiesInOutfit`, on squares
+`ExitShoveRadius + 2` to `+ 6` out -- past the bubble, so the tax never undoes
+the shove -- that pass the shove's own `shovable` test plus `isFree(false)`.
+A square not found in twelve tries is skipped rather than forced. Only a
+vehicle exit that lands at its vehicle pays: not `sendTo`, not a tent, not an
+admin port, and not a cab exit that bounced back inside.
+
+**It was a todo that the docs described as working, until 2026-09-27.** The
+count was worked out and handed to `OnExit`, which nothing in this mod listens
+to, so no zombie ever appeared. And it was gated on a snapshot of the crowd at
+the door being non-zero, which the entry gate makes zero by construction --
+it refuses anybody with a zombie within `EntryZombieRadius`. Both are gone;
+the snapshot field went with them. `OnExit` now carries the number gathered as
+`info.exitTax`; see "OnEnter and OnExit fire for every way in and out".
 
 **On the arrival report rather than in `Transit.leave`**, and it is the same
 split the weight and the power ledger already sit on. When `leave` runs the
@@ -1470,7 +1494,7 @@ next lease. Claimed slots are left alone, as Reset leaves them.
 
 **A room can have no holder at all.** `Core.enterRoom(player, roomId, opts)`
 puts somebody into a named room with no vehicle, tent or admin behind it --
-PhunSpawn's arrival room is the first caller. It is `Transit.adminEnter` with
+PhunTaxi's arrival room is the first caller. It is `Transit.adminEnter` with
 two differences, and both are about there being more than one person.
 
 **The lease key belongs to the lease, not the player.** `room:<uuid>`, minted
@@ -1577,6 +1601,23 @@ The server side calls other mods use, all plain-English on refusal:
 | `Core.sendTo(player, {x, y, z}, reason, release)` | the rest of an exit to a position the caller chose; `release` hands the room back once the last one is out |
 | `Core.setRoomOpen(roomId, open, {evict, scrub})` | open or close a room; closing refuses new leases, `enterRoom` included |
 | `Core.isRoomOpen(roomId)` | whether it is taking tenants |
+
+**OnEnter and OnExit fire for every way in and out**, server side, as
+`(player, info)` with `room`, `index`, `holder` and `kind` always present and
+the rest per call site (`Docs/modding.md` lists them). The rule that makes it
+complete: **every site that sets an occupancy fires OnEnter, and every site
+that clears one fires OnExit.** That is `placeInside`, `recover` and
+`recoverInPlace` for the first, and `leave` and `rescueStranded` for the
+second. A new `setOccupancy` caller needs the matching event.
+
+`OnEnter` used to fire from `Transit.enter` alone, so a tent, an admin port
+and `enterRoom` were invisible to a listener. It lives in `placeInside` now,
+the one function all five entry paths pass through. A recovery fires it with
+`recovered = true`, because a listener that keeps per player state in memory
+lost it with the server; the idempotent `enterRoom` call for somebody already
+inside fires nothing. One table rather than positional arguments so a field
+can be added without moving the others under somebody's handler.
+`enterroom_spec.lua` checks the payloads. Neither event has run in game.
 
 **An edit is a patch, kept beside the registration rather than inside it.**
 The registry is code, and `defaults.lua` is *generated* from three CSVs by
@@ -2142,12 +2183,12 @@ right about the box it was handed. The same run found a second fault nobody had
 noticed, one stamp a square south of its row, which had left that slot's exit
 tile on open ground outside its north wall.
 
-**It checks the whole family in one run, and it has to.** `--mod ../PhunSpawn`
-puts that repo's lua on the require path, requires its `PhunSpawn/interiors`
+**It checks the whole family in one run, and it has to.** `--mod ../PhunTaxi`
+puts that repo's lua on the require path, requires its `PhunTaxi/interiors`
 and adds its cells to the scan:
 
 ```bash
-perl scripts/roomcheck.pl --mod ../PhunSpawn --mod ../PhunHub
+perl scripts/roomcheck.pl --mod ../PhunTaxi --mod ../PhunRooms
 ```
 
 The two halves cannot be separated. Those mods call `registerRoom` into OUR
@@ -2167,7 +2208,7 @@ the fence -- every square of every cell, less the last row of a cell whose
 south neighbour is absent and the last column of one whose east neighbour is
 absent, which is exactly the W/N-only wall convention -- and requires a face
 wherever inside meets outside. Carve a cell out, add one, or point it at a
-one-cell map like PhunSpawn's, and it asks the right question with no edit.
+one-cell map like PhunTaxi's, and it asks the right question with no edit.
 
 Two things fell out of that which the table did not have. It found the
 **concave** turn, which is the one nobody writing out a rectangle thinks of:
@@ -2220,6 +2261,34 @@ cells are actually towns.
 - **PhunServer2 is a soft hook, never a dependency.** `admin.lua` guards with
   `if not PhunServer2 or not PhunServer2.registerCommand then`. Keep it that
   way — this was an explicit decision.
+- **Whennyago Initiative is patched, never required.**
+  `shared/PhunInteriors/compat_whennyago.lua` replaces that mod's
+  EveryOneMinute vehicle sweep (40k squares per player per minute, run on MP
+  clients) with a server side pass over `getCell():getVehicles():iterator()`.
+  Its header carries the bytecode findings it rests on, including why the
+  handler cannot simply be removed (parked vehicles get no engine part
+  updates). It stands itself down to Whennyago's own handler when the hooks it
+  depends on change, and `PhunInteriors.WhennyagoPatch` turns it off.
+  PhunFixes carries the same patch and stands aside when
+  `Core.compat.whennyago.hooked` is set; keep the two in step.
+- **PhunZones2 is a soft hook, and the interior zone is ours.**
+  `shared/PhunInteriors/compat_phunzones.lua` adds the `PhunInteriors` zone to
+  `PhunZones/data` at load (PhunTaxi's pattern for the Taxi Garage), with
+  `isVoid = true`. It used to be in PhunZones' own `data.lua` and was moved here
+  on 2026-09-28 because the geometry is our map's: **re-cut the block and
+  that `points` list has to follow**, and nothing checks it. `isVoid` is what
+  makes PhunZones' client show a tenant the zone of their holder rather than
+  "Interior". `server/PhunInteriors/phunzones.lua` pushes that zone with
+  PhunZones' own `updateEffectiveZone`, the command its `rv_server.lua` sends
+  for Project RV Interior: on every `OnEnter`, and on a 2s poll whenever it
+  changes. The position is the lease's `lastKnownVehiclePos` for a vehicle or
+  object, and the player's entrance for an admin port or holderless room.
+  A position inside our own zone is never pushed, or the void would name
+  itself. None of it has run in game.
+  Whennyago's own client code iterates that Set, which contradicts the
+  `getCell():getVehicles()` row in the API table above. That row predates
+  this patch and is worth rechecking in game: if iterator() works, loaded
+  vehicles CAN be enumerated from Lua.
 
 ## Known gaps
 
@@ -2398,7 +2467,7 @@ cells are actually towns.
    and the pitch, came out of the lotpacks.
 
    **87,49 and 88,49 are gone, and the block is an L rather than a
-   rectangle.** 87,49 went to **PhunSpawn** and 88,49 to **PhunHub**, which is
+   rectangle.** 87,49 went to **PhunTaxi** and 88,49 to **PhunRooms**, which is
    why they had to leave rather than merely be emptied: maps sharing a `lots=`
    chain share one coordinate space and `IsoLot.MapFiles` is ordered, so two
    maps shipping 87,49 means the loser's cell is discarded with **no
@@ -3016,7 +3085,7 @@ cells are actually towns.
    about.
 5. **The reshaped registry has never run in game.** Rooms, bindings, per-slot
    blueprint capture and the nullable generator are all
-   covered by `Tests/lua/` -- 742 checks, all green -- which is real verification
+   covered by `Tests/lua/` -- 756 checks, all green -- which is real verification
    of the logic and no verification at all that PZ agrees. In particular:
    - **Capture is now load bearing and has never succeeded on this map.** The
      `bounds.z + 1` sweep used to count a nil square above the room as a
@@ -3387,9 +3456,17 @@ cells are actually towns.
       loads, and the arrival report is sent the moment the client has a square.
       If realisation lags that by a beat, the sweep finds an empty street and
       the crowd fades in afterwards. Visible as a debug log that says nothing
-      on an exit into a crowd. The answer if so is a short window rather than
-      one pass, driven by something other than the leash -- which gates on
-      occupancy, and a player who just left has none.
+      on an exit into a crowd. **Reported in game on 2026-09-29** (radius 20,
+      zombies all over the landing), so the one pass became a window:
+      `Transit.clearLanding` shoves at once and `Transit.tickLandings`, on
+      the server `OnTick` beside `Removal.tick`, re-sweeps the same centre
+      every 100ms for the first 1.5s and every 500ms after, to 5s. Not the
+      leash, which gates on occupancy, and a player who just left has none.
+      A flat 500ms read as a shove about 3s late in game (2026-09-29), hence
+      the fast start. A `sendTo` arrival is centred on its chosen square
+      (`record.landing`), not the server's `player:getX()`, which can still
+      be the room when the report overtakes the position update; a vehicle
+      exit still uses the player's position. Neither change has run in game.
     - **`teleportTo` on a zombie.** It is `IsoGameCharacter`'s and every caller
       in this codebase and in vanilla uses it on a player. It calls
       `ensureNotInVehicle()` and `ensureOnTile()` and sets `last` alongside
@@ -3432,7 +3509,7 @@ cells are actually towns.
       is already gone by the time the arrival report says so, so the tenant is
       told the cab is full and left standing beside the vehicle rather than
       put back inside.
-    - **PhunHub's rooms are never leased**, so the leash never captures a
+    - **PhunRooms's rooms are never leased**, so the leash never captures a
       blueprint for them, and `scrub` on a hub room will defer forever unless
       one ships or the hub's entry goes through this mod. `Core.enterRoom` is
       that route now; see #16.
@@ -3447,17 +3524,20 @@ cells are actually towns.
       `BreachEjects = false` branch, which has never run in game either.
     - **`Client.noExit` hiding "Step outside".** Client UI, so untested. If the
       option still shows, the server refuses it anyway and logs at debug.
-    - **Ordering against PhunSpawn's `playerSetup`.** Both orders are covered
+    - **Ordering against PhunTaxi's `playerSetup`.** Both orders are covered
       in the spec, but only against stubs. The tell if it is wrong is a new
       character put out at their `returnTo` on login, or a second slot leased.
     - **`recoverInPlace` not scrubbing.** Deliberate, but it means a slot comes
       out of quarantine marked clean with whatever the last visit left in it.
 
-17. **Sprite bindings, `permanent`, shared rooms and the override sync have
-    never run in game.** See "An object is named by item or by sprite" in
-    Architecture. Covered by `holders_spec`, `overrides_spec` and
-    `enterroom_spec`, and the hub checks were confirmed to fail with each
-    guard disabled. What they cannot see, in rough order of risk:
+17. **A toilet bound to a room is confirmed working in game** (2026-09-27):
+    the binding matched, the object offered a way in, and the room behind it
+    was reachable. That is the first object binding other than a tent to run.
+    **`permanent`, shared rooms and the override sync have still never run in
+    game.** See "An object is named by item or by sprite" in Architecture.
+    Covered by `holders_spec`, `overrides_spec` and `enterroom_spec`, and the
+    hub checks were confirmed to fail with each guard disabled. What they
+    cannot see, in rough order of risk:
     - **The item fallback.** `Item.getWorldObjectSprite` has no vanilla lua
       uses. `console.txt` gets `indexed N world object sprites, M more by
       facing` on the first right click; N of 0 means it does not work.
@@ -3473,6 +3553,21 @@ cells are actually towns.
       the option still shows and works, the wrap did not take.
     - **A hub exit.** Lands on the square the player stood on to go in, via
       the occupancy's `returnTo`, the path `enterRoom` already uses.
+
+18. **The exit tax has never run in game.** `exittax_spec.lua` covers the
+    count and the cap, and the cap checks were confirmed to fail with the
+    `math.min` removed. The spawn needs real squares, so it is tested in game
+    or not at all; `admin("gather")` puts a day's worth round you. Watch for:
+    - **`addZombiesInOutfit` from server Lua on a dedicated server.** It ends
+      in `VirtualZombieManager.createRealZombieAlways`, and Horde Night's B42
+      build calls it server side, but vanilla only ever calls it from debug
+      UI. The tell is `gathered N of N` in the log with nothing on screen.
+    - **The zombie authority row in the API table**, again: a zombie spawned
+      next to a player may be handed to that player's client, and whether it
+      then shows up for them is the same unproven question as the shove.
+    - **The `nil` outfit and the `50` female chance**, passed as vanilla's
+      `FenrisScenario` passes them. A zombie that spawns naked or throws is
+      the one.
 
 ## v2, deliberately not in v1
 

@@ -3,7 +3,7 @@
 #
 #   perl scripts/roomcheck.pl                  # every cell under media/maps
 #   perl scripts/roomcheck.pl <dir>            # a different map folder
-#   perl scripts/roomcheck.pl --mod ../PhunSpawn --mod ../PhunHub
+#   perl scripts/roomcheck.pl --mod ../PhunTaxi --mod ../PhunRooms
 #
 # `--mod <repo>` folds another mod of the family into the SAME run: its lua on
 # the require path, its `<Mod>/interiors` required, and every cell under its
