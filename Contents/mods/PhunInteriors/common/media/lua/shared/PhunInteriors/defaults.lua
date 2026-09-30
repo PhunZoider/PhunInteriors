@@ -541,10 +541,10 @@ local function registerRooms()
         }
     })
 
-    -- GAGE K15 -- floor 4x5, 10 slots, room def 'armysurplus'.
+    -- GAGE KI5 -- floor 4x5, 10 slots, room def 'armysurplus'.
     -- Stamped at 91,47 row 1.
-    Core.registerRoom("phun.room.GAGE_K15", {
-        label = "GAGE K15",
+    Core.registerRoom("phun.room.GAGE_KI5", {
+        label = "GAGE KI5",
         source = SOURCE,
         size = {
             w = 5,
@@ -3108,11 +3108,11 @@ local function registerVehicles()
         scripts = {"Base.TrailerM747lowbed", "Base.isoContainer2"}
     })
 
-    -- GAGE K15: 3 bound directly.
+    -- GAGE KI5: 3 bound directly.
     Core.registerVehicles({
-        id = "phun.vehicles.GAGE_K15",
+        id = "phun.vehicles.GAGE_KI5",
         source = SOURCE,
-        rooms = {"phun.room.GAGE_K15"},
+        rooms = {"phun.room.GAGE_KI5"},
         scripts = {"Base.84gageV300apc", "Base.84gageV300fsv", "Base.lockMartM577"}
     })
 
@@ -3172,12 +3172,22 @@ local function registerVehicles()
         scripts = {"Base.SemiTrailerVan", "Base.SemiTrailerVanCattle", "Base.SemiTrailerVan_mil", "Base.W900_Container"}
     })
 
-    -- Step Van: 3 bound directly, 30 more overflowing in.
+    -- Step Van: 3 bound directly, 57 more overflowing in.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van",
         source = SOURCE,
         rooms = {"phun.room.Step_Van"},
-        scripts = {"Base.85chevyStepVan", "Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan",
+        scripts = {"Base.85chevyStepVan", "Base.85chevyStepVanBlacksmith", "Base.85chevyStepVanButchers",
+                   "Base.85chevyStepVanCitrusWave", "Base.85chevyStepVanDelirosPlonkies", "Base.85chevyStepVanFlorist",
+                   "Base.85chevyStepVanGenuine", "Base.85chevyStepVanHerald", "Base.85chevyStepVanJorgensen",
+                   "Base.85chevyStepVanLibrary", "Base.85chevyStepVanLvAirportCatering",
+                   "Base.85chevyStepVanLvMotorshop", "Base.85chevyStepVanMarineBites", "Base.85chevyStepVanMasonry",
+                   "Base.85chevyStepVanMrHuangsLaundry", "Base.85chevyStepVanPostal", "Base.85chevyStepVanPropane",
+                   "Base.85chevyStepVanRandys", "Base.85chevyStepVanSWAT", "Base.85chevyStepVanScarletOak",
+                   "Base.85chevyStepVanSeHospitality", "Base.85chevyStepVanSePaintingServices",
+                   "Base.85chevyStepVanSmartCut", "Base.85chevyStepVanSunBallz", "Base.85chevyStepVanTheCompleteRepair",
+                   "Base.85chevyStepVanTimelessGlass", "Base.85chevyStepVanUsLogistics",
+                   "Base.85chevyStepVanZipeeMarket", "Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan",
                    "Base.StepVanAirportCatering", "Base.StepVanMail", "Base.StepVan_Blacksmith",
                    "Base.StepVan_Butchers", "Base.StepVan_Cereal", "Base.StepVan_Citr8",
                    "Base.StepVan_CompleteRepairShop", "Base.StepVan_Florist", "Base.StepVan_Genuine_Beer",
@@ -3186,207 +3196,210 @@ local function registerVehicles()
                    "Base.StepVan_Masonry", "Base.StepVan_Mechanic", "Base.StepVan_MobileLibrary",
                    "Base.StepVan_Plonkies", "Base.StepVan_Propane", "Base.StepVan_RandisPlants", "Base.StepVan_Scarlet",
                    "Base.StepVan_SmartKut", "Base.StepVan_SouthEasternHosp", "Base.StepVan_SouthEasternPaint",
-                   "Base.StepVan_USL", "Base.StepVan_Zippee", "Base.TrailerK15cargoLarge"}
+                   "Base.StepVan_USL", "Base.StepVan_Zippee", "Base.TrailerKI5cargoLarge"}
     })
 
-    -- Step Van - Beer: 1 bound directly.
+    -- Step Van - Beer: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Beer",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Beer"},
-        scripts = {"Base.StepVan_Genuine_Beer"}
+        scripts = {"Base.85chevyStepVanGenuine", "Base.StepVan_Genuine_Beer"}
     })
 
-    -- Step Van - Blacksmith: 1 bound directly.
+    -- Step Van - Blacksmith: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Blacksmith",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Blacksmith"},
-        scripts = {"Base.StepVan_Blacksmith"}
+        scripts = {"Base.85chevyStepVanBlacksmith", "Base.StepVan_Blacksmith"}
     })
 
-    -- Step Van - Book: 1 bound directly.
+    -- Step Van - Book: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Book",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Book"},
-        scripts = {"Base.StepVan_MobileLibrary"}
+        scripts = {"Base.85chevyStepVanLibrary", "Base.StepVan_MobileLibrary"}
     })
 
-    -- Step Van - Butcher: 1 bound directly.
+    -- Step Van - Butcher: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Butcher",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Butcher"},
-        scripts = {"Base.StepVan_Butchers"}
+        scripts = {"Base.85chevyStepVanButchers", "Base.StepVan_Butchers"}
     })
 
-    -- Step Van - Carpentry: 1 bound directly.
+    -- Step Van - Carpentry: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Carpentry",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Carpentry"},
-        scripts = {"Base.StepVan_Jorgensen"}
+        scripts = {"Base.85chevyStepVanJorgensen", "Base.StepVan_Jorgensen"}
     })
 
-    -- Step Van - Catering: 2 bound directly.
+    -- Step Van - Catering: 4 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Catering",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Catering"},
-        scripts = {"Base.StepVanAirportCatering", "Base.StepVan_SouthEasternHosp"}
+        scripts = {"Base.85chevyStepVanLvAirportCatering", "Base.85chevyStepVanSeHospitality",
+                   "Base.StepVanAirportCatering", "Base.StepVan_SouthEasternHosp"}
     })
 
-    -- Step Van - Citr8: 2 bound directly.
+    -- Step Van - Citr8: 4 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Citr8",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Citr8"},
-        scripts = {"Base.StepVan_Citr8", "Base.StepVan_Zippee"}
+        scripts = {"Base.85chevyStepVanCitrusWave", "Base.85chevyStepVanZipeeMarket", "Base.StepVan_Citr8",
+                   "Base.StepVan_Zippee"}
     })
 
-    -- Step Van - Fish: 1 bound directly.
+    -- Step Van - Fish: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Fish",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Fish"},
-        scripts = {"Base.StepVan_MarineBites"}
+        scripts = {"Base.85chevyStepVanMarineBites", "Base.StepVan_MarineBites"}
     })
 
-    -- Step Van - Florist: 1 bound directly.
+    -- Step Van - Florist: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Florist",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Florist"},
-        scripts = {"Base.StepVan_Florist"}
+        scripts = {"Base.85chevyStepVanFlorist", "Base.StepVan_Florist"}
     })
 
-    -- Step Van - Glass: 1 bound directly.
+    -- Step Van - Glass: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Glass",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Glass"},
-        scripts = {"Base.StepVan_Glass"}
+        scripts = {"Base.85chevyStepVanTimelessGlass", "Base.StepVan_Glass"}
     })
 
-    -- Step Van - Groceries: 1 bound directly.
+    -- Step Van - Groceries: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Groceries",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Groceries"},
-        scripts = {"Base.StepVan_Cereal"}
+        scripts = {"Base.85chevyStepVanSunBallz", "Base.StepVan_Cereal"}
     })
 
-    -- Step Van - Laundry: 1 bound directly.
+    -- Step Van - Laundry: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Laundry",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Laundry"},
-        scripts = {"Base.StepVan_HuangsLaundry"}
+        scripts = {"Base.85chevyStepVanMrHuangsLaundry", "Base.StepVan_HuangsLaundry"}
     })
 
-    -- Step Van - Logistics: 1 bound directly.
+    -- Step Van - Logistics: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Logistics",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Logistics"},
-        scripts = {"Base.StepVan_USL"}
+        scripts = {"Base.85chevyStepVanUsLogistics", "Base.StepVan_USL"}
     })
 
-    -- Step Van - Mail: 1 bound directly.
+    -- Step Van - Mail: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Mail",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Mail"},
-        scripts = {"Base.StepVanMail"}
+        scripts = {"Base.85chevyStepVanPostal", "Base.StepVanMail"}
     })
 
-    -- Step Van - Masonry: 1 bound directly.
+    -- Step Van - Masonry: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Masonry",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Masonry"},
-        scripts = {"Base.StepVan_Masonry"}
+        scripts = {"Base.85chevyStepVanMasonry", "Base.StepVan_Masonry"}
     })
 
-    -- Step Van - Mechanic: 2 bound directly.
+    -- Step Van - Mechanic: 3 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Mechanic",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Mechanic"},
-        scripts = {"Base.StepVan_LouisvilleMotorShop", "Base.StepVan_Mechanic"}
+        scripts = {"Base.85chevyStepVanLvMotorshop", "Base.StepVan_LouisvilleMotorShop", "Base.StepVan_Mechanic"}
     })
 
-    -- Step Van - News: 1 bound directly.
+    -- Step Van - News: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_News",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_News"},
-        scripts = {"Base.StepVan_Heralds"}
+        scripts = {"Base.85chevyStepVanHerald", "Base.StepVan_Heralds"}
     })
 
-    -- Step Van - Paint: 1 bound directly.
+    -- Step Van - Paint: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Paint",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Paint"},
-        scripts = {"Base.StepVan_SouthEasternPaint"}
+        scripts = {"Base.85chevyStepVanSePaintingServices", "Base.StepVan_SouthEasternPaint"}
     })
 
-    -- Step Van - Plants: 1 bound directly.
+    -- Step Van - Plants: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Plants",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Plants"},
-        scripts = {"Base.StepVan_RandisPlants"}
+        scripts = {"Base.85chevyStepVanRandys", "Base.StepVan_RandisPlants"}
     })
 
-    -- Step Van - Plonkies: 1 bound directly.
+    -- Step Van - Plonkies: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Plonkies",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Plonkies"},
-        scripts = {"Base.StepVan_Plonkies"}
+        scripts = {"Base.85chevyStepVanDelirosPlonkies", "Base.StepVan_Plonkies"}
     })
 
-    -- Step Van - Propane: 1 bound directly.
+    -- Step Van - Propane: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Propane",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Propane"},
-        scripts = {"Base.StepVan_Propane"}
+        scripts = {"Base.85chevyStepVanPropane", "Base.StepVan_Propane"}
     })
 
-    -- Step Van - Repair: 1 bound directly.
+    -- Step Van - Repair: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Repair",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Repair"},
-        scripts = {"Base.StepVan_CompleteRepairShop"}
+        scripts = {"Base.85chevyStepVanTheCompleteRepair", "Base.StepVan_CompleteRepairShop"}
     })
 
-    -- Step Van - SWAT: 3 bound directly.
+    -- Step Van - SWAT: 4 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_SWAT",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_SWAT"},
-        scripts = {"Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan_LouisvilleSWAT"}
+        scripts = {"Base.85chevyStepVanSWAT", "Base.87fordF700swat", "Base.90fordF350SWAT",
+                   "Base.StepVan_LouisvilleSWAT"}
     })
 
-    -- Step Van - Tailoring: 1 bound directly.
+    -- Step Van - Tailoring: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Tailoring",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Tailoring"},
-        scripts = {"Base.StepVan_SmartKut"}
+        scripts = {"Base.85chevyStepVanSmartCut", "Base.StepVan_SmartKut"}
     })
 
-    -- Step Van - Whiskey: 1 bound directly.
+    -- Step Van - Whiskey: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.Step_Van_Whiskey",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Whiskey"},
-        scripts = {"Base.StepVan_Scarlet"}
+        scripts = {"Base.85chevyStepVanScarletOak", "Base.StepVan_Scarlet"}
     })
 
     -- Trailer - Livestock: 3 bound directly.
@@ -3394,7 +3407,7 @@ local function registerVehicles()
         id = "phun.vehicles.Trailer_Livestock",
         source = SOURCE,
         rooms = {"phun.room.Trailer_Livestock"},
-        scripts = {"Base.TrailerK15livestock", "Base.Trailer_Horsebox", "Base.Trailer_Livestock"}
+        scripts = {"Base.TrailerKI5livestock", "Base.Trailer_Horsebox", "Base.Trailer_Livestock"}
     })
 
     -- Trailer - Medium: 2 bound directly.
@@ -3429,23 +3442,32 @@ local function registerVehicles()
         scripts = {"Base.87fordF700box"}
     })
 
-    -- Van: 12 bound directly, 95 more overflowing in.
+    -- Van: 12 bound directly, 122 more overflowing in.
     Core.registerVehicles({
         id = "phun.vehicles.Van",
         source = SOURCE,
         rooms = {"phun.room.Van"},
         scripts = {"Base.63Type2Van", "Base.63Type2VanApocalypse", "Base.63Type2VanHippie", "Base.63Type2VanMilitary",
-                   "Base.83gmcG1500aTeam", "Base.83gmcG1500lwb", "Base.85chevyStepVan", "Base.87fordF700bank",
-                   "Base.87fordF700box", "Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan",
-                   "Base.StepVanAirportCatering", "Base.StepVanMail", "Base.StepVan_Blacksmith",
-                   "Base.StepVan_Butchers", "Base.StepVan_Cereal", "Base.StepVan_Citr8",
+                   "Base.83gmcG1500aTeam", "Base.83gmcG1500lwb", "Base.85chevyStepVan", "Base.85chevyStepVanBlacksmith",
+                   "Base.85chevyStepVanButchers", "Base.85chevyStepVanCitrusWave", "Base.85chevyStepVanDelirosPlonkies",
+                   "Base.85chevyStepVanFlorist", "Base.85chevyStepVanGenuine", "Base.85chevyStepVanHerald",
+                   "Base.85chevyStepVanJorgensen", "Base.85chevyStepVanLibrary", "Base.85chevyStepVanLvAirportCatering",
+                   "Base.85chevyStepVanLvMotorshop", "Base.85chevyStepVanMarineBites", "Base.85chevyStepVanMasonry",
+                   "Base.85chevyStepVanMrHuangsLaundry", "Base.85chevyStepVanPostal", "Base.85chevyStepVanPropane",
+                   "Base.85chevyStepVanRandys", "Base.85chevyStepVanSWAT", "Base.85chevyStepVanScarletOak",
+                   "Base.85chevyStepVanSeHospitality", "Base.85chevyStepVanSePaintingServices",
+                   "Base.85chevyStepVanSmartCut", "Base.85chevyStepVanSunBallz", "Base.85chevyStepVanTheCompleteRepair",
+                   "Base.85chevyStepVanTimelessGlass", "Base.85chevyStepVanUsLogistics",
+                   "Base.85chevyStepVanZipeeMarket", "Base.87fordF700bank", "Base.87fordF700box", "Base.87fordF700swat",
+                   "Base.90fordF350SWAT", "Base.StepVan", "Base.StepVanAirportCatering", "Base.StepVanMail",
+                   "Base.StepVan_Blacksmith", "Base.StepVan_Butchers", "Base.StepVan_Cereal", "Base.StepVan_Citr8",
                    "Base.StepVan_CompleteRepairShop", "Base.StepVan_Florist", "Base.StepVan_Genuine_Beer",
                    "Base.StepVan_Glass", "Base.StepVan_Heralds", "Base.StepVan_HuangsLaundry", "Base.StepVan_Jorgensen",
                    "Base.StepVan_LouisvilleMotorShop", "Base.StepVan_LouisvilleSWAT", "Base.StepVan_MarineBites",
                    "Base.StepVan_Masonry", "Base.StepVan_Mechanic", "Base.StepVan_MobileLibrary",
                    "Base.StepVan_Plonkies", "Base.StepVan_Propane", "Base.StepVan_RandisPlants", "Base.StepVan_Scarlet",
                    "Base.StepVan_SmartKut", "Base.StepVan_SouthEasternHosp", "Base.StepVan_SouthEasternPaint",
-                   "Base.StepVan_USL", "Base.StepVan_Zippee", "Base.TrailerK15cargoLarge", "Base.TrailerK15cargoMedium",
+                   "Base.StepVan_USL", "Base.StepVan_Zippee", "Base.TrailerKI5cargoLarge", "Base.TrailerKI5cargoMedium",
                    "Base.Van", "Base.VanBeckmans", "Base.VanBrewsterHarbin", "Base.VanBuilder", "Base.VanCarpenter",
                    "Base.VanCoastToCoast", "Base.VanDeerValley", "Base.VanFossoil", "Base.VanGardenGods",
                    "Base.VanGardener", "Base.VanGreenes", "Base.VanJohnMcCoy", "Base.VanJonesFabrication",
