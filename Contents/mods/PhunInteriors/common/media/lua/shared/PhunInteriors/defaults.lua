@@ -8,7 +8,7 @@ local Core = PhunInteriors
 -- Docs/pi-mappings.csv and Docs/pi-vehicles.csv. Edit those and regenerate;
 -- an edit made here is lost on the next run.
 --
--- 83 rooms, 99 rows of ten stamps, 990 slots.
+-- 83 rooms, 108 rows of ten stamps, 1080 slots.
 --
 -- A ROOM is a contract: one shape, and every place on the map it is stamped.
 -- Two rooms whose CONTRACT differs are two registrations. What is on the
@@ -54,21 +54,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Ambulance_Bay", {
         label = "Ambulance Bay",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 4},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 12419, 0},
             [1] = {22568, 12419, 0},
@@ -88,20 +78,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Bus", {
         label = "Bus",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 10
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 4, h = 10},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 12461, 0},
             [1] = {22568, 12461, 0},
@@ -131,21 +111,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Bus_Military", {
         label = "Bus - Military",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 10
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 4, h = 10},
+        spawn = {x = 0, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 12293, 0},
             [1] = {23336, 12293, 0},
@@ -175,20 +145,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Bus_Prison", {
         label = "Bus - Prison",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 10
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 4, h = 10},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 12377, 0},
             [1] = {23336, 12377, 0},
@@ -218,21 +178,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Bus_School", {
         label = "Bus - School",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 10
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 4, h = 10},
+        spawn = {x = 0, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 12461, 0},
             [1] = {23336, 12461, 0},
@@ -262,20 +212,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Camper_Dasher", {
         label = "Camper - Dasher",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 5},
+        spawn = {x = 1, y = 1},
         front = "north",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 11865, 0},
             [1] = {23336, 11865, 0},
@@ -295,20 +235,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Camper_Large", {
         label = "Camper - Large",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 10
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 10},
+        spawn = {x = 1, y = 1},
         front = "north",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23055, 12377, 0},
             [1] = {23080, 12377, 0},
@@ -338,20 +268,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Camper_Medium", {
         label = "Camper - Medium",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 6
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 6},
+        spawn = {x = 1, y = 1},
         front = "north",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23055, 12461, 0},
             [1] = {23080, 12461, 0},
@@ -381,20 +301,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Camper_Mini", {
         label = "Camper - Mini",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
         front = "north",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 11781, 0},
             [1] = {23336, 11781, 0},
@@ -414,20 +324,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Camper_Small", {
         label = "Camper - Small",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 5},
+        spawn = {x = 1, y = 1},
         front = "north",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 11823, 0},
             [1] = {23336, 11823, 0},
@@ -447,20 +347,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Container_Factory", {
         label = "Container - Factory",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 7
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 7},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 12205, 0},
             [1] = {23336, 12205, 0},
@@ -480,20 +370,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Container_Storage", {
         label = "Container - Storage",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 7
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 7},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 12247, 0},
             [1] = {23336, 12247, 0},
@@ -513,20 +393,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Container_Warehouse", {
         label = "Container - Warehouse",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 7
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 7},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 12163, 0},
             [1] = {23336, 12163, 0},
@@ -546,21 +416,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.GAGE_KI5", {
         label = "GAGE KI5",
         source = SOURCE,
-        size = {
-            w = 5,
-            h = 6
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 5, h = 6},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 12037, 0},
             [1] = {23336, 12037, 0},
@@ -580,20 +440,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Military_Box", {
         label = "Military Box",
         source = SOURCE,
-        size = {
-            w = 5,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 5, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 11991, 0},
             [1] = {23336, 11991, 0},
@@ -613,21 +463,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.RV_Large", {
         label = "RV - Large",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 10
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 10},
+        spawn = {x = 1, y = 1},
         front = "north",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23055, 12293, 0},
             [1] = {23080, 12293, 0},
@@ -657,21 +497,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.RV_Small", {
         label = "RV - Small",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 6
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 6},
+        spawn = {x = 1, y = 1},
         front = "north",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 11907, 0},
             [1] = {23336, 11907, 0},
@@ -691,21 +521,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.RV_Spare_1", {
         label = "RV - Spare 1",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 10
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 10},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 12079, 0},
             [1] = {23336, 12079, 0},
@@ -725,21 +545,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.RV_Spare_2", {
         label = "RV - Spare 2",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 10
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 10},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23311, 12121, 0},
             [1] = {23336, 12121, 0},
@@ -759,20 +569,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Semi_Trailer_Factory", {
         label = "Semi Trailer - Factory",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 14
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 14},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23055, 12121, 0},
             [1] = {23080, 12121, 0},
@@ -802,20 +602,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Semi_Trailer_Warehouse", {
         label = "Semi Trailer - Warehouse",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 14
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 14},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23055, 12037, 0},
             [1] = {23080, 12037, 0},
@@ -845,20 +635,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Semi_Trailer_Water", {
         label = "Semi Trailer - Water",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 14
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 14},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23055, 12205, 0},
             [1] = {23080, 12205, 0},
@@ -888,21 +668,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van", {
         label = "Step Van",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 11781, 0},
             [1] = {22824, 11781, 0},
@@ -932,21 +702,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Beer", {
         label = "Step Van - Beer",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 11865, 0},
             [1] = {22824, 11865, 0},
@@ -966,21 +726,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Blacksmith", {
         label = "Step Van - Blacksmith",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 11907, 0},
             [1] = {22824, 11907, 0},
@@ -1000,21 +750,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Book", {
         label = "Step Van - Book",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 11949, 0},
             [1] = {22824, 11949, 0},
@@ -1034,21 +774,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Butcher", {
         label = "Step Van - Butcher",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 11991, 0},
             [1] = {22824, 11991, 0},
@@ -1068,21 +798,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Carpentry", {
         label = "Step Van - Carpentry",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12037, 0},
             [1] = {22824, 12037, 0},
@@ -1102,21 +822,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Catering", {
         label = "Step Van - Catering",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12079, 0},
             [1] = {22824, 12079, 0},
@@ -1136,21 +846,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Citr8", {
         label = "Step Van - Citr8",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12121, 0},
             [1] = {22824, 12121, 0},
@@ -1170,21 +870,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Fish", {
         label = "Step Van - Fish",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12163, 0},
             [1] = {22824, 12163, 0},
@@ -1204,21 +894,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Florist", {
         label = "Step Van - Florist",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12205, 0},
             [1] = {22824, 12205, 0},
@@ -1238,21 +918,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Glass", {
         label = "Step Van - Glass",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12247, 0},
             [1] = {22824, 12247, 0},
@@ -1272,21 +942,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Groceries", {
         label = "Step Van - Groceries",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12293, 0},
             [1] = {22824, 12293, 0},
@@ -1306,21 +966,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Laundry", {
         label = "Step Van - Laundry",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12335, 0},
             [1] = {22824, 12335, 0},
@@ -1340,21 +990,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Logistics", {
         label = "Step Van - Logistics",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12377, 0},
             [1] = {22824, 12377, 0},
@@ -1374,21 +1014,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Mail", {
         label = "Step Van - Mail",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12419, 0},
             [1] = {22824, 12419, 0},
@@ -1408,21 +1038,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Masonry", {
         label = "Step Van - Masonry",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 3
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 3},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12461, 0},
             [1] = {22824, 12461, 0},
@@ -1437,26 +1057,16 @@ local function registerRooms()
         }
     })
 
-    -- Step Van - Mechanic -- floor 3x4, 10 slots, room def 'mechanic'.
-    -- Stamped at 89,48 row 6.
+    -- Step Van - Mechanic -- floor 3x4, 40 slots, room def 'mechanic'.
+    -- Stamped at 89,48 row 6, 91,49 row 4, 91,49 row 5, 91,49 row 6.
     Core.registerRoom("phun.room.Step_Van_Mechanic", {
         label = "Step Van - Mechanic",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12503, 0},
             [1] = {22824, 12503, 0},
@@ -1467,7 +1077,37 @@ local function registerRooms()
             [6] = {22949, 12503, 0},
             [7] = {22974, 12503, 0},
             [8] = {22999, 12503, 0},
-            [9] = {23024, 12503, 0}
+            [9] = {23024, 12503, 0},
+            [10] = {23311, 12675, 0},
+            [11] = {23336, 12675, 0},
+            [12] = {23361, 12675, 0},
+            [13] = {23386, 12675, 0},
+            [14] = {23411, 12675, 0},
+            [15] = {23436, 12675, 0},
+            [16] = {23461, 12675, 0},
+            [17] = {23486, 12675, 0},
+            [18] = {23511, 12675, 0},
+            [19] = {23536, 12675, 0},
+            [20] = {23311, 12717, 0},
+            [21] = {23336, 12717, 0},
+            [22] = {23361, 12717, 0},
+            [23] = {23386, 12717, 0},
+            [24] = {23411, 12717, 0},
+            [25] = {23436, 12717, 0},
+            [26] = {23461, 12717, 0},
+            [27] = {23486, 12717, 0},
+            [28] = {23511, 12717, 0},
+            [29] = {23536, 12717, 0},
+            [30] = {23311, 12759, 0},
+            [31] = {23336, 12759, 0},
+            [32] = {23361, 12759, 0},
+            [33] = {23386, 12759, 0},
+            [34] = {23411, 12759, 0},
+            [35] = {23436, 12759, 0},
+            [36] = {23461, 12759, 0},
+            [37] = {23486, 12759, 0},
+            [38] = {23511, 12759, 0},
+            [39] = {23536, 12759, 0}
         }
     })
 
@@ -1476,21 +1116,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_News", {
         label = "Step Van - News",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12549, 0},
             [1] = {22824, 12549, 0},
@@ -1510,21 +1140,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Paint", {
         label = "Step Van - Paint",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12591, 0},
             [1] = {22824, 12591, 0},
@@ -1544,21 +1164,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Plants", {
         label = "Step Van - Plants",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12633, 0},
             [1] = {22824, 12633, 0},
@@ -1578,21 +1188,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Plonkies", {
         label = "Step Van - Plonkies",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12675, 0},
             [1] = {22824, 12675, 0},
@@ -1612,21 +1212,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Propane", {
         label = "Step Van - Propane",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12717, 0},
             [1] = {22824, 12717, 0},
@@ -1646,21 +1236,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Repair", {
         label = "Step Van - Repair",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22799, 12759, 0},
             [1] = {22824, 12759, 0},
@@ -1680,21 +1260,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_SWAT", {
         label = "Step Van - SWAT",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23055, 11781, 0},
             [1] = {23080, 11781, 0},
@@ -1714,21 +1284,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Tailoring", {
         label = "Step Van - Tailoring",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23055, 11823, 0},
             [1] = {23080, 11823, 0},
@@ -1748,21 +1308,11 @@ local function registerRooms()
     Core.registerRoom("phun.room.Step_Van_Whiskey", {
         label = "Step Van - Whiskey",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
         cab = true,
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23055, 11865, 0},
             [1] = {23080, 11865, 0},
@@ -1782,20 +1332,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Tent", {
         label = "Tent",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
         front = "north",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         reservoir = false,
         locations = {
             [0] = {23311, 11949, 0},
@@ -1816,20 +1356,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Trailer_Livestock", {
         label = "Trailer - Livestock",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23055, 12633, 0},
             [1] = {23080, 12633, 0},
@@ -1859,20 +1389,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Trailer_Medium", {
         label = "Trailer - Medium",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 10
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 10},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23055, 12549, 0},
             [1] = {23080, 12549, 0},
@@ -1902,20 +1422,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Trailer_Military", {
         label = "Trailer - Military",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 10
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 10},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {23055, 12717, 0},
             [1] = {23080, 12717, 0},
@@ -1945,20 +1455,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Truck_Armored", {
         label = "Truck - Armored",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 11907, 0},
             [1] = {22312, 11907, 0},
@@ -1978,20 +1478,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Truck_Furniture", {
         label = "Truck - Furniture",
         source = SOURCE,
-        size = {
-            w = 4,
-            h = 7
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 4, h = 7},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 12419, 0},
             [1] = {22312, 12419, 0},
@@ -2006,25 +1496,15 @@ local function registerRooms()
         }
     })
 
-    -- Van -- floor 2x3, 20 slots, room def 'shed'.
-    -- Stamped at 87,46 row 1, 87,46 row 2.
+    -- Van -- floor 2x3, 80 slots, room def 'shed'.
+    -- Stamped at 87,46 row 1, 87,46 row 2, 90,46 row 4, 90,46 row 5, 90,46 row 6, 91,49 row 1, 91,49 row 2, 91,49 row 3.
     Core.registerRoom("phun.room.Van", {
         label = "Van",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 11781, 0},
             [1] = {22312, 11781, 0},
@@ -2045,7 +1525,67 @@ local function registerRooms()
             [16] = {22437, 11823, 0},
             [17] = {22462, 11823, 0},
             [18] = {22487, 11823, 0},
-            [19] = {22512, 11823, 0}
+            [19] = {22512, 11823, 0},
+            [20] = {23055, 11907, 0},
+            [21] = {23080, 11907, 0},
+            [22] = {23105, 11907, 0},
+            [23] = {23130, 11907, 0},
+            [24] = {23155, 11907, 0},
+            [25] = {23180, 11907, 0},
+            [26] = {23205, 11907, 0},
+            [27] = {23230, 11907, 0},
+            [28] = {23255, 11907, 0},
+            [29] = {23280, 11907, 0},
+            [30] = {23055, 11949, 0},
+            [31] = {23080, 11949, 0},
+            [32] = {23105, 11949, 0},
+            [33] = {23130, 11949, 0},
+            [34] = {23155, 11949, 0},
+            [35] = {23180, 11949, 0},
+            [36] = {23205, 11949, 0},
+            [37] = {23230, 11949, 0},
+            [38] = {23255, 11949, 0},
+            [39] = {23280, 11949, 0},
+            [40] = {23055, 11991, 0},
+            [41] = {23080, 11991, 0},
+            [42] = {23105, 11991, 0},
+            [43] = {23130, 11991, 0},
+            [44] = {23155, 11991, 0},
+            [45] = {23180, 11991, 0},
+            [46] = {23205, 11991, 0},
+            [47] = {23230, 11991, 0},
+            [48] = {23255, 11991, 0},
+            [49] = {23280, 11991, 0},
+            [50] = {23311, 12549, 0},
+            [51] = {23336, 12549, 0},
+            [52] = {23361, 12549, 0},
+            [53] = {23386, 12549, 0},
+            [54] = {23411, 12549, 0},
+            [55] = {23436, 12549, 0},
+            [56] = {23461, 12549, 0},
+            [57] = {23486, 12549, 0},
+            [58] = {23511, 12549, 0},
+            [59] = {23536, 12549, 0},
+            [60] = {23311, 12591, 0},
+            [61] = {23336, 12591, 0},
+            [62] = {23361, 12591, 0},
+            [63] = {23386, 12591, 0},
+            [64] = {23411, 12591, 0},
+            [65] = {23436, 12591, 0},
+            [66] = {23461, 12591, 0},
+            [67] = {23486, 12591, 0},
+            [68] = {23511, 12591, 0},
+            [69] = {23536, 12591, 0},
+            [70] = {23311, 12633, 0},
+            [71] = {23336, 12633, 0},
+            [72] = {23361, 12633, 0},
+            [73] = {23386, 12633, 0},
+            [74] = {23411, 12633, 0},
+            [75] = {23436, 12633, 0},
+            [76] = {23461, 12633, 0},
+            [77] = {23486, 12633, 0},
+            [78] = {23511, 12633, 0},
+            [79] = {23536, 12633, 0}
         }
     })
 
@@ -2054,20 +1594,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Alcohol", {
         label = "Van - Alcohol",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 11991, 0},
             [1] = {22312, 11991, 0},
@@ -2087,20 +1617,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Ambulance", {
         label = "Van - Ambulance",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 11865, 0},
             [1] = {22312, 11865, 0},
@@ -2120,20 +1640,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Art_Supply", {
         label = "Van - Art Supply",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 11949, 0},
             [1] = {22312, 11949, 0},
@@ -2153,20 +1663,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Blacksmith", {
         label = "Van - Blacksmith",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 0
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 0},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 12037, 0},
             [1] = {22312, 12037, 0},
@@ -2186,20 +1686,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Butcher", {
         label = "Van - Butcher",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 12079, 0},
             [1] = {22312, 12079, 0},
@@ -2219,20 +1709,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Carpenter", {
         label = "Van - Carpenter",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 12163, 0},
             [1] = {22312, 12163, 0},
@@ -2252,20 +1732,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Comms", {
         label = "Van - Comms",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 12205, 0},
             [1] = {22312, 12205, 0},
@@ -2285,20 +1755,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Construction", {
         label = "Van - Construction",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 12247, 0},
             [1] = {22312, 12247, 0},
@@ -2318,20 +1778,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Electrical", {
         label = "Van - Electrical",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 12293, 0},
             [1] = {22312, 12293, 0},
@@ -2351,20 +1801,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Farm", {
         label = "Van - Farm",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 12335, 0},
             [1] = {22312, 12335, 0},
@@ -2384,20 +1824,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Fossil", {
         label = "Van - Fossil",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 12377, 0},
             [1] = {22312, 12377, 0},
@@ -2417,20 +1847,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Gardening", {
         label = "Van - Gardening",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 12461, 0},
             [1] = {22312, 12461, 0},
@@ -2450,20 +1870,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Gas_and_Electric", {
         label = "Van - Gas and Electric",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 12503, 0},
             [1] = {22312, 12503, 0},
@@ -2483,20 +1893,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Glass", {
         label = "Van - Glass",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 11781, 0},
             [1] = {22568, 11781, 0},
@@ -2516,20 +1916,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Greens", {
         label = "Van - Greens",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 0
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 0},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 11823, 0},
             [1] = {22568, 11823, 0},
@@ -2549,20 +1939,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Leather", {
         label = "Van - Leather",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 11865, 0},
             [1] = {22568, 11865, 0},
@@ -2582,20 +1962,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Love", {
         label = "Van - Love",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 11907, 0},
             [1] = {22568, 11907, 0},
@@ -2615,20 +1985,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Mail", {
         label = "Van - Mail",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 11949, 0},
             [1] = {22568, 11949, 0},
@@ -2648,20 +2008,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Masonry", {
         label = "Van - Masonry",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 11991, 0},
             [1] = {22568, 11991, 0},
@@ -2681,20 +2031,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Mechanic", {
         label = "Van - Mechanic",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 12037, 0},
             [1] = {22568, 12037, 0},
@@ -2714,20 +2054,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Plumbing", {
         label = "Van - Plumbing",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 12079, 0},
             [1] = {22568, 12079, 0},
@@ -2747,20 +2077,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Police", {
         label = "Van - Police",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 12121, 0},
             [1] = {22568, 12121, 0},
@@ -2780,20 +2100,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Prison", {
         label = "Van - Prison",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 2
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 2},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 12163, 0},
             [1] = {22568, 12163, 0},
@@ -2813,20 +2123,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Seats", {
         label = "Van - Seats",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 2
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 2},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 12205, 0},
             [1] = {22568, 12205, 0},
@@ -2856,20 +2156,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Spiffo", {
         label = "Van - Spiffo",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 0
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 0},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 12293, 0},
             [1] = {22568, 12293, 0},
@@ -2889,20 +2179,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Tailor", {
         label = "Van - Tailor",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 0,
-            y = 1
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 0, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 12335, 0},
             [1] = {22568, 12335, 0},
@@ -2922,20 +2202,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_VW_Camper", {
         label = "Van - VW Camper",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 5
-        },
-        spawn = {
-            x = 1,
-            y = 1
-        },
+        size = {w = 3, h = 5},
+        spawn = {x = 1, y = 1},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22287, 12121, 0},
             [1] = {22312, 12121, 0},
@@ -2955,20 +2225,10 @@ local function registerRooms()
     Core.registerRoom("phun.room.Van_Welding", {
         label = "Van - Welding",
         source = SOURCE,
-        size = {
-            w = 3,
-            h = 4
-        },
-        spawn = {
-            x = 1,
-            y = 0
-        },
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 0},
         front = "south",
-        generator = {
-            x = 1,
-            y = 17,
-            z = 0
-        },
+        generator = {x = 1, y = 17, z = 0},
         locations = {
             [0] = {22543, 12377, 0},
             [1] = {22568, 12377, 0},
@@ -3177,26 +2437,7 @@ local function registerVehicles()
         id = "phun.vehicles.Step_Van",
         source = SOURCE,
         rooms = {"phun.room.Step_Van"},
-        scripts = {"Base.85chevyStepVan", "Base.85chevyStepVanBlacksmith", "Base.85chevyStepVanButchers",
-                   "Base.85chevyStepVanCitrusWave", "Base.85chevyStepVanDelirosPlonkies", "Base.85chevyStepVanFlorist",
-                   "Base.85chevyStepVanGenuine", "Base.85chevyStepVanHerald", "Base.85chevyStepVanJorgensen",
-                   "Base.85chevyStepVanLibrary", "Base.85chevyStepVanLvAirportCatering",
-                   "Base.85chevyStepVanLvMotorshop", "Base.85chevyStepVanMarineBites", "Base.85chevyStepVanMasonry",
-                   "Base.85chevyStepVanMrHuangsLaundry", "Base.85chevyStepVanPostal", "Base.85chevyStepVanPropane",
-                   "Base.85chevyStepVanRandys", "Base.85chevyStepVanSWAT", "Base.85chevyStepVanScarletOak",
-                   "Base.85chevyStepVanSeHospitality", "Base.85chevyStepVanSePaintingServices",
-                   "Base.85chevyStepVanSmartCut", "Base.85chevyStepVanSunBallz", "Base.85chevyStepVanTheCompleteRepair",
-                   "Base.85chevyStepVanTimelessGlass", "Base.85chevyStepVanUsLogistics",
-                   "Base.85chevyStepVanZipeeMarket", "Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan",
-                   "Base.StepVanAirportCatering", "Base.StepVanMail", "Base.StepVan_Blacksmith",
-                   "Base.StepVan_Butchers", "Base.StepVan_Cereal", "Base.StepVan_Citr8",
-                   "Base.StepVan_CompleteRepairShop", "Base.StepVan_Florist", "Base.StepVan_Genuine_Beer",
-                   "Base.StepVan_Glass", "Base.StepVan_Heralds", "Base.StepVan_HuangsLaundry", "Base.StepVan_Jorgensen",
-                   "Base.StepVan_LouisvilleMotorShop", "Base.StepVan_LouisvilleSWAT", "Base.StepVan_MarineBites",
-                   "Base.StepVan_Masonry", "Base.StepVan_Mechanic", "Base.StepVan_MobileLibrary",
-                   "Base.StepVan_Plonkies", "Base.StepVan_Propane", "Base.StepVan_RandisPlants", "Base.StepVan_Scarlet",
-                   "Base.StepVan_SmartKut", "Base.StepVan_SouthEasternHosp", "Base.StepVan_SouthEasternPaint",
-                   "Base.StepVan_USL", "Base.StepVan_Zippee", "Base.TrailerKI5cargoLarge"}
+        scripts = {"Base.85chevyStepVan", "Base.85chevyStepVanBlacksmith", "Base.85chevyStepVanButchers", "Base.85chevyStepVanCitrusWave", "Base.85chevyStepVanDelirosPlonkies", "Base.85chevyStepVanFlorist", "Base.85chevyStepVanGenuine", "Base.85chevyStepVanHerald", "Base.85chevyStepVanJorgensen", "Base.85chevyStepVanLibrary", "Base.85chevyStepVanLvAirportCatering", "Base.85chevyStepVanLvMotorshop", "Base.85chevyStepVanMarineBites", "Base.85chevyStepVanMasonry", "Base.85chevyStepVanMrHuangsLaundry", "Base.85chevyStepVanPostal", "Base.85chevyStepVanPropane", "Base.85chevyStepVanRandys", "Base.85chevyStepVanSWAT", "Base.85chevyStepVanScarletOak", "Base.85chevyStepVanSeHospitality", "Base.85chevyStepVanSePaintingServices", "Base.85chevyStepVanSmartCut", "Base.85chevyStepVanSunBallz", "Base.85chevyStepVanTheCompleteRepair", "Base.85chevyStepVanTimelessGlass", "Base.85chevyStepVanUsLogistics", "Base.85chevyStepVanZipeeMarket", "Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan", "Base.StepVanAirportCatering", "Base.StepVanMail", "Base.StepVan_Blacksmith", "Base.StepVan_Butchers", "Base.StepVan_Cereal", "Base.StepVan_Citr8", "Base.StepVan_CompleteRepairShop", "Base.StepVan_Florist", "Base.StepVan_Genuine_Beer", "Base.StepVan_Glass", "Base.StepVan_Heralds", "Base.StepVan_HuangsLaundry", "Base.StepVan_Jorgensen", "Base.StepVan_LouisvilleMotorShop", "Base.StepVan_LouisvilleSWAT", "Base.StepVan_MarineBites", "Base.StepVan_Masonry", "Base.StepVan_Mechanic", "Base.StepVan_MobileLibrary", "Base.StepVan_Plonkies", "Base.StepVan_Propane", "Base.StepVan_RandisPlants", "Base.StepVan_Scarlet", "Base.StepVan_SmartKut", "Base.StepVan_SouthEasternHosp", "Base.StepVan_SouthEasternPaint", "Base.StepVan_USL", "Base.StepVan_Zippee", "Base.TrailerKI5cargoLarge"}
     })
 
     -- Step Van - Beer: 2 bound directly.
@@ -3244,8 +2485,7 @@ local function registerVehicles()
         id = "phun.vehicles.Step_Van_Catering",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Catering"},
-        scripts = {"Base.85chevyStepVanLvAirportCatering", "Base.85chevyStepVanSeHospitality",
-                   "Base.StepVanAirportCatering", "Base.StepVan_SouthEasternHosp"}
+        scripts = {"Base.85chevyStepVanLvAirportCatering", "Base.85chevyStepVanSeHospitality", "Base.StepVanAirportCatering", "Base.StepVan_SouthEasternHosp"}
     })
 
     -- Step Van - Citr8: 4 bound directly.
@@ -3253,8 +2493,7 @@ local function registerVehicles()
         id = "phun.vehicles.Step_Van_Citr8",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_Citr8"},
-        scripts = {"Base.85chevyStepVanCitrusWave", "Base.85chevyStepVanZipeeMarket", "Base.StepVan_Citr8",
-                   "Base.StepVan_Zippee"}
+        scripts = {"Base.85chevyStepVanCitrusWave", "Base.85chevyStepVanZipeeMarket", "Base.StepVan_Citr8", "Base.StepVan_Zippee"}
     })
 
     -- Step Van - Fish: 2 bound directly.
@@ -3382,8 +2621,7 @@ local function registerVehicles()
         id = "phun.vehicles.Step_Van_SWAT",
         source = SOURCE,
         rooms = {"phun.room.Step_Van_SWAT"},
-        scripts = {"Base.85chevyStepVanSWAT", "Base.87fordF700swat", "Base.90fordF350SWAT",
-                   "Base.StepVan_LouisvilleSWAT"}
+        scripts = {"Base.85chevyStepVanSWAT", "Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan_LouisvilleSWAT"}
     })
 
     -- Step Van - Tailoring: 2 bound directly.
@@ -3447,44 +2685,7 @@ local function registerVehicles()
         id = "phun.vehicles.Van",
         source = SOURCE,
         rooms = {"phun.room.Van"},
-        scripts = {"Base.63Type2Van", "Base.63Type2VanApocalypse", "Base.63Type2VanHippie", "Base.63Type2VanMilitary",
-                   "Base.83gmcG1500aTeam", "Base.83gmcG1500lwb", "Base.85chevyStepVan", "Base.85chevyStepVanBlacksmith",
-                   "Base.85chevyStepVanButchers", "Base.85chevyStepVanCitrusWave", "Base.85chevyStepVanDelirosPlonkies",
-                   "Base.85chevyStepVanFlorist", "Base.85chevyStepVanGenuine", "Base.85chevyStepVanHerald",
-                   "Base.85chevyStepVanJorgensen", "Base.85chevyStepVanLibrary", "Base.85chevyStepVanLvAirportCatering",
-                   "Base.85chevyStepVanLvMotorshop", "Base.85chevyStepVanMarineBites", "Base.85chevyStepVanMasonry",
-                   "Base.85chevyStepVanMrHuangsLaundry", "Base.85chevyStepVanPostal", "Base.85chevyStepVanPropane",
-                   "Base.85chevyStepVanRandys", "Base.85chevyStepVanSWAT", "Base.85chevyStepVanScarletOak",
-                   "Base.85chevyStepVanSeHospitality", "Base.85chevyStepVanSePaintingServices",
-                   "Base.85chevyStepVanSmartCut", "Base.85chevyStepVanSunBallz", "Base.85chevyStepVanTheCompleteRepair",
-                   "Base.85chevyStepVanTimelessGlass", "Base.85chevyStepVanUsLogistics",
-                   "Base.85chevyStepVanZipeeMarket", "Base.87fordF700bank", "Base.87fordF700box", "Base.87fordF700swat",
-                   "Base.90fordF350SWAT", "Base.StepVan", "Base.StepVanAirportCatering", "Base.StepVanMail",
-                   "Base.StepVan_Blacksmith", "Base.StepVan_Butchers", "Base.StepVan_Cereal", "Base.StepVan_Citr8",
-                   "Base.StepVan_CompleteRepairShop", "Base.StepVan_Florist", "Base.StepVan_Genuine_Beer",
-                   "Base.StepVan_Glass", "Base.StepVan_Heralds", "Base.StepVan_HuangsLaundry", "Base.StepVan_Jorgensen",
-                   "Base.StepVan_LouisvilleMotorShop", "Base.StepVan_LouisvilleSWAT", "Base.StepVan_MarineBites",
-                   "Base.StepVan_Masonry", "Base.StepVan_Mechanic", "Base.StepVan_MobileLibrary",
-                   "Base.StepVan_Plonkies", "Base.StepVan_Propane", "Base.StepVan_RandisPlants", "Base.StepVan_Scarlet",
-                   "Base.StepVan_SmartKut", "Base.StepVan_SouthEasternHosp", "Base.StepVan_SouthEasternPaint",
-                   "Base.StepVan_USL", "Base.StepVan_Zippee", "Base.TrailerKI5cargoLarge", "Base.TrailerKI5cargoMedium",
-                   "Base.Van", "Base.VanBeckmans", "Base.VanBrewsterHarbin", "Base.VanBuilder", "Base.VanCarpenter",
-                   "Base.VanCoastToCoast", "Base.VanDeerValley", "Base.VanFossoil", "Base.VanGardenGods",
-                   "Base.VanGardener", "Base.VanGreenes", "Base.VanJohnMcCoy", "Base.VanJonesFabrication",
-                   "Base.VanKerrHomes", "Base.VanKnobCreekGas", "Base.VanKnoxCom", "Base.VanKorshunovs",
-                   "Base.VanLouisvilleLandscaping", "Base.VanMail", "Base.VanMccoy", "Base.VanMechanic",
-                   "Base.VanMeltingPointMetal", "Base.VanMetalheads", "Base.VanMicheles", "Base.VanMobileMechanics",
-                   "Base.VanMooreMechanics", "Base.VanOldMill", "Base.VanOvoFarm", "Base.VanPennSHam",
-                   "Base.VanPlattAuto", "Base.VanPluggedInElectrics", "Base.VanRadio", "Base.VanRadio_3N",
-                   "Base.VanRiversideFabrication", "Base.VanRosewoodworking", "Base.VanSchwabSheetMetal",
-                   "Base.VanSeats", "Base.VanSeatsAirportShuttle", "Base.VanSeats_Creature",
-                   "Base.VanSeats_LadyDelighter", "Base.VanSeats_Mural", "Base.VanSeats_Prison", "Base.VanSeats_Space",
-                   "Base.VanSeats_Trippy", "Base.VanSeats_Valkyrie", "Base.VanSpiffo", "Base.VanTreyBaines",
-                   "Base.VanUncloggers", "Base.VanUtility", "Base.VanWPCarpentry", "Base.Van_Blacksmith",
-                   "Base.Van_BugWipers", "Base.Van_Charlemange_Beer", "Base.Van_CraftSupplies", "Base.Van_Glass",
-                   "Base.Van_HeritageTailors", "Base.Van_KnoxDisti", "Base.Van_Leather", "Base.Van_LectroMax",
-                   "Base.Van_Locksmith", "Base.Van_Masonry", "Base.Van_MassGenFac", "Base.Van_Perfick_Potato",
-                   "Base.Van_Transit", "Base.Van_VoltMojo"}
+        scripts = {"Base.63Type2Van", "Base.63Type2VanApocalypse", "Base.63Type2VanHippie", "Base.63Type2VanMilitary", "Base.83gmcG1500aTeam", "Base.83gmcG1500lwb", "Base.85chevyStepVan", "Base.85chevyStepVanBlacksmith", "Base.85chevyStepVanButchers", "Base.85chevyStepVanCitrusWave", "Base.85chevyStepVanDelirosPlonkies", "Base.85chevyStepVanFlorist", "Base.85chevyStepVanGenuine", "Base.85chevyStepVanHerald", "Base.85chevyStepVanJorgensen", "Base.85chevyStepVanLibrary", "Base.85chevyStepVanLvAirportCatering", "Base.85chevyStepVanLvMotorshop", "Base.85chevyStepVanMarineBites", "Base.85chevyStepVanMasonry", "Base.85chevyStepVanMrHuangsLaundry", "Base.85chevyStepVanPostal", "Base.85chevyStepVanPropane", "Base.85chevyStepVanRandys", "Base.85chevyStepVanSWAT", "Base.85chevyStepVanScarletOak", "Base.85chevyStepVanSeHospitality", "Base.85chevyStepVanSePaintingServices", "Base.85chevyStepVanSmartCut", "Base.85chevyStepVanSunBallz", "Base.85chevyStepVanTheCompleteRepair", "Base.85chevyStepVanTimelessGlass", "Base.85chevyStepVanUsLogistics", "Base.85chevyStepVanZipeeMarket", "Base.87fordF700bank", "Base.87fordF700box", "Base.87fordF700swat", "Base.90fordF350SWAT", "Base.StepVan", "Base.StepVanAirportCatering", "Base.StepVanMail", "Base.StepVan_Blacksmith", "Base.StepVan_Butchers", "Base.StepVan_Cereal", "Base.StepVan_Citr8", "Base.StepVan_CompleteRepairShop", "Base.StepVan_Florist", "Base.StepVan_Genuine_Beer", "Base.StepVan_Glass", "Base.StepVan_Heralds", "Base.StepVan_HuangsLaundry", "Base.StepVan_Jorgensen", "Base.StepVan_LouisvilleMotorShop", "Base.StepVan_LouisvilleSWAT", "Base.StepVan_MarineBites", "Base.StepVan_Masonry", "Base.StepVan_Mechanic", "Base.StepVan_MobileLibrary", "Base.StepVan_Plonkies", "Base.StepVan_Propane", "Base.StepVan_RandisPlants", "Base.StepVan_Scarlet", "Base.StepVan_SmartKut", "Base.StepVan_SouthEasternHosp", "Base.StepVan_SouthEasternPaint", "Base.StepVan_USL", "Base.StepVan_Zippee", "Base.TrailerKI5cargoLarge", "Base.TrailerKI5cargoMedium", "Base.Van", "Base.VanBeckmans", "Base.VanBrewsterHarbin", "Base.VanBuilder", "Base.VanCarpenter", "Base.VanCoastToCoast", "Base.VanDeerValley", "Base.VanFossoil", "Base.VanGardenGods", "Base.VanGardener", "Base.VanGreenes", "Base.VanJohnMcCoy", "Base.VanJonesFabrication", "Base.VanKerrHomes", "Base.VanKnobCreekGas", "Base.VanKnoxCom", "Base.VanKorshunovs", "Base.VanLouisvilleLandscaping", "Base.VanMail", "Base.VanMccoy", "Base.VanMechanic", "Base.VanMeltingPointMetal", "Base.VanMetalheads", "Base.VanMicheles", "Base.VanMobileMechanics", "Base.VanMooreMechanics", "Base.VanOldMill", "Base.VanOvoFarm", "Base.VanPennSHam", "Base.VanPlattAuto", "Base.VanPluggedInElectrics", "Base.VanRadio", "Base.VanRadio_3N", "Base.VanRiversideFabrication", "Base.VanRosewoodworking", "Base.VanSchwabSheetMetal", "Base.VanSeats", "Base.VanSeatsAirportShuttle", "Base.VanSeats_Creature", "Base.VanSeats_LadyDelighter", "Base.VanSeats_Mural", "Base.VanSeats_Prison", "Base.VanSeats_Space", "Base.VanSeats_Trippy", "Base.VanSeats_Valkyrie", "Base.VanSpiffo", "Base.VanTreyBaines", "Base.VanUncloggers", "Base.VanUtility", "Base.VanWPCarpentry", "Base.Van_Blacksmith", "Base.Van_BugWipers", "Base.Van_Charlemange_Beer", "Base.Van_CraftSupplies", "Base.Van_Glass", "Base.Van_HeritageTailors", "Base.Van_KnoxDisti", "Base.Van_Leather", "Base.Van_LectroMax", "Base.Van_Locksmith", "Base.Van_Masonry", "Base.Van_MassGenFac", "Base.Van_Perfick_Potato", "Base.Van_Transit", "Base.Van_VoltMojo"}
     })
 
     -- Van - Alcohol: 2 bound directly.
@@ -3528,8 +2729,7 @@ local function registerVehicles()
         id = "phun.vehicles.Van_Carpenter",
         source = SOURCE,
         rooms = {"phun.room.Van_Carpenter"},
-        scripts = {"Base.VanCarpenter", "Base.VanJohnMcCoy", "Base.VanMccoy", "Base.VanMicheles",
-                   "Base.VanRosewoodworking", "Base.VanWPCarpentry"}
+        scripts = {"Base.VanCarpenter", "Base.VanJohnMcCoy", "Base.VanMccoy", "Base.VanMicheles", "Base.VanRosewoodworking", "Base.VanWPCarpentry"}
     })
 
     -- Van - Comms: 3 bound directly.
@@ -3545,8 +2745,7 @@ local function registerVehicles()
         id = "phun.vehicles.Van_Construction",
         source = SOURCE,
         rooms = {"phun.room.Van_Construction"},
-        scripts = {"Base.VanBeckmans", "Base.VanBuilder", "Base.VanCoastToCoast", "Base.VanKerrHomes",
-                   "Base.VanPennSHam"}
+        scripts = {"Base.VanBeckmans", "Base.VanBuilder", "Base.VanCoastToCoast", "Base.VanKerrHomes", "Base.VanPennSHam"}
     })
 
     -- Van - Electrical: 3 bound directly.
@@ -3578,8 +2777,7 @@ local function registerVehicles()
         id = "phun.vehicles.Van_Gardening",
         source = SOURCE,
         rooms = {"phun.room.Van_Gardening"},
-        scripts = {"Base.VanGardenGods", "Base.VanGardener", "Base.VanLouisvilleLandscaping", "Base.VanMooreMechanics",
-                   "Base.VanTreyBaines"}
+        scripts = {"Base.VanGardenGods", "Base.VanGardener", "Base.VanLouisvilleLandscaping", "Base.VanMooreMechanics", "Base.VanTreyBaines"}
     })
 
     -- Van - Gas and Electric: 2 bound directly.
@@ -3619,8 +2817,7 @@ local function registerVehicles()
         id = "phun.vehicles.Van_Love",
         source = SOURCE,
         rooms = {"phun.room.Van_Love"},
-        scripts = {"Base.VanSeats_LadyDelighter", "Base.VanSeats_Mural", "Base.VanSeats_Space", "Base.VanSeats_Trippy",
-                   "Base.Van_Transit"}
+        scripts = {"Base.VanSeats_LadyDelighter", "Base.VanSeats_Mural", "Base.VanSeats_Space", "Base.VanSeats_Trippy", "Base.Van_Transit"}
     })
 
     -- Van - Mail: 1 bound directly.
@@ -3644,8 +2841,7 @@ local function registerVehicles()
         id = "phun.vehicles.Van_Mechanic",
         source = SOURCE,
         rooms = {"phun.room.Van_Mechanic"},
-        scripts = {"Base.VanBrewsterHarbin", "Base.VanKorshunovs", "Base.VanMechanic", "Base.VanMobileMechanics",
-                   "Base.VanPlattAuto"}
+        scripts = {"Base.VanBrewsterHarbin", "Base.VanKorshunovs", "Base.VanMechanic", "Base.VanMobileMechanics", "Base.VanPlattAuto"}
     })
 
     -- Van - Plumbing: 1 bound directly.
