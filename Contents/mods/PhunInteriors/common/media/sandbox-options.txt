@@ -1,12 +1,5 @@
 VERSION = 1,
 
-option PhunInteriors.Debug
-{
-    type = boolean,
-    default = false,
-    page = PhunInteriors,
-    translation = PhunInteriors_Debug,
-}
 
 option PhunInteriors.WeightFactor
 {
@@ -142,6 +135,14 @@ option PhunInteriors.PowerDrainFactor
     max = 1000,
     page = PhunInteriors,
     translation = PhunInteriors_PowerDrainFactor,
+}
+
+option PhunInteriors.Debug
+{
+    type = boolean,
+    default = false,
+    page = PhunInteriors,
+    translation = PhunInteriors_Debug,
 }
 
 option PhunInteriors.WhennyagoPatch

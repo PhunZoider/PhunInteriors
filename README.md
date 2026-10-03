@@ -55,6 +55,10 @@ parked.
 Build 42. Nothing else: there are no required mods. PhunServer2 adds an
 `/interiors` chat command when it is installed.
 
+**Multiplayer servers need `AntiCheatSpeed=3` in the server `.ini`.** Every
+trip in or out of a room is a teleport, and the default setting kicks players
+for it. See [Running a server](Docs/admin.md#the-speed-anti-cheat).
+
 The mod ships its own map: a separate block of 18 cells, away from anywhere a
 player walks to, holding 990 room slots. It uses cells 87,46 to 91,48 and
 89,49 to 91,49, and another map mod using any of them will conflict.

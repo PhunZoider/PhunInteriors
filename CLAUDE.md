@@ -128,6 +128,16 @@ thing to watch in game.
 Towing is confirmed as well: one player inside, a second towing, the tenant
 exiting into a seat of the moving towed van.
 
+**Every one of those runs was as an admin, and that hid a kick.** On
+2026-10-03 an ordinary player was kicked with "Malformed packet or suspicious
+activity" after two transits: `AntiCheatSpeed`, which defaults to Kick,
+reads a teleport as 13,000 tiles a second, and a role with a teleport
+capability is exempt from it. There is no way round it from Lua -- see the
+speed anti-cheat row in the API table -- so entry is now refused for a player
+it would punish (`server/PhunInteriors/anticheat.lua`) and the server must set
+`AntiCheatSpeed=3`. **Test multiplayer as a non-admin**, or this class of
+fault is invisible.
+
 Still unproven:
 
 - **`Core.tools.onlinePlayers()`** returns only local players on a client and
@@ -262,7 +272,7 @@ Contents/mods/PhunInteriors/common/
   media/lua/server/PhunInteriors/    slots, transit, leash, manifest, scrub,
                                     weight, power, harden, removal, admin,
                                     author, rainwater, loot, store, phunzones,
-                                    server_{commands,events}
+                                    anticheat, server_{commands,events}
   .../server/PhunInteriors/blueprints/  NOT SHIPPED, deleted before release.
                                     Nothing ships a blueprint any more, because
                                     capture is per slot and falls back to a
@@ -294,8 +304,9 @@ Tests/lua/*_spec.lua               registry placement/links, allocation order,
                                    the PhunInteriors.json round trip, the
                                    admin actions the editor drives, sendTo,
                                    holderless entry (enterRoom) and the
-                                   exit tax count and its cap, and the
-                                   Whennyago Initiative patch
+                                   exit tax count and its cap, the
+                                   Whennyago Initiative patch, and who
+                                   the speed anti-cheat would punish
 Tests/root/PhunInteriors/common/   overlay carrying the test ids, applied by
                                    deploy.cmd to build PhunInteriorsTest. The
                                    path must mirror the live mod folder or the
@@ -381,12 +392,29 @@ unregistering.** `Transit.anyoneInside()` is one integer compare, and it is the
 first thing `Leash.tick` does — before reading the clock, which an empty map
 used to do sixty times a second to work out it had nothing to do.
 
-**Do not "fix" this by adding and removing the `OnTick` handler.** `Event.trigger`
-walks its callbacks by index, re-reading `size()` each time round, so removing
-one during dispatch shifts the list under the cursor and **silently skips the
-next handler** — somebody else's, from another mod. It does not throw. And the
-exit path runs from inside this very tick, which is precisely when the
-unregister would happen.
+**Adding and removing the `OnTick` handler would also work, and the count is
+kept because it is simpler, not because unregistering is dangerous.** This
+file used to say otherwise -- that removing a handler during dispatch shifts
+the list and skips the next one -- and the bytecode says that is only half
+true. `Event.trigger` (`zombie/Lua/Event`) walks `callbacks` by index,
+re-reading `size()`, and after each call does
+`if (!callbacks.contains(closure)) i--; i++`. So a handler that removes
+**itself** is compensated for and nothing is skipped; `Add` appends, which is
+also safe mid-dispatch. Lua being single threaded is not the reason: the
+hazard is re-entrancy on one thread, and the `contains` check is what answers
+it.
+
+What is still unsafe is removing a **different** handler that sits earlier in
+the list while dispatch is running: the closure just called is still present,
+so nothing compensates and the handler after it is skipped for one tick. If
+this is ever switched over, the leash must only ever remove itself, or defer
+the removal to its own next tick -- never be removed from inside another
+`OnTick` handler such as `Removal.tick` or `Transit.tickLandings`, both of
+which can reach `Transit.leave`.
+
+Note also that `Event$Add` and `Event$Remove` both return without doing
+anything when `LuaCompiler.rewriteEvents` is set. They are symmetric, so it
+does not matter here, but it is why an `.Add` can appear to do nothing.
 
 The count is kept by `Transit.setOccupancy`, which is the **only** thing that
 writes `Core.occupants`; there are three callers — entering, recovering a
@@ -1999,6 +2027,7 @@ B41 tutorial applies.
 | `IsoGridSquare.isBlockedTo(IsoGridSquare)` is `isWallTo` OR `isWindowBlockedTo` OR `isDoorBlockedTo` OR `isStairBlockedTo` — a question about the edge two **adjacent** squares share, so it means nothing between two that meet only at a corner. `isFree(true)` also refuses a square with any moving object on it; `isFree(false)` is solidity alone. `IsoGameCharacter.teleportTo` has four overloads, `(FF)`, `(FFI)`, `(II)` and `(III)`, and the float ones `PZMath.fastfloor` both coordinates straight into the int one — so **every teleport lands on a tile corner** and the `+ 0.5` this codebase passes is discarded. The int one clamps z and then does `setX/setY/setZ` plus `setLastX/setLastY` and `ensureOnTile()`. | Any shove has to walk cardinally and ask `isBlockedTo` per step, or it posts a zombie through a wall. And the third argument is an **int** in every overload: passing a float level, which `getZ()` returns, is how a Kahlua overload resolves to something nobody meant, so `Transit.shoveZombies` floors it. |
 | **`getForwardVector` answers in BULLET space, where y is UP.** It is one line -- `jniTransform.basis.getColumn(2, out)` -- so it hands back the chassis's local Z axis in the physics frame, not a map direction. `BaseVehicle.getWorldPos` settles which component is which: it builds a world position as `origin.x` -> world x, `origin.z` -> world y, `origin.y` -> height. So the map plane is **`x()` and `z()`**, and `y()` is the vertical. | Reading `x(), y()` looks right and fails in the most expensive way available: on level ground the vertical component is ~0, so the vector reads as zero length for every vehicle pointing **north or south** and the caller silently takes its fallback, while an east or west facing one answers normally. Two headings of four correct reads as "inconsistent", not as "broken". `Client.groundBeside` ate a session on this. Note also that PZ's map y increases **southward**, so a quarter turn to the left is `(fy, -fx)`, not the `(-fy, fx)` a y-up frame wants. |
 | Moving a player is `IsoGameCharacter:teleportTo(x, y, z)` (overloads `(FFI)`, `(III)`, `(FF)`, `(II)`). `setX`/`setLastX` also works — PhunZones2 ports players that way. | `Client.teleport` uses `teleportTo`, `+ 0.5` to centre on the tile, as vanilla's `StreamMapWindow` does. |
+| **A Lua teleport is a speed hack to the server, and nothing in Lua can excuse it.** `teleportTo` never touches the network. `AntiCheatSpeed.validate` runs on every `PlayerUpdateReliable`: `NetworkCharacterAI$SpeedChecker.set` samples the client's reported position once a second (`UpdateLimit` 1000ms) and stores `distance * 1000 / dt`, so a cross-map jump reads ~13,000 against a limit of 20 and **stays stored until the next sample** -- every reliable packet in that second is another strike. Four strikes (`maxSuspiciousCounter`) acts; `SuspiciousActivity` takes one off every 150s. The only excuse is the private `SpeedChecker.reset()`, which zeroes the stored position and opens a 15s grace window; it is reached from `NetworkCharacterAI.resetSpeedLimiter`, whose only callers are `GameServer.sendTeleport` (class not exposed to Lua) and zombie code. Every packet that reaches `sendTeleport` -- `TeleportPacket`, `TeleportUserActionPacket`, `TeleportToHimUserActionPacket` -- carries a `@PacketSetting` `requiredCapability`. Exempt: a role with `TeleportToPlayer`, `TeleportToCoordinates`, `TeleportPlayerToAnotherPlayer` or `UseFastMoveCheat` (checked in `validate`), or `CantBeKickedByAnticheat` (checked in `AntiCheat.act`), and any server with `Core.debug`, where `act` logs and never kicks. `AntiCheat$Policy` is 1 Ban, 2 Kick, 3 Log, 4 Disabled; **`AntiCheatSpeed` defaults to 2**, `AntiCheatNoClip` to 4. | A stock server kicks an ordinary tenant after one or two transits, and at 1 bans them. The only fix is `AntiCheatSpeed=3` in the server `.ini`. `anticheat.lua` reads it with `getServerOptions():getOption`, refuses every entry path for a player it would punish, and warns at boot. Leaving is not gated: kicked beats stranded. Admins are exempt, which is why every dedicated server test passed until a non-admin tried. |
 | **One teleport call is not enough across the map.** The player moves, but the destination chunk is not loaded, and the engine restores anyone on a square that does not exist. It reads as "the teleport silently did nothing" — the position log shows the move landing and then being undone. | `Client.teleport` re-asserts the position every tick until `getGridSquare` at the destination is non-nil (`HOLD_TICKS`). Applies leaving a room too: the vehicle's chunk unloads while the player is inside. The leash `graceUntil` **must** outlast that window. |
 | `ISEnterVehicle:new(character, vehicle, seat)` is the only sanctioned way into a seat, and its `start()` silently returns without entering if the character is more than 2 tiles from `getPassengerPosition(seat, "outside")`. `isValid` then fails and the queue drops it, so a failed re-seat degrades to standing there rather than hanging — **this happens by default**, because the only position the server can send is the vehicle centre, which is further than 2 tiles on anything van sized. Teleport to the outside position first (`getWorldPos(pos:getOffset(), Vector3f)`, as vanilla does). `getBestSeat`, `isSeatOccupied`, `getMaxPassengers`, `getCharacter` all exist on `BaseVehicle`. | Re-seating on exit is a client action in `Client.teleport`'s second phase, run only once the destination chunk has streamed in. |
 | **An empty `position outside { }` block DELETES the position, and a seat without one crashes `ISEnterVehicle`.** From the bytecode, `VehicleScript.LoadPosition` opens with `if (block.isEmpty()) { positions.remove(existing); return null; }` -- so an empty block is how a script cancels a position it inherited from a template, and `getPassengerPosition(seat, "outside")` then answers null. `ISEnterVehicle:start` does `outside:getOffset()` at line 43 with **no nil check**, and so does `ISVehicleMenu`'s own `distanceToPassengerPosition`. The sanctioned test is `vehicle:isEnterBlocked(chr, seat)`, an alias for `isExitBlocked(chr, seat)`, which returns true when either the inside or the outside position is null and otherwise runs `PolygonalMap2.lineClearCollide` between the two. `PolygonalMap2.instance` is built in a static initialiser, so it is never nil, and the only client-only branch in there is gated on `GameClient.client`. | A fitted, empty seat is **not** necessarily a seat anybody can be put into. Vanilla's own `VanSeats` rear seats have no door, and `Base.RollingRefuge` empties five of its six -- including **seat 0, the driver's** -- so a cab exit that took "the first free seat counting from the driver's" threw on the first RV that reached it. `Core.seatIsEnterable` is the one shared test, called by `firstFreeSeat` and `resolveSeat` client side and by `freeSeat` server side, where it also gates the moving-vehicle rule. Vanilla's answer for getting into a doorless seat is to board by one with a door and queue `ISSwitchVehicleSeat:new(chr, seatTo, seatFrom)` -- with `seatFrom` passed explicitly, because at queue time the character is not in the vehicle and the constructor's own default reads `getVehicle()`. |
@@ -3568,6 +3597,21 @@ cells are actually towns.
     - **The `nil` outfit and the `50` female chance**, passed as vanilla's
       `FenrisScenario` passes them. A zombie that spawns naked or throws is
       the one.
+
+19. **The anti-cheat refusal has never run in game.** `anticheat_spec.lua`
+    covers the decision against stubs, and the exemption and policy checks
+    were confirmed to fail against broken copies. What it cannot see:
+    - **`getServerOptions():getOption("AntiCheatSpeed")` on a dedicated
+      server.** If it answers nil the guard refuses nobody, and the only tell
+      is that the boot warning never appears on a server left at 2.
+    - **`player:getRole()` server side** for a remote player, and
+      `Capability` being reachable as a table of enum constants there.
+      Vanilla only ever reads both client side. If the role cannot be read,
+      everybody is treated as unexempt, admins included -- loud, and visible
+      the first time an admin tries to get in.
+    - **PhunTaxi.** `Core.enterRoom` now refuses on a punishing server, and
+      PhunTaxi's `sendTo` out of the arrival room is a teleport it does not
+      gate. Whatever PhunTaxi does with that refusal is its own question.
 
 ## v2, deliberately not in v1
 

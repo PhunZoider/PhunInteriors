@@ -7,6 +7,7 @@
   "IGUI_PhunInteriors_RoomClosed": "That interior is closed right now",
   "IGUI_PhunInteriors_RoomNotInWorld": "This interior is missing from your world",
   "IGUI_PhunInteriors_ZombiesTooClose": "Too dangerous to climb in right now",
+  "IGUI_PhunInteriors_AntiCheatSpeed": "The server anti-cheat would kick you for this. An admin needs to set AntiCheatSpeed to 3",
   "IGUI_PhunInteriors_VehicleGone": "Your vehicle is no longer where you left it",
   "IGUI_PhunInteriors_VehicleMoving": "You cannot climb out while it is moving",
   "IGUI_PhunInteriors_CabFull": "Every seat is taken",

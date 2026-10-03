@@ -1,7 +1,7 @@
 version=1
-id=
+id=3812500419
 title=PhunInteriors
-description=83 themed interiors for 168 vehicles (and tents, and toilets). Walk out the back to the tailgate, out the front into the driver's seat. Weight, battery power and multiplayer included.
+description=83 themed interiors for 168 vehicles (and tents). Walk out the back to the tailgate, out the front into the driver's seat.
 description=
 description=[h2]The big four[/h2]
 description=[list]
@@ -13,13 +13,12 @@ description=[/list]
 description=
 description=[h2]Also in the box[/h2]
 description=[list]
-description=[*][b]No escape hatch.[/b] You cannot climb in with zombies close, from a moving vehicle, or from behind the wheel. And a few zombies gather outside while you wait in there.
+description=[*][b]No cheesing.[/b] You cannot climb in with zombies close or from a moving vehicle. And Zeds can gather outside while you wait in there.
 description=[*][b]Coming out is survivable.[/b] You cannot see what you are stepping into, so the ground around you is cleared as you land. The crowd is not removed; you just get a moment to see it.
 description=[*][b]Contained, properly.[/b] The server keeps you in your room, so no clipping through walls, no roof walks and no wandering into the neighbour's. Walls can (optionally) be made unbreakable and fires inside are put out.
 description=[*][b]Rooms stay the way they were built.[/b] Each room remembers its own fittings, and when it is reset it is put back the way it was, working light switches included.
 description=[*][b]Rain water.[/b] Craft a Rain Reservoir Kit and put barrels on your room's roof for a plumbed sink.
 description=[*][b]Put a room behind anything.[/b] An admin can map (or re-map) any vehicle or placed object to any room from the in-game editor, with no restart. Want a toilet that is secretly a portkey to a workshop? Easy! See [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/remapping.md]how to map a vehicle or object to a room[/url].
-description=[*][b]Multiplayer first.[/b] One code path for single player and multiplayer, tested on a real dedicated server, including towing and passengers climbing into the back of a moving van.
 description=[/list]
 description=
 description=[h2]Vehicle mods supported out of the box[/h2]
@@ -43,6 +42,7 @@ description=Missing your favourite? An admin can give it a room from inside the 
 description=
 description=[h2]For server owners[/h2]
 description=[list]
+description=[*][b]Set AntiCheatSpeed=3 in your server .ini.[/b] Every trip in or out of a room is a teleport, and the default setting kicks players for it ("Malformed packet or suspicious activity"). Until it is changed, players are told why they cannot get in rather than being kicked. Admins are exempt, so you will not see it yourself.
 description=[*]Every constraint is a sandbox option: entry time, zombie gathering, the weight factor, battery drain, how long a room is protected, unbreakable walls. Turn off whatever is taking the phun out of it.
 description=[*]An in-game room window for admins: see every room and slot, port into any of them, reset or scrub one, open or close a room, and remap vehicles and edit rooms live. Changes are saved to PhunInteriors.json when you press Save, as a patch over the shipped rooms, so mod updates still reach everything you did not change.
 description=[*]No required mods. PhunServer2 adds an /interiors chat command if you have it.
@@ -56,22 +56,9 @@ description=[*][b]Map mods:[/b] draw your own rooms on your own cells and regist
 description=[*][b]Everything else:[/b] shared hub rooms several objects lead into, and calls to put a player in a room directly. [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/modding.md]Adding rooms and vehicles[/url]
 description=[/list]
 description=
-description=[h2]Compatibility[/h2]
-description=Build 42 only. The mod ships its own map block (cells 87,46 to 91,48 and 89,49 to 91,49); another map mod using those cells will conflict. Server zombie distribution should not be set to Uniform.
-description=
-description=Running [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3790153201]Whennyago Initiative[/url]? PhunInteriors includes a performance patch for it: that mod's solar and generator upkeep is done by the server from the loaded vehicle list, rather than by every client scanning the squares around them every in-game minute. It turns itself off if Whennyago changes in a way it does not recognise, and there is a sandbox option to turn it off yourself.
-description=
 description=[h2]Documentation[/h2]
-description=[list]
-description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/playing.md]Playing[/url]: getting in, getting out, power, water, tents
-description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicles.md]Supported vehicles[/url]: which vehicle gets which room
-description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/sandbox-options.md]Sandbox options[/url]: every option and its default
-description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/admin.md]Running a server[/url]: the room window, editor and console commands
-description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/remapping.md]Mapping a vehicle or an object to a room[/url]: give anything a room from inside the game, no code
-description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicle-mods.md]Giving your vehicles a room[/url]: for vehicle mod authors, a few lines of Lua
-description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/map-authors.md]Adding rooms from your map[/url]: for map authors
-description=[*][url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/modding.md]Adding rooms and vehicles[/url]: the API for other mods
-description=[/list]
+description=Everything is written up on GitHub: playing, supported vehicles, sandbox options, running a server, remapping, and adding rooms from your own mod or map.
+description=[b][url=https://github.com/PhunZoider/PhunInteriors#readme]See the full documentation here[/url][/b]
 description=
 description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
 tags=Build 42;Vehicles;Multiplayer

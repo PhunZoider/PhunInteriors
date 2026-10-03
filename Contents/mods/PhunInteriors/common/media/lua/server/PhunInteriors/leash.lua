@@ -279,13 +279,12 @@ function Leash.tick()
     -- almost always there is nobody in a room at all -- an empty map used to
     -- cost a getTimestampMs() call per tick to work that out.
     --
-    -- One integer compare instead. NOT an add/remove of the OnTick handler,
-    -- which is the obvious alternative and is a trap: Event.trigger walks its
-    -- callbacks by index, re-reading size() each time round, so removing one
-    -- during dispatch shifts the list under the cursor and silently SKIPS the
-    -- next handler -- somebody else's, from another mod. And the exit path
-    -- runs from inside this very tick, which is exactly when we would be
-    -- unregistering. It does not throw; it just quietly drops a callback.
+    -- One integer compare instead. An add/remove of the OnTick handler would
+    -- also be safe as long as this handler only ever removes ITSELF:
+    -- Event.trigger checks callbacks:contains(closure) after each call and
+    -- steps the index back when it is gone. Removing a different, earlier
+    -- handler mid-dispatch is what skips one. The count is simply less to
+    -- get wrong. See CLAUDE.md.
     if not Transit.anyoneInside() then
         return
     end

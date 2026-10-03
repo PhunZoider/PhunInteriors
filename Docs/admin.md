@@ -2,6 +2,35 @@
 
 Everything an admin can see and change, in game and from the console.
 
+## The speed anti-cheat
+
+**On a multiplayer server, set this in your server `.ini` before anything
+else:**
+
+```
+AntiCheatSpeed=3
+```
+
+Going into a room and coming back out are both teleports, and Build 42 gives
+a mod no way to tell the server's anti-cheat that a teleport was meant. The
+speed check sees a player cross the map in a fraction of a second. At the
+default setting (`2`, Kick) it kicks them after one or two trips, with
+"Malformed packet or suspicious activity was detected". At `1` it bans them.
+
+| Value | Means |
+|---|---|
+| 1 | Ban |
+| 2 | Kick (the default) |
+| 3 | Log only (recommended) |
+| 4 | Disabled |
+
+Until it is 3 or 4, PhunInteriors refuses entry rather than let anybody be
+kicked. The player is told the anti-cheat would kick them, and the server
+log says so at startup. Anybody whose role can teleport, or carries
+`CantBeKickedByAnticheat`, is exempt from the check and can still get in, so
+admins testing on a default server will not notice. A server started with
+`-debug` never kicks either.
+
 ## The room window
 
 Open it from the **admin panel**, the **debug menu** (PhunInteriors), or the

@@ -148,8 +148,11 @@ for (1 .. $methods) {
                     my $idx = u2(); u2();
                     printf("  %4d: %-16s %s\n", $off, $n, ref_($idx));
                 } else {
-                    $pos += $nb;
-                    printf("  %4d: %s\n", $off, $n);
+                    # Print raw operand bytes: for iload/istore/iinc they name
+                    # the local slot, which is the only way to tell two loop
+                    # counters apart.
+                    my @b = map { u1() } 1 .. $nb;
+                    printf("  %4d: %s%s\n", $off, $n, @b ? "  [" . join(" ", @b) . "]" : "");
                 }
             }
             exit 0;

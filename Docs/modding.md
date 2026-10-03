@@ -166,7 +166,7 @@ in plain English.
 
 | Call | What it does |
 |---|---|
-| `PhunInteriors.enterRoom(player, roomId, opts)` | Put a player in a room with no vehicle behind it. `opts`: `share` joins an existing lease when the room is full, `exit = false` removes the way out, `returnTo = {x, y, z}` is where they come back out, `reason` is for the log. Safe to call again for somebody already inside. Returns `true, "room#index"` or `false, why`. |
+| `PhunInteriors.enterRoom(player, roomId, opts)` | Put a player in a room with no vehicle behind it. `opts`: `share` joins an existing lease when the room is full, `exit = false` removes the way out, `returnTo = {x, y, z}` is where they come back out, `reason` is for the log. Safe to call again for somebody already inside. Returns `true, "room#index"` or `false, why`. Refuses on a server whose `AntiCheatSpeed` would kick or ban the player for the teleport (see [Running a server](admin.md#the-speed-anti-cheat)); `sendTo` is not gated, so a mod that teleports players itself has the same problem. |
 | `PhunInteriors.sendTo(player, {x, y, z}, reason, release)` | Take a player out of their room to a place you choose. `release` hands the room back once the last person is out. |
 | `PhunInteriors.setRoomOpen(roomId, open, {evict, scrub})` | Open or close a room. |
 | `PhunInteriors.isRoomOpen(roomId)` | Whether it is taking tenants. |

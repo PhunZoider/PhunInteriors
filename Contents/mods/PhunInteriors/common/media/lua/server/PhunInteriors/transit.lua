@@ -10,6 +10,7 @@ local Core = PhunInteriors
 local Slots = require "PhunInteriors/slots"
 local Weight = require "PhunInteriors/weight"
 local Power = require "PhunInteriors/power"
+local AntiCheat = require "PhunInteriors/anticheat"
 local Transit = {}
 Core.modules.transit = Transit
 
@@ -406,6 +407,12 @@ function Transit.canEnter(player, vehicle)
     -- answer here would refuse entries that should succeed.
     if not Core.vehicleHasRooms(vehicle) then
         return false, "IGUI_PhunInteriors_WrongVehicle"
+    end
+
+    -- The way in is a teleport, and on a server whose speed anti-cheat punishes
+    -- one this player would be kicked or banned for it. See anticheat.lua.
+    if AntiCheat.teleportPunished(player) then
+        return false, "IGUI_PhunInteriors_AntiCheatSpeed"
     end
 
     -- Stepping from a seat into the interior is fine at speed; catching a
@@ -828,6 +835,11 @@ function Transit.enterObject(player, object, anchor)
         return false
     end
 
+    if AntiCheat.teleportPunished(player) then
+        notify(player, "IGUI_PhunInteriors_AntiCheatSpeed", true)
+        return false
+    end
+
     if Core.settings.EntryBlockedByZombies then
         local radius = Core.settings.EntryZombieRadius or 4
         if zombiesNear(anchor.x, anchor.y, anchor.z or 0, radius) > 0 then
@@ -1003,6 +1015,14 @@ function Transit.adminEnter(player, roomId, index)
         -- owns a lease and a return position, and quietly replacing it would
         -- strand both.
         return false, "you are already inside a room; leave it first"
+    end
+
+    -- An admin normally carries a teleport capability and passes. One whose
+    -- role does not would be kicked by the port like anybody else.
+    local punished = AntiCheat.teleportPunished(player)
+    if punished then
+        return false, "AntiCheatSpeed would " .. punished ..
+                   " you for the teleport; set it to 3 or 4, or give your role a teleport capability"
     end
 
     local vehicleId = Core.adminKey(player)
@@ -1251,6 +1271,13 @@ function Transit.enterRoom(player, roomId, opts)
         end
         return false, string.format("standing in %s#%s, which is not %s", tostring(current.room),
             tostring(current.index), roomId)
+    end
+
+    -- After the recovery above, which moves nobody. Plain English, because the
+    -- caller is another mod and it decides what the player is told.
+    local punished = AntiCheat.teleportPunished(player)
+    if punished then
+        return false, "the server's AntiCheatSpeed would " .. punished .. " this player for the teleport"
     end
 
     if not Slots.isOpen(roomId) then

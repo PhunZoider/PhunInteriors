@@ -20,6 +20,7 @@ local Author = require "PhunInteriors/author"
 local Removal = require "PhunInteriors/removal"
 local Store = require "PhunInteriors/store"
 local Transit = require "PhunInteriors/transit"
+local AntiCheat = require "PhunInteriors/anticheat"
 
 local started = false
 
@@ -70,6 +71,10 @@ local function start()
     -- is worse than no warning at all. Slots.acquire says it at the point of
     -- failure instead, where the answer is always current.
     Core.logLn("ready. " .. Core.describeRegistry())
+
+    -- A stock server kicks every tenant for the teleport. Said at boot because
+    -- the refusal a player sees cannot change the setting; an admin can.
+    AntiCheat.warnAtBoot()
     Core.logLn("rooms kept " .. tostring(Core.settings.RoomProtectedDays) .. " day(s) unused, weight factor " ..
         tostring(Core.settings.WeightFactor) .. "%")
 end
