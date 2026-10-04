@@ -32,6 +32,8 @@ description=
 description=[h2]Compatibility[/h2]
 description=Build 42 only. The mod ships its own map block (cells 87,46 to 91,48 and 89,49 to 91,49); another map mod using those cells will conflict. Server zombie distribution should not be set to Uniform.
 description=
+description=Running [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2957935793]Another Vehicle Claim System[/url]? A claimed vehicle's room follows its trunk permission: the owner, whoever the claim lets in, or everybody once the owner allows opening the trunk.
+description=
 description=Running [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3790153201]Whennyago Initiative[/url]? PhunInteriors includes a performance patch for it: that mod's solar and generator upkeep is done by the server from the loaded vehicle list, rather than by every client scanning the squares around them every in-game minute. It turns itself off if Whennyago changes in a way it does not recognise, and there is a sandbox option to turn it off yourself.
 description=
 description=[h2]Documentation[/h2]

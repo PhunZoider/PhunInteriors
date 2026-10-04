@@ -124,6 +124,12 @@ which keeps it for as long as the claim stands.
 A room somebody else has claimed as a safehouse refuses entry to anybody the
 claim does not allow.
 
+With [Another Vehicle Claim System](https://steamcommunity.com/sharedfiles/filedetails/?id=2957935793)
+installed, a claimed vehicle's room counts as its cargo space: only people the
+claim lets open the trunk can go in. That means the owner, their faction or
+safehouse if the server allows those, an admin, or everybody once the owner
+ticks "Allow opening trunk". Anybody already inside can always leave.
+
 If a vehicle is scrapped with a blowtorch, or removed by an admin, its room is
 freed for somebody else.
 

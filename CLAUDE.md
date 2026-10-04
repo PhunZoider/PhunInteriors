@@ -2300,6 +2300,19 @@ cells are actually towns.
   depends on change, and `PhunInteriors.WhennyagoPatch` turns it off.
   PhunFixes carries the same patch and stands aside when
   `Core.compat.whennyago.hooked` is set; keep the two in step.
+- **Another Vehicle Claim System (2957935793) is a soft hook.**
+  `server/PhunInteriors/avcs.lua` refuses entry to a claimed vehicle's room
+  unless AVCS would let that player open its trunk: the vehicle's public
+  `AllowOpeningTrunk`, else `AVCS.checkPermission` (owner, faction,
+  safehouse, `ManipulateVehicle`). The room is the cargo space, hence the
+  trunk rather than `AllowPassenger`. It reads `SQLID` off vehicle modData
+  rather than calling `AVCS.getVehicleID`, which mints one, and fails OPEN
+  with a log line on an error inside AVCS. Leaving is never gated. The Tsar's
+  library patch for it (2965124692) adds nothing to ask about. A cab exit into
+  a seat AVCS refuses comes back as its `ignoreAction` stand-in, which
+  vanilla's queue drops, so the tenant lands beside the vehicle while the
+  arrival report still says `seated`. Never run in game; `avcs_spec.lua`
+  covers the decision.
 - **PhunZones2 is a soft hook, and the interior zone is ours.**
   `shared/PhunInteriors/compat_phunzones.lua` adds the `PhunInteriors` zone to
   `PhunZones/data` at load (PhunTaxi's pattern for the Taxi Garage), with

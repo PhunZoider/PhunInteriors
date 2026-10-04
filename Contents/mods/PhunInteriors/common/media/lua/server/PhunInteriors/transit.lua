@@ -11,6 +11,7 @@ local Slots = require "PhunInteriors/slots"
 local Weight = require "PhunInteriors/weight"
 local Power = require "PhunInteriors/power"
 local AntiCheat = require "PhunInteriors/anticheat"
+local Avcs = require "PhunInteriors/avcs"
 local Transit = {}
 Core.modules.transit = Transit
 
@@ -413,6 +414,12 @@ function Transit.canEnter(player, vehicle)
     -- one this player would be kicked or banned for it. See anticheat.lua.
     if AntiCheat.teleportPunished(player) then
         return false, "IGUI_PhunInteriors_AntiCheatSpeed"
+    end
+
+    -- Somebody else's claimed vehicle. The room is its cargo space, so this
+    -- is the trunk permission, asked of AVCS when it is installed. See avcs.lua.
+    if Avcs.refuses(player, vehicle) then
+        return false, "IGUI_PhunInteriors_VehicleClaimed"
     end
 
     -- Stepping from a seat into the interior is fine at speed; catching a

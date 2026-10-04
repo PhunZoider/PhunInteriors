@@ -42,10 +42,11 @@ description=Missing your favourite? An admin can give it a room from inside the 
 description=
 description=[h2]For server owners[/h2]
 description=[list]
-description=[*][b]Set AntiCheatSpeed=3 in your server .ini.[/b] Every trip in or out of a room is a teleport, and the default setting kicks players for it ("Malformed packet or suspicious activity"). Until it is changed, players are told why they cannot get in rather than being kicked. Admins are exempt, so you will not see it yourself.
+description=[*][b]Set AntiCheatSpeed=3 or 4 in your server .ini.[/b] to prevent the game booting players.
 description=[*]Every constraint is a sandbox option: entry time, zombie gathering, the weight factor, battery drain, how long a room is protected, unbreakable walls. Turn off whatever is taking the phun out of it.
 description=[*]An in-game room window for admins: see every room and slot, port into any of them, reset or scrub one, open or close a room, and remap vehicles and edit rooms live. Changes are saved to PhunInteriors.json when you press Save, as a patch over the shipped rooms, so mod updates still reach everything you did not change.
 description=[*]No required mods. PhunServer2 adds an /interiors chat command if you have it.
+description=[*][b]Claim Support[/b] Built in support for [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2957935793]Another Vehicle Claim System[/url].
 description=[/list]
 description=
 description=[h2]For mod authors[/h2]
