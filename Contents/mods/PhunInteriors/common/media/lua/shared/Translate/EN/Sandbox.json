@@ -22,6 +22,9 @@
   "Sandbox_PhunInteriors_EntryAtBoardingPoint": "Enter At The Door",
   "Sandbox_PhunInteriors_EntryAtBoardingPoint_tooltip": "If yes, you walk to the back of a van or the door of a caravan to get inside, rather than going in from anywhere beside it",
 
+  "Sandbox_PhunInteriors_EntryNeedsUnlocked": "Locked Vehicles Keep You Out",
+  "Sandbox_PhunInteriors_EntryNeedsUnlocked_tooltip": "If yes, you cannot get inside a locked vehicle without its key. An unlocked, open or missing door, or an open or smashed window, still lets you in, just as it would let you into the cab",
+
   "Sandbox_PhunInteriors_EntryBlockedByZombies": "Block Entry When Chased",
   "Sandbox_PhunInteriors_EntryBlockedByZombies_tooltip": "If yes, you cannot get inside while a zombie is close, so the interior is not an escape hatch mid chase",
 

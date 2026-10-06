@@ -14,6 +14,7 @@ server, turn it off.
 |---|---|---|---|
 | Entry Time | 1 | 0 to 120 | Seconds it takes to get inside. Walking, running or aiming cancels it. 0 is instant. |
 | Enter At The Door | on | | You walk to the back of a van or the door of a caravan to get in, rather than going in from anywhere beside it. |
+| Locked Vehicles Keep You Out | on | | You cannot get in to a locked vehicle without its key. As with the cab, an unlocked, open or missing door, or an open or smashed window, still lets you in. A vehicle with no lockable doors, like most trailers, is never locked. Ignored when the server's Vehicle Easy Use is on. |
 | Block Entry When Chased | on | | You cannot get in while a zombie is close, so the interior is not an escape hatch mid chase. Checked when the action finishes, not when it starts. |
 | Entry Block Radius | 10 | 1 to 30 | How close, in squares, a zombie has to be to stop you. |
 

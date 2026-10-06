@@ -218,6 +218,7 @@ Core.defaults = {
     ExitTaxCap = 3,
     EntryDelay = 1,
     EntryAtBoardingPoint = true,
+    EntryNeedsUnlocked = true,
     EntryBlockedByZombies = true,
     EntryZombieRadius = 10,
     ExitShoveRadius = 6,

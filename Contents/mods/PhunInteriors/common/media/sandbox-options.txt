@@ -57,6 +57,14 @@ option PhunInteriors.EntryAtBoardingPoint
     translation = PhunInteriors_EntryAtBoardingPoint,
 }
 
+option PhunInteriors.EntryNeedsUnlocked
+{
+    type = boolean,
+    default = true,
+    page = PhunInteriors,
+    translation = PhunInteriors_EntryNeedsUnlocked,
+}
+
 option PhunInteriors.EntryBlockedByZombies
 {
     type = boolean,

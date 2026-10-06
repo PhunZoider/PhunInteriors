@@ -210,6 +210,17 @@ does the entry action start. Also:
 - A modded vehicle nobody listed: the rear if it declares one, else its nearest
   door.
 
+### A11. Locked vehicles
+
+Lock every door of a van, drop its key, and try to enter. **Pass:** "It is
+locked, and you do not have the key", refused at once, with no walk. Also:
+- Pick the key back up: you get in.
+- Smash one window, or unlock any one door: you get in without the key.
+- A doorless trailer: you get in.
+- `EntryNeedsUnlocked` off, or the server's `VehicleEasyUse` on: you get in.
+- As a non-admin on a dedicated server, so the server's own copy of the lock
+  state is what refuses.
+
 ---
 
 ## Phase B: the reshaped registry and allocation

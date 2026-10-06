@@ -429,6 +429,13 @@ function Transit.canEnter(player, vehicle)
         return false, why
     end
 
+    -- Locked against this player: no key and no other way into the cab. The
+    -- client asks the same thing first so the refusal is instant.
+    local unlocked, lockedWhy = Core.vehicleLockAllows(vehicle, player)
+    if not unlocked then
+        return false, lockedWhy
+    end
+
     -- Standing at the door, not merely somewhere near the vehicle. The client
     -- walks there first; this is what refuses a client that did not. The
     -- vehicle is loaded, because the player is standing beside it.

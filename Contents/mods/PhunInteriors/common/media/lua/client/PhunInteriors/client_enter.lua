@@ -138,6 +138,9 @@ function Client.beginEnter(vehicle)
     -- of arriving after a fifteen second action. Same function on both sides;
     -- the server is still the authority and re-checks it in Transit.canEnter.
     local allowed, why = Core.vehicleMotionAllows(vehicle, player)
+    if allowed then
+        allowed, why = Core.vehicleLockAllows(vehicle, player)
+    end
     if not allowed then
         Client.notify({text = why, warning = true})
         return

@@ -189,6 +189,70 @@ function Core.boardingRefusal(point)
     return "IGUI_PhunInteriors_BoardAtDoor"
 end
 
+--- Can this character get into this vehicle at all, as far as its locks go?
+-- Returns true, or false plus a translation key.
+--
+-- The interior is reached through the vehicle, so a vehicle you could not
+-- open is one you cannot walk into the back of. Without this a locked car was
+-- a way past its own locks: no key, no smashed window, and its cargo space
+-- was yours anyway.
+--
+-- The rule is vanilla's own, from VehicleUtils.RequiredKeyNotFound and the
+-- CheckForUnlockedDoorsWindows it calls -- the test that lets you pop a hood
+-- without the key "if the player can get in the vehicle". You can if you hold
+-- the key, if the key is in the door, if VehicleEasyUse is on, or if any door
+-- other than the hood is open, unlocked or missing, or any window is open,
+-- smashed or missing. So the ways into the cab are the ways into the room,
+-- and smashing a window works here for the same reason it works there.
+--
+-- Written out rather than calling CheckForUnlockedDoorsWindows, for one
+-- difference: that returns false for a vehicle with no doors at all, which is
+-- most trailers. Nothing to unlock is not locked, so a vehicle with no
+-- installed, lockable door lets everybody in.
+--
+-- Somebody already aboard got past the locks to sit there, so is never asked,
+-- which is the rule Core.vehicleMotionAllows and atBoardingPoint follow too.
+function Core.vehicleLockAllows(vehicle, player)
+    if not Core.settings.EntryNeedsUnlocked then
+        return true
+    end
+    if not vehicle or not player or player:getVehicle() == vehicle then
+        return true
+    end
+    if SandboxVars and SandboxVars.VehicleEasyUse then
+        return true
+    end
+    if vehicle.isKeyIsOnDoor and vehicle:isKeyIsOnDoor() then
+        return true
+    end
+    local inventory = player:getInventory()
+    if inventory and inventory:haveThisKeyId(vehicle:getKeyId()) then
+        return true
+    end
+
+    local anyLock = false
+    for i = 0, vehicle:getPartCount() - 1 do
+        local part = vehicle:getPartByIndex(i)
+        if part then
+            local door = part:getDoor()
+            if door and part:getId() ~= "EngineDoor" then
+                if not part:getInventoryItem() or door:isOpen() or not door:isLocked() then
+                    return true
+                end
+                anyLock = true
+            end
+            local window = part:getWindow()
+            if window and (not part:getInventoryItem() or window:isOpen() or window:isDestroyed()) then
+                return true
+            end
+        end
+    end
+    if not anyLock then
+        return true
+    end
+    return false, "IGUI_PhunInteriors_VehicleLocked"
+end
+
 --- The door nearest this character, or nil. What the walk heads for.
 function Core.nearestVehicleDoor(vehicle, character)
     local best, bestDistance

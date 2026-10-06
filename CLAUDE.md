@@ -3626,6 +3626,19 @@ cells are actually towns.
       PhunTaxi's `sendTo` out of the arrival room is a teleport it does not
       gate. Whatever PhunTaxi does with that refusal is its own question.
 
+20. **The lock check has never run in game.** Reported by a player: a locked
+    vehicle's interior was open to anybody, which made the room a way past
+    the vehicle's own locks. `Core.vehicleLockAllows` in `boarding.lua` now
+    refuses entry unless vanilla would let you into the cab -- the key, the
+    key in the door, `VehicleEasyUse`, or any non-hood door open, unlocked
+    or missing, or any window open, smashed or missing. That is
+    `VehicleUtils.CheckForUnlockedDoorsWindows`, written out because it
+    calls a doorless trailer locked. Called by `Transit.canEnter` and
+    `Client.beginEnter`; `EntryNeedsUnlocked` turns it off. `locks_spec.lua`
+    covers the rule. What it cannot see: whether `haveThisKeyId` finds a key
+    on a keyring, and whether a KI5 caravan's doors are real lockable door
+    parts or it reads as doorless and is never locked.
+
 ## v2, deliberately not in v1
 
 The siege/breach system, a fuel penalty for load, and the purpose-built map.
