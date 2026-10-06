@@ -268,7 +268,8 @@ Contents/mods/PhunInteriors/common/
   media/sandbox-options.txt
   media/lua/shared/PhunInteriors/    core, tools, registry, bounds, defaults,
                                     reservoir, holders, overrides, json, boarding,
-                                    compat_whennyago, compat_phunzones
+                                    compat_whennyago, compat_phunzones,
+                                    compat_rsemitruck
   media/lua/server/PhunInteriors/    slots, transit, leash, manifest, scrub,
                                     weight, power, harden, removal, admin,
                                     author, rainwater, loot, store, phunzones,
@@ -305,7 +306,8 @@ Tests/lua/*_spec.lua               registry placement/links, allocation order,
                                    admin actions the editor drives, sendTo,
                                    holderless entry (enterRoom) and the
                                    exit tax count and its cap, the
-                                   Whennyago Initiative patch, and who
+                                   Whennyago Initiative patch, the W900
+                                   payload hand-off, and who
                                    the speed anti-cheat would punish
 Tests/root/PhunInteriors/common/   overlay carrying the test ids, applied by
                                    deploy.cmd to build PhunInteriorsTest. The
@@ -2300,6 +2302,23 @@ cells are actually towns.
   depends on change, and `PhunInteriors.WhennyagoPatch` turns it off.
   PhunFixes carries the same patch and stands aside when
   `Core.compat.whennyago.hooked` is set; keep the two in step.
+- **W900 Semi-Truck (rSemiTruck, 3409472393) owns its trucks' mass, so
+  the room goes in as its payload.** `shared/PhunInteriors/compat_rsemitruck.lua`
+  wraps the global `MSW_MassUtil.computePayload` to add
+  `consts.payloadDeltaKey` from vehicle modData, and `Weight.apply` writes that
+  key instead of calling `setMass` on any vehicle `MSW_MassUtil.isTargetVehicle`
+  accepts (their whitelist: `SemiTruckBox`, `_mil`, `SemiTrailerVan`, `_mil`,
+  `SemiTrailerContainer`). Their payload damping writes ABSOLUTE masses
+  (script mass + 0.65 of payload, capped per script, no sandbox option) to
+  keep these trucks out of physics spikes, and our `updateTotalMass()`
+  recomputed the uncapped mass on a truck that had just reloaded: reported
+  as a box truck's hood and rear door going missing on exit and a crash
+  minutes later. The room is double damped (`WeightFactor` then 0.65) on
+  purpose, so it ranks exactly with their own cargo. A pre-patch additive
+  delta is taken back off once (`Weight.applyAsPayload`). Their client pass
+  never sees our delta (vehicle modData), their server recomputes and does.
+  Never run in game; `rsemitruck_spec.lua` covers it, Phase J2 of
+  `Docs/testplan.md` is the in-game check.
 - **Another Vehicle Claim System (2957935793) is a soft hook.**
   `server/PhunInteriors/avcs.lua` refuses entry to a claimed vehicle's room
   unless AVCS would let that player open its trunk: the vehicle's public

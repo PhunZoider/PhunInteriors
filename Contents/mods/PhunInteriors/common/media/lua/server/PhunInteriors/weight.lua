@@ -4,6 +4,7 @@ end
 require "PhunInteriors/registry"
 local Core = PhunInteriors
 local Slots = require "PhunInteriors/slots"
+local Semi = require "PhunInteriors/compat_rsemitruck"
 local Weight = {}
 Core.modules.weight = Weight
 
@@ -177,6 +178,10 @@ function Weight.apply(vehicle, interiorWeight)
     local applied = tonumber(vmd[Core.consts.massDeltaKey]) or 0
     local want = (tonumber(interiorWeight) or 0) * (factor / 100)
 
+    if Semi.manages(vehicle) then
+        return Weight.applyAsPayload(vehicle, want, applied)
+    end
+
     if math.abs(want - applied) < 0.01 then
         -- Silence here reads as "the weight was never calculated", which is
         -- the one thing it does not mean: the room is scanned on every exit,
@@ -217,6 +222,36 @@ function Weight.apply(vehicle, interiorWeight)
     return want
 end
 
+--- The room's weight, handed to a mod that owns this vehicle's mass.
+--
+-- No setMass here, and above all no updateTotalMass: that is what spiked the
+-- W900s. The number goes where compat_rsemitruck.lua's wrap reads it, and
+-- their own pass applies it, capped, under their own physics lock.
+--
+-- A truck leased before this existed may still carry a delta in its initial
+-- mass from the additive path. That one is taken back out, once, or the
+-- room would be counted twice wherever the engine recomputes from it.
+function Weight.applyAsPayload(vehicle, want, legacy)
+    local vmd = vehicle:getModData()
+    if legacy ~= 0 then
+        local undone = pcall(function()
+            vehicle:setInitialMass(vehicle:getInitialMass() - legacy)
+            vehicle:setMass(vehicle:getMass() - legacy)
+        end)
+        if undone then
+            vmd[Core.consts.massDeltaKey] = nil
+        end
+        Core.debugLn(string.format("took a legacy mass delta of %.1f back off a vehicle W900 Semi-Truck manages",
+            legacy))
+    end
+
+    local before = Semi.payloadOf(vehicle)
+    vmd[Core.consts.payloadDeltaKey] = want > 0 and want or nil
+    Core.debugLn(string.format("payload delta %.1f -> %.1f, applied by W900 Semi-Truck's payload damping", before,
+        want))
+    return want
+end
+
 -- ---------------------------------------------------------------------------
 -- Applying the mass needs the vehicle loaded, and the moment a player leaves a
 -- room it never is: the vehicle's chunk was unloaded the whole time they were
@@ -244,7 +279,7 @@ function Weight.report()
         local vehicle = position and Core.vehicleNear(position.x, position.y, position.z, vehicleId)
         local applied = 0
         if vehicle then
-            applied = tonumber(vehicle:getModData()[Core.consts.massDeltaKey]) or 0
+            applied = tonumber(vehicle:getModData()[Core.consts.massDeltaKey]) or Semi.payloadOf(vehicle)
         end
         table.insert(lines,
             string.format("%s -> %s#%s, carrying %.1f%s", vehicleId, assignment.room, assignment.index, applied,

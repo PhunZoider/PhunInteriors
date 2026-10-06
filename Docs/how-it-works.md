@@ -91,7 +91,10 @@ with are part of the room and stay.
 ## Weight
 
 The mod only ever adds and removes its own share of a vehicle's mass, so it
-does not fight other mods that change mass too. Fuel use in vanilla reads the
+does not fight other mods that change mass too. The W900 Semi-Truck mod's
+trucks are the exception: that mod sets their mass itself to keep them stable,
+so on those the room is added to the truck's cargo and that mod applies it,
+with the same damping and limit as anything else loaded into it. Fuel use in vanilla reads the
 vehicle's fixed script weight, so interior weight changes handling but not
 fuel.
 

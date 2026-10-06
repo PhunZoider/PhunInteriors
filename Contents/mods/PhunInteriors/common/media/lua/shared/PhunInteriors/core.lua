@@ -19,6 +19,9 @@ PhunInteriors = {
         -- set once a vehicle has held a room, so losing one can be reported
         leasedKey = "PhunInteriors_leased",
         massDeltaKey = "PhunInteriors_massDelta",
+        -- the same weight, on a vehicle whose mass another mod owns and which
+        -- carries it as that mod's payload instead; see compat_rsemitruck.lua
+        payloadDeltaKey = "PhunInteriors_payloadDelta",
         -- object modData flag on a rain barrel a kit put up, so capture can
         -- tell it from a barrel the map author built
         reservoirKey = "PhunInteriors_reservoir",

@@ -73,6 +73,10 @@ Half the weight of everything in the room is added to the vehicle. A room full
 of generators and ammunition makes the van slower to accelerate and brake. It
 does not change fuel use.
 
+On the W900 Semi-Truck mod's box trucks and trailers the room counts as cargo
+in the truck, so it is damped the way that mod damps its own loads and feels
+lighter than it would in a van.
+
 ## Power
 
 **The lights run off the vehicle battery.** A real generator powers the room,

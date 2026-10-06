@@ -769,6 +769,38 @@ releases is the signature of testing the value.
 
 ---
 
+## Phase J2: the W900 Semi-Truck
+
+`compat_rsemitruck.lua` is new. Needs the W900 Semi-Truck mod (3409472393)
+and Debug on. Reported in game before it existed: leaving a box truck's room
+took its hood and rear door off, and the game crashed minutes later.
+
+### JW1. Box truck exit
+
+1. Put something heavy in a `SemiTruckBox` room and step out.
+
+**Pass:** the hood and rear door are still there, the truck sits still, and
+the log has `payload delta 0.0 -> N` rather than `mass delta`. Ten minutes
+beside it with no crash.
+
+**Fails as:** a `mass delta` line for the box truck, which means
+`isTargetVehicle` did not say yes and the old path ran.
+
+### JW2. The weight is felt
+
+1. `admin("weight")` names the delta. Drive the truck, empty the room, drive
+   it again.
+
+**Pass:** slower to pull away with the room full. The room counts at their
+0.65 on top of `WeightFactor`, so it is a smaller effect than on a van.
+
+### JW3. A truck leased before the patch
+
+**Pass:** `took a legacy mass delta of N back off` once, on its first exit
+under the new code, and never again.
+
+---
+
 ## Phase K: multiplayer
 
 Everything above is single player unless noted. **Re-run on a real dedicated
