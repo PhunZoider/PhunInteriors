@@ -1,28 +1,28 @@
 version=1
 id=3812500419
 title=PhunInteriors
-description=83 themed interiors for 168 vehicles (and tents). Walk out the back to the tailgate, out the front into the driver's seat.
+description=1,000+ instances of 83 themed interiors for 168 vehicles (and tents). Walk out the back to the tailgate, out the front into the driver's seat.
 description=
 description=[h2]The big four[/h2]
 description=[list]
-description=[*][b]Every vehicle gets a room that fits it.[/b] The mail van opens onto a post room, the ambulance onto a medical bay, the SWAT van onto an armory, the school bus onto a portable classroom, the cattle trailer onto a moving barn. 1080 furnished rooms in 83 designs, with loot to match, across vans, step vans, buses, trucks, semi trailers, caravans, RVs, shipping containers and tents. Not one shared box with a different label on it.
-description=[*][b]Walk in, walk out.[/b] Board at the back of a van or the door of a caravan, and leave by walking out of the room. Which way you walk out decides where you land: out the back puts you at the tailgate, out the front puts you straight into a free seat in the cab. You can even climb into the back of a van while somebody else drives it, and step back out into a free seat without stopping.
-description=[*][b]Rooms never run out.[/b] A room belongs to the vehicle (or object) that opened it and keeps whatever you leave there for as long as you use it. Only when every one of the 1080 rooms is taken can a room left unused for two weeks be reset and handed to somebody else, and its owner is told when it happens. Claim it as a safehouse and it is never reset. Server owners pick the threshold, all the way up to "never".
-description=[*][b]The room is part of the vehicle.[/b] What you store adds to the weight of the vehicle, so an overloaded van drives like one. The lights run off the vehicle battery through a real generator, so a flat battery means a dark room. Tents are lit by a generator you park beside them. It is a room, not free storage.
+description=[*][b]Every vehicle gets a room that fits it.[/b] The mail van opens onto a post room, the ambulance onto a medical bay, the SWAT van onto an armory, the cattle trailer onto a barn. Furnished, with loot to match. Not one shared box with a different label on it.
+description=[*][b]Walk in, walk out.[/b] Enter at the back of a van or the door of a caravan, and leave by walking out of the room. Which way you walk out decides where you land: out the back puts you at the tailgate, out the front puts you straight into a free seat in the cab. You can even climb into the back of a moving van and step back out into a free seat.
+description=[*][b]Rooms never run out.[/b] A room belongs to the vehicle (or object) that opened it and keeps what you leave there. Only when every room is taken can one left unused for two weeks be reset for somebody else, and its owner is told. Claim it as a safehouse and it is never reset. Server owners pick the threshold, all the way up to "never".
+description=[*][b]The room is part of the vehicle.[/b] What you store adds to the vehicle's weight. The lights run off the vehicle battery through a real generator, so a flat battery means a dark room. Tents are lit by a generator you park beside them. It is a room, not free storage.
 description=[/list]
 description=
 description=[h2]Also in the box[/h2]
 description=[list]
 description=[*][b]No cheesing.[/b] You cannot climb in with zombies close or from a moving vehicle. And Zeds can gather outside while you wait in there.
-description=[*][b]Coming out is survivable.[/b] You cannot see what you are stepping into, so the ground around you is cleared as you land. The crowd is not removed; you just get a moment to see it.
+description=[*][b]Coming out is survivable.[/b] The ground around you is cleared as you land. The crowd is not removed; you just get a moment to see it.
 description=[*][b]Contained, properly.[/b] The server keeps you in your room, so no clipping through walls, no roof walks and no wandering into the neighbour's. Walls can (optionally) be made unbreakable and fires inside are put out.
-description=[*][b]Rooms stay the way they were built.[/b] Each room remembers its own fittings, and when it is reset it is put back the way it was, working light switches included.
+description=[*][b]Rooms stay the way they were built.[/b] A reset room is put back as built, working light switches included.
 description=[*][b]Rain water.[/b] Craft a Rain Reservoir Kit and put barrels on your room's roof for a plumbed sink.
-description=[*][b]Put a room behind anything.[/b] An admin can map (or re-map) any vehicle or placed object to any room from the in-game editor, with no restart. Want a toilet that is secretly a portkey to a workshop? Easy! See [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/remapping.md]how to map a vehicle or object to a room[/url].
+description=[*][b]Put a room behind anything.[/b] Admins can map any vehicle or placed object to any room in game, no restart. A toilet that is secretly a portkey to a workshop? Easy! See [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/remapping.md]how to map a vehicle or object to a room[/url].
 description=[/list]
 description=
 description=[h2]Vehicle mods supported out of the box[/h2]
-description=None of these are required. Install any of them and their vehicles automagically get rooms of their own; leave them out and nothing changes.
+description=None are required. Install any and their vehicles automagically get rooms.
 description=[list]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2952802178]'90 Ford F350 Ambulance Type 1[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3652371248]Lock-Mart Industries M577[/url]
@@ -38,29 +38,42 @@ description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=34094
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3788543896]Rolling Refuge[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3790153201]Whennyago Initiative[/url]
 description=[/list]
-description=Missing your favourite? An admin can give it a room from inside the game, and a vehicle mod author can do it in about ten lines. See [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicles.md]Supported vehicles[/url] for exactly which vehicle gets which room.
+description=Missing your favourite? An admin can give it a room in game. See [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicles.md]Supported vehicles[/url] for which vehicle gets which room.
 description=
 description=[h2]For server owners[/h2]
 description=[list]
-description=[*][b]Set AntiCheatSpeed=3 or 4 in your server .ini.[/b] to prevent the game booting players.
+description=[*][b]Set AntiCheatSpeed=4 in your server .ini[/b] or the game kicks players for every trip in or out.
 description=[*]Every constraint is a sandbox option: entry time, zombie gathering, the weight factor, battery drain, how long a room is protected, unbreakable walls. Turn off whatever is taking the phun out of it.
-description=[*]An in-game room window for admins: see every room and slot, port into any of them, reset or scrub one, open or close a room, and remap vehicles and edit rooms live. Changes are saved to PhunInteriors.json when you press Save, as a patch over the shipped rooms, so mod updates still reach everything you did not change.
+description=[*]An in-game room window for admins: see every room and slot, port into any of them, reset or scrub one, open or close a room, and remap vehicles and edit rooms live. Changes save to PhunInteriors.json as a patch, so mod updates still reach everything you did not change.
 description=[*]No required mods. PhunServer2 adds an /interiors chat command if you have it.
 description=[*][b]Claim Support[/b] Built in support for [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2957935793]Another Vehicle Claim System[/url].
 description=[/list]
 description=
+description=[h2]Project Viewpoint[/h2]
+description=Big thanks to [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3809306528]Project Viewpoint[/url] for first person Zomboid. Going inside and stepping out work from its [F] menu, and a model pack we ship draws the rooms properly in 3D.
+description=Part of that fix is in the map, and a save keeps every chunk it has loaded, so rooms already visited in an existing save keep the old look in first person (metal south and east walls, gaps in the ground along them). Cosmetic only.
+description=
 description=[h2]For mod authors[/h2]
-description=Rooms and the things that reach them are registered, not hard coded. Hook the vanilla OnInitGlobalModData event and call PhunInteriors.registerRoom and PhunInteriors.registerVehicles to add interiors for your own vehicles, or registerObjects to put one behind a placed object. Bindings name ordinary game script names, so you never need an id of ours and neither mod depends on the other. They add to each other rather than replacing, so covering a vehicle somebody else already covers takes nothing away from them.
+description=Rooms and bindings are registered, not hard coded. Bindings name ordinary game script names, so neither mod depends on the other, and they add to each other rather than replacing.
 description=[list]
-description=[*][b]Vehicle mods:[/b] give your vehicles one of our 83 rooms in about ten lines, with no map work and no dependency. [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicle-mods.md]Giving your vehicles a room[/url]
+description=[*][b]Vehicle mods:[/b] one of our 83 rooms in about ten lines, no dependency. [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicle-mods.md]Giving your vehicles a room[/url]
 description=[*][b]Map mods:[/b] draw your own rooms on your own cells and register them. [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/map-authors.md]Adding rooms from your map[/url]
-description=[*][b]Everything else:[/b] shared hub rooms several objects lead into, and calls to put a player in a room directly. [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/modding.md]Adding rooms and vehicles[/url]
+description=[*][b]Everything else:[/b] hub rooms, and putting a player in a room directly. [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/modding.md]Adding rooms and vehicles[/url]
 description=[/list]
 description=
 description=[h2]Documentation[/h2]
-description=Everything is written up on GitHub: playing, supported vehicles, sandbox options, running a server, remapping, and adding rooms from your own mod or map.
+description=Playing, vehicles, sandbox options, running a server, remapping and modding are all on GitHub.
 description=[b][url=https://github.com/PhunZoider/PhunInteriors#readme]See the full documentation here[/url][/b]
 description=
+description=[img]https://i.ibb.co/DZ7Vffn/Thumbs-Up.png[/img]
+description=
+description=[h2]More Phun Mods[/h2]
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3812506730][img]https://i.ibb.co/QvxxrqJD/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3689006725][img]https://i.ibb.co/4ZLgMZ4m/preview.png[/img][/url] 
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3793624522][img]https://i.ibb.co/k2k39f8w/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676252660][img]https://i.ibb.co/3mQpB8ST/preview.png[/img][/url] 
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676252110][img]https://i.ibb.co/d4y0BhnF/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676251425][img]https://i.ibb.co/fYNn5BLC/preview.png[/img][/url] 
+description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676250472][img]https://i.ibb.co/svW9sVvK/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3792193021][img]https://i.ibb.co/vCBcKtp8/preview.png[/img][/url] 
+
+description=
 description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
-tags=Build 42;Vehicles;Multiplayer
+tags=Build 42;Vehicles;Multiplayer;map
 visibility=public

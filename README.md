@@ -34,6 +34,12 @@ parked.
 - **An in-game room editor** for admins, with changes saved to a file.
 - **Open to other mods.** Register rooms for your own vehicles, bind your
   vehicles to ours, or put a room behind a placed object.
+- **Works in first person** with
+  [Project Viewpoint](https://steamcommunity.com/sharedfiles/filedetails/?id=3809306528),
+  whose [F] menu offers going inside and stepping out, and which draws our
+  rooms with a model pack we ship. Rooms already visited in an existing save
+  keep the old map and can look a little off in 3D; see
+  [Playing](Docs/playing.md#first-person-project-viewpoint).
 
 ## Documentation
 
@@ -60,7 +66,7 @@ trip in or out of a room is a teleport, and the default setting kicks players
 for it. See [Running a server](Docs/admin.md#the-speed-anti-cheat).
 
 The mod ships its own map: a separate block of 18 cells, away from anywhere a
-player walks to, holding 990 room slots. It uses cells 87,46 to 91,48 and
+player walks to, holding 1080 room slots. It uses cells 87,46 to 91,48 and
 89,49 to 91,49, and another map mod using any of them will conflict.
 
 ## Status
@@ -82,7 +88,7 @@ to watch for in each.
 bash Tests/run.sh
 ```
 
-Parses every Lua file, runs three static checks and then the specs (742
+Parses every Lua file, runs three static checks and then the specs (871
 checks). It fakes just enough of the game to test the pure Lua logic; anything
 needing a real map square is tested in game or not at all.
 
@@ -98,6 +104,9 @@ root (`perl scripts/roomcheck.pl`):
   contains and who claims it.
 - `roomcheck.pl` and `fencecheck.pl` check the registry and the fence against
   the map that ships.
+- `viewpointpack.pl` generates the Project Viewpoint model pack, and
+  `blackground.pl` and `innerwalls.pl` fix the map's buildings for first
+  person before lots are generated.
 - `gendefaults.pl` and `vehicledoc.pl` regenerate the room registry and
   [Docs/vehicles.md](Docs/vehicles.md) from the room and vehicle sheets. The
   sheets are not in the repository.
@@ -105,3 +114,8 @@ root (`perl scripts/roomcheck.pl`):
 ## Credits
 
 By UburGeek, for the [PhunZoid](https://discord.gg/v2USyAtP6q) community.
+
+Thanks to the author of
+[Project Viewpoint](https://steamcommunity.com/sharedfiles/filedetails/?id=3809306528)
+for first person Zomboid, and for a model pack API that made supporting it a
+matter of data rather than code.

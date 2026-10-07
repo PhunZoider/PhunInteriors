@@ -168,6 +168,18 @@ safehouse. To free one, remove the claim the vanilla way first.
 
 - **PhunServer2**, if installed, adds the `/interiors` chat command. Nothing
   else depends on it.
+- **Project Viewpoint**, if installed, gets our options on its first person
+  [F] menu and draws our rooms with the model pack in `media/viewpoint/`. Two
+  of the fixes for it (ground along the wall lines, and the inside face of
+  each room's south and east walls) are in the map, and a save keeps every
+  chunk it has loaded, so rooms already visited on an existing server keep the
+  old look in first person. Only new chunks pick it up. The one way to refresh
+  a visited room is to delete its chunk from the save, which also deletes
+  everything stored in it, so it is not worth doing for a cosmetic fault.
+- **Another Vehicle Claim System**, if installed, decides who may enter a
+  claimed vehicle's room, by the same rule as its trunk.
+- **W900 Semi-Truck**, if installed, gets the room's weight as cargo on its
+  box trucks and trailers, so its own load damping applies.
 - **PhunTaxi** and **PhunRooms** register rooms of their own through this mod
   and ship map cells beside ours.
 - **Other map mods** must not use cells 87,46 to 91,48 or 89,49 to 91,49.

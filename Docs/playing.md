@@ -19,6 +19,10 @@ the vehicle radial menu, seated or standing.
 - **Not while it is moving**, unless you are already aboard. A passenger can
   climb into the back of a moving van. Nobody boards one from the road.
 - **Not from the driver's seat of a moving vehicle.** Somebody has to drive.
+- **Not into a locked vehicle** without its key. The same things that let you
+  into the cab let you in here: the key, an unlocked, open or missing door, or
+  an open or smashed window. Most trailers have no lockable doors and are never
+  locked.
 
 The first time a vehicle goes in, it is given a room of its own. That room is
 its room from then on: anything you leave there is still there next time,
@@ -136,6 +140,22 @@ ticks "Allow opening trunk". Anybody already inside can always leave.
 
 If a vehicle is scrapped with a blowtorch, or removed by an admin, its room is
 freed for somebody else.
+
+## First person (Project Viewpoint)
+
+[Project Viewpoint](https://steamcommunity.com/sharedfiles/filedetails/?id=3809306528)
+puts the game in first person, and PhunInteriors works with it. **Go inside**
+is on its [F] menu when you look at a vehicle or a tent, and **Step outside**
+when you look at a door in your room. The rooms and the black block around
+them are drawn with models of their own, so in 3D they look like rooms rather
+than grey slabs under a blue sky.
+
+**Rooms already in your save may look a little off.** Part of the fix is in
+the map itself, and the game saves every chunk it has loaded, so any room a
+player has been in, or been near, keeps the old map. In first person its south
+and east walls can show the outside of a truck body, and there may be gaps in
+the ground along them. Rooms nobody has been near yet get the new version. It
+is cosmetic, and the normal view is unaffected.
 
 ## Logging out inside
 

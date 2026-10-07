@@ -801,6 +801,46 @@ under the new code, and never again.
 
 ---
 
+## Phase J3: Project Viewpoint
+
+`client_viewpoint.lua`, the guarded `showRadialMenuOutside` hook and the model
+pack are new. Needs Project Viewpoint (3809306528) and ZombieBuddy, with its
+Java approved. **Use a fresh save, or reset our cells out of the test save**
+(`map.cmd`): the ground and inner wall fixes are in the lotpacks, and a chunk
+the save has already loaded keeps the old map, which reads exactly like these
+tests failing.
+
+### JV1. The menus
+
+1. In first person, look at a supported vehicle and press [F].
+2. Inside, look at the room's door and press [F].
+
+**Pass:** **Go inside** on the vehicle, **Step outside** on the door, each
+exactly once. **Fails as:** two Go inside slices (the guard), or none on a
+world object (the trailing argument).
+
+### JV2. The pack loads
+
+**Pass:** the console has no `ModelPacks` complaint naming our manifest, and
+the block outside a shell is black ground, not grey slabs and sky.
+
+### JV3. A room from inside
+
+**Pass:** floor all the way to every wall, no sky along the foot of the south
+and east walls, those two walls showing the room's own wallpaper rather than
+truck-body metal, and a pale grey ceiling with no dark discs from the roof
+barrels.
+
+### JV4. An old chunk, deliberately
+
+In a save that visited a room before the map update, port into it.
+
+**Pass:** it looks as it did before (metal south and east walls, gaps along
+them). That is expected and documented, not a failure. Nothing about entering,
+leaving or containment differs.
+
+---
+
 ## Phase K: multiplayer
 
 Everything above is single player unless noted. **Re-run on a real dedicated

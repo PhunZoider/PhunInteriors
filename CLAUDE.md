@@ -10,7 +10,7 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 **The registry was reshaped and has not run in game since.** Rooms, bindings
 and blueprints all changed shape -- see "A room is a contract" in Architecture.
-`Tests/run.sh` is green across 756 checks, which is real verification of the
+`Tests/run.sh` is green across 871 checks, which is real verification of the
 logic and no verification at all that PZ agrees. Everything below describes
 what was proven *before* that change; the mechanics are the same, but the
 registry underneath them is not.
@@ -2382,6 +2382,16 @@ cells are actually towns.
   `_8`-`_11` ring at z=1 round every room's lid grows too. PhunTaxi and
   PhunRooms use these sprites and are covered by the same pack. The pack has
   not run in game.
+  **The pack reaches every save; the map half does not.** The pack binds by
+  sprite name, so it applies to chunks a save already holds. `blackground.pl`
+  and `innerwalls.pl` change the lotpacks, and a chunk is persisted into the
+  save the first time it loads (see the API row on chunk reloads), so a room
+  anybody has visited, or stood within the load radius of, keeps the bare
+  wall lines and metal south and east walls in first person for the life of
+  that save. Deleting the chunk refreshes it and deletes its contents, so the
+  docs call it cosmetic and leave it. `playing.md`, `admin.md`, both
+  `workshop.txt` files and the README say so; a future map fix aimed at
+  Viewpoint carries the same caveat.
 - **PhunZones2 is a soft hook, and the interior zone is ours.**
   `shared/PhunInteriors/compat_phunzones.lua` adds the `PhunInteriors` zone to
   `PhunZones/data` at load (PhunTaxi's pattern for the Taxi Garage), with
@@ -3196,7 +3206,7 @@ cells are actually towns.
    about.
 5. **The reshaped registry has never run in game.** Rooms, bindings, per-slot
    blueprint capture and the nullable generator are all
-   covered by `Tests/lua/` -- 756 checks, all green -- which is real verification
+   covered by `Tests/lua/` -- 871 checks, all green -- which is real verification
    of the logic and no verification at all that PZ agrees. In particular:
    - **Capture is now load bearing and has never succeeded on this map.** The
      `bounds.z + 1` sweep used to count a nil square above the room as a

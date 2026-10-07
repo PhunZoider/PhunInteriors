@@ -195,7 +195,18 @@ common space, like a hub.
 - **Our tiles.** You are welcome to draw with our tile sheet
   (`media/phuninteriors.tiles`), including the black ground and fence, as
   PhunTaxi and PhunRooms do. If you do, depend on PhunInteriors, because the
-  tiles ship with it.
+  tiles ship with it. Our [Project Viewpoint](https://steamcommunity.com/sharedfiles/filedetails/?id=3809306528)
+  model pack is keyed by sprite, so your black ground and fence draw properly
+  in first person too, with nothing to ship.
+- **First person needs ground under every wall.** The map exporter writes no
+  floor on a square that holds a wall unless a room claims it, which leaves a
+  room's south and east wall lines bare: invisible in the normal view, a strip
+  of sky in Project Viewpoint. And those two walls take the wall's exterior
+  tile, which Viewpoint draws on both faces. `scripts/blackground.pl` and
+  `scripts/innerwalls.pl` in our repository fix both in a folder of `.tbx`
+  files before you generate lots. They were written for our buildings, so
+  point them at a copy of yours and run with `--dry` first. Do it before you ship: once a chunk has been
+  loaded in a save, a later map fix never reaches it.
 - **Room size.** Weight is what stops a room being free storage, so a very
   large room on a light vehicle makes a very heavy van.
 - **Nothing to ship for decor.** There is no blueprint file to export. Each
