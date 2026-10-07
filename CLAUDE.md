@@ -2369,8 +2369,8 @@ cells are actually towns.
   user tile, in every room building. Those same south and east walls take
   the wall object's EXTERIOR tile, PZ keeping one sprite per edge, and
   Viewpoint draws it on both faces, so from inside they were truck-body
-  metal; `scripts/innerwalls.pl` points their `Tile` and `ExteriorTrim` at
-  appended copies of the room's own interior set. A bind REPLACES Viewpoint's geometry for that
+  metal; `scripts/innerwalls.pl` points their `Tile`, not their trim, at
+  an appended copy of the room's own interior wall set. A bind REPLACES Viewpoint's geometry for that
   sprite: `WorldMesher.square` tests it before `FloorGather` and `WallMesher`.
   Model space is tile centre origin, x east, y SOUTH, z up, ~2.45 a level.
   Height costs the iso view nothing, since only Viewpoint draws a model; the

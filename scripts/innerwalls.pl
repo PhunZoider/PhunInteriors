@@ -12,13 +12,17 @@
 # those faces from inside, since it cuts them away; Project Viewpoint draws
 # the one sprite on both faces, so from inside two walls were metal.
 #
-# So the exterior Tile and ExteriorTrim of those runs are pointed at copies of
-# the room's InteriorWall and InteriorWallTrim. Wall object indices are into
-# the building's flat, 1-based tile_entry list, and a wall's Tile must name an
-# exterior_walls entry (its trim an exterior_wall_trim one), so the interior
-# set is copied into a new entry of the right category, APPENDED after the
+# So the exterior Tile of those runs is pointed at a copy of the room's
+# InteriorWall. Wall object indices are into the building's flat, 1-based
+# tile_entry list, and a wall's Tile must name an exterior_walls entry, so the
+# interior set is copied into a new exterior_walls entry, APPENDED after the
 # last one so no existing index moves. An identical entry is reused, which
 # also makes a second run change nothing.
+#
+# The trim is deliberately left alone. The iso view draws those two walls cut
+# away to stubs whenever a tenant is inside, and the stub is mostly trim, so
+# carrying the room's wainscot over turned the whole near edge of the room
+# into a band of panelling. The exterior trim it already had stays.
 #
 # A run whose squares face more than one room, or a room with a different
 # interior set, is split into runs per room. Only level 0 is edited; the z=1
@@ -123,10 +127,8 @@ for my $path (sort glob("$dir/*.tbx")) {
             if ($room) {
                 my $r = $rooms[$room - 1];
                 my $t  = $r->{wall} ? $entryFor->($r->{wall}, "exterior_walls") : undef;
-                my $tr = $r->{trim} ? $entryFor->($r->{trim}, "exterior_wall_trim") : 0;
                 if ($t) {
                     $l =~ s/ Tile="\d+"/ Tile="$t"/;
-                    $l =~ s/ ExteriorTrim="\d+"/ ExteriorTrim="$tr"/;
                     $runs++;
                 }
             }
