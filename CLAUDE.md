@@ -322,7 +322,8 @@ scripts/                           deploy.cmd, map.cmd, tighten.cmd, viewpointpa
                                    perl tool (roomcheck, fencecheck, tiles,
                                    rooms, zombies, cells, methods, body,
                                    gendefaults, vehicledoc, tighten,
-                                   blackroof, blackground, viewpointpack).
+                                   blackroof, blackground, innerwalls,
+                                   viewpointpack).
                                    Run from the repo root.
 Docs/*.md                          user-facing docs, linked from README.md
                                    and workshop.txt
@@ -2365,7 +2366,11 @@ cells are actually towns.
   a wall unless a real room claims it, so a room's south and east wall
   lines, the shell ring and the generator box were bare in 3D;
   `scripts/blackground.pl` paints `phuninteriors_01_0` on each as a z=0
-  user tile, in every room building. A bind REPLACES Viewpoint's geometry for that
+  user tile, in every room building. Those same south and east walls take
+  the wall object's EXTERIOR tile, PZ keeping one sprite per edge, and
+  Viewpoint draws it on both faces, so from inside they were truck-body
+  metal; `scripts/innerwalls.pl` points their `Tile` and `ExteriorTrim` at
+  appended copies of the room's own interior set. A bind REPLACES Viewpoint's geometry for that
   sprite: `WorldMesher.square` tests it before `FloorGather` and `WallMesher`.
   Model space is tile centre origin, x east, y SOUTH, z up, ~2.45 a level.
   Height costs the iso view nothing, since only Viewpoint draws a model; the
