@@ -322,8 +322,8 @@ scripts/                           deploy.cmd, map.cmd, tighten.cmd, viewpointpa
                                    perl tool (roomcheck, fencecheck, tiles,
                                    rooms, zombies, cells, methods, body,
                                    gendefaults, vehicledoc, tighten,
-                                   blackroof, viewpointpack). Run from the
-                                   repo root.
+                                   blackroof, blackground, viewpointpack).
+                                   Run from the repo root.
 Docs/*.md                          user-facing docs, linked from README.md
                                    and workshop.txt
 Docs/pi-*.csv                      the room, mapping and vehicle sheets that
@@ -2358,7 +2358,14 @@ cells are actually towns.
   (2331 of them in 87,46, none with both); the iso view hides that under the
   wall sprite, and in 3D it was a hole into the sky along every wall's foot.
   `--debug` paints floor red and walls green to tell surfaces apart; never
-  ship it. A bind REPLACES Viewpoint's geometry for that
+  ship it. The lid (`_1`) and the slab under each wall model sit just
+  ABOVE the floor line rather than below it: the lid is painted over each
+  room's own ceiling sprite, and hung below the line it was the ceiling a
+  tenant saw, black. The exporter writes no ground on a square that carries
+  a wall unless a real room claims it, so a room's south and east wall
+  lines, the shell ring and the generator box were bare in 3D;
+  `scripts/blackground.pl` paints `phuninteriors_01_0` on each as a z=0
+  user tile, in every room building. A bind REPLACES Viewpoint's geometry for that
   sprite: `WorldMesher.square` tests it before `FloorGather` and `WallMesher`.
   Model space is tile centre origin, x east, y SOUTH, z up, ~2.45 a level.
   Height costs the iso view nothing, since only Viewpoint draws a model; the
