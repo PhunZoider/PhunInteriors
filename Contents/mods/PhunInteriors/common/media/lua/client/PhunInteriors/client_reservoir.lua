@@ -60,7 +60,11 @@ end
 -- A room that opted out shows nothing. One that could take a reservoir but
 -- cannot right now -- it came with barrels, or has no roof -- shows the option
 -- greyed out with the reason, so a player holding a kit is not left guessing.
-function Client.reservoirOption(context, player)
+--
+-- `clicked` rides along as an argument beginReservoir ignores, so Viewpoint's
+-- first person menu counts the option as belonging to what it is looking at;
+-- see onFillWorldObjectContextMenu in client_context.lua.
+function Client.reservoirOption(context, player, clicked)
     local kit = player:getInventory():getFirstTypeRecurse(Core.consts.reservoirItem)
     if not kit then
         return
@@ -72,7 +76,7 @@ function Client.reservoirOption(context, player)
     end
 
     local option = context:addOption(getText("ContextMenu_PhunInteriors_InstallReservoir"), player,
-        Client.beginReservoir, kit)
+        Client.beginReservoir, kit, clicked)
     local spots, why = Core.reservoirPlan(room, index)
     if not spots then
         option.notAvailable = true

@@ -30,6 +30,25 @@
             }
         },
         {
+            // Regenerates media/viewpoint/ without --debug, so the shells are
+            // black rather than red floor and green walls. Saving any file
+            // afterwards redeploys it through runonsave.
+            "label": "Viewpoint: rebuild model pack",
+            "type": "shell",
+            "command": "${workspaceFolder}\\scripts\\viewpointpack.cmd",
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": ["/d", "/c"]
+                }
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "clear": true
+            }
+        },
+        {
             "label": "Map: sync, check, deploy, reset",
             "type": "shell",
             "command": "${workspaceFolder}\\scripts\\map.cmd",

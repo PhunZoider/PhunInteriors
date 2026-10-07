@@ -11,12 +11,20 @@ local Client = Core.client
 -- context option exists as an affordance and a safety net rather than as the
 -- primary route out.
 --
--- One hook, on showRadialMenu, covers both cases. When the player is not
+-- The hook on showRadialMenu covers both cases. When the player is not
 -- seated that function delegates to showRadialMenuOutside *and that happens
 -- inside the call we wrap*, so by the time the base returns the outside menu
--- has been built and displayed and our slice lands on it. Do not also wrap
--- showRadialMenuOutside: it has exactly one caller, that delegation, so a
--- second hook only buys a duplicate slice.
+-- has been built and displayed and our slice lands on it.
+--
+-- showRadialMenuOutside is wrapped as well, for the callers that skip
+-- showRadialMenu. In vanilla it has exactly one caller, that delegation, but
+-- Project Viewpoint (workshop 3809306528) calls it directly from
+-- ViewpointInteract.harvestVehicle, with getPlayerRadialMenu swapped for a
+-- stand-in that records each slice, and turns the slices into its own [F]
+-- menu. Hooked on showRadialMenu alone, first person had no way in at all.
+-- `building` is what stops the vanilla path getting the slice twice: the
+-- inner hook stands down while the outer one is on the stack and adds it
+-- after the base returns, exactly as before.
 --
 -- ISRadialMenu:addSlice forwards to the java object when there is one, which
 -- is why adding after the base has displayed the menu works at all, and the
@@ -50,17 +58,15 @@ local function onEnter(playerObj, vehicle)
     Client.beginEnter(vehicle)
 end
 
-local baseShowRadialMenu = ISVehicleMenu.showRadialMenu
-
-function ISVehicleMenu.showRadialMenu(playerObj, ...)
-    baseShowRadialMenu(playerObj, ...)
-
+local function addEnterSlice(playerObj)
     if not playerObj then
         return
     end
 
     -- Vanilla's own resolver: seat, then useable, then near. Stopping at
-    -- useable misses the vehicle the rest of the menu is about.
+    -- useable misses the vehicle the rest of the menu is about. Read off the
+    -- table at call time, because Viewpoint swaps it for one that answers
+    -- the vehicle its crosshair is on.
     local vehicle = ISVehicleMenu.getVehicleToInteractWith(playerObj)
     if not vehicle or not Core.vehicleHasRooms(vehicle) then
         return
@@ -72,6 +78,29 @@ function ISVehicleMenu.showRadialMenu(playerObj, ...)
     end
 
     menu:addSlice(getText("ContextMenu_PhunInteriors_Enter"), enterTexture(), onEnter, playerObj, vehicle)
+end
+
+local building = false
+
+local baseShowRadialMenu = ISVehicleMenu.showRadialMenu
+
+function ISVehicleMenu.showRadialMenu(playerObj, ...)
+    building = true
+    local ok, err = pcall(baseShowRadialMenu, playerObj, ...)
+    building = false
+    if not ok then
+        error(err)
+    end
+    addEnterSlice(playerObj)
+end
+
+local baseShowRadialMenuOutside = ISVehicleMenu.showRadialMenuOutside
+
+function ISVehicleMenu.showRadialMenuOutside(playerObj, ...)
+    baseShowRadialMenuOutside(playerObj, ...)
+    if not building then
+        addEnterSlice(playerObj)
+    end
 end
 
 --- The bound object on the clicked square, if there is one.
@@ -102,13 +131,22 @@ local function onFillWorldObjectContextMenu(playerNum, context, worldObjects, te
     -- vehicle interaction. Only offered when the player is not already inside
     -- somewhere -- the server refuses either way, but an option that can only
     -- be refused should not be drawn.
+    --
+    -- Every option here carries the clicked object as a trailing argument
+    -- that its handler ignores. Project Viewpoint builds its first person [F]
+    -- menu by calling createMenu for the one object under its crosshair and
+    -- keeps a top level option only when some argument IS that object
+    -- (`whose` in Viewpoint_Interact.lua); an option naming only the player
+    -- is dropped as somebody else's. So without it a tent could not be
+    -- entered and nobody could step outside in first person.
+    local clicked = worldObjects and worldObjects[1]
     if not Client.inside then
         local object = boundObjectIn(worldObjects)
         local square = object and object:getSquare()
         if square then
             context:addOption(getText("ContextMenu_PhunInteriors_EnterObject"), player, function()
                 Client.requestEnterObject(square)
-            end)
+            end, object)
         end
         return
     end
@@ -117,11 +155,11 @@ local function onFillWorldObjectContextMenu(playerNum, context, worldObjects, te
     if not Client.noExit then
         local leave = context:addOption(getText("ContextMenu_PhunInteriors_Leave"), player, function()
             Client.requestLeave()
-        end)
+        end, clicked)
         leave.iconTexture = modTexture()
     end
     if Client.reservoirOption then
-        Client.reservoirOption(context, player)
+        Client.reservoirOption(context, player, clicked)
     end
 end
 
