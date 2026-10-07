@@ -29,7 +29,7 @@
 use strict; use warnings;
 use Compress::Zlib qw(compress crc32);
 
-# --debug paints the floor red and the walls green, to tell which surface a
+# --debug paints the floor red, the walls green and the ceiling blue, to tell which surface a
 # stray colour in game belongs to and whether our texture is reaching it.
 my $debug = grep { $_ eq "--debug" } @ARGV;
 @ARGV = grep { $_ ne "--debug" } @ARGV;
@@ -46,6 +46,9 @@ my $SKIN  = 0.008;          # and how thick it is
 my $SHADE = 10;             # 0-255 grey; pure black reads as a hole in lit scenes
 my @FLOOR = $debug ? (220, 0, 0) : ($SHADE) x 3;
 my @WALL  = $debug ? (0, 220, 0) : ($SHADE) x 3;
+# The lid's colour, seen from inside as the ceiling. A neutral pale grey,
+# because it sits over painted rooms and truck-body metal alike.
+my @CEIL  = $debug ? (0, 0, 220) : (168, 166, 160);
 
 my $out = "Contents/mods/PhunInteriors/common/media/viewpoint";
 -d "Contents/mods/PhunInteriors" or die "viewpointpack: run from the repo root\n";
@@ -110,13 +113,15 @@ my $north = box(-$e - $LAP, $e + $LAP, -$e - $T/2, -$e + $T/2, 0, $H);
 my $post  = box(-$e - $T/2, -$e + $T/2, -$e - $T/2, -$e + $T/2, 0, $H);
 # Floor: a slab whose top is the floor line, lapped so tiles meet.
 my $floor = box(-$e - 0.002, $e + 0.002, -$e - 0.002, $e + 0.002, -$SLAB, 0);
-# Lid: the same tile, lifted just OFF the floor line. Every room is capped at
-# z=1 by phuninteriors_01_1 painted over the room's own ceiling sprite, and
-# Viewpoint draws both. As a floor slab the lid hung below the floor line,
-# under that ceiling, so it was what a tenant saw looking up: a black
-# ceiling. Lifted, the room's own ceiling is nearer the tenant and hides it,
-# while from above the lid still covers the ceiling as the iso view does.
-my $lid   = box(-$e - 0.002, $e + 0.002, -$e - 0.002, $e + 0.002, $LIFT, $LIFT + $SKIN);
+# Lifted: the same tile just OFF the floor line, for the slab under a wall.
+my $lifted = box(-$e - 0.002, $e + 0.002, -$e - 0.002, $e + 0.002, $LIFT, $LIFT + $SKIN);
+# Lid: phuninteriors_01_1, painted at z=1 over every room's own ceiling
+# sprite. It is what a tenant sees looking up, so it is a floor slab in a
+# CEILING colour rather than black. Viewpoint does not draw the room's own
+# ceiling from below: lifting the lid above it was tried, the ceiling stayed
+# black, and the roof's rain barrels, standing on the floor line, showed
+# through as dark discs. Below the line the lid hides them.
+my $lid   = $floor;
 
 # Every wall model carries a floor slab too. A square that holds a shell wall
 # holds NO ground tile -- all 2331 of them in 87,46, against 62455 squares of
@@ -125,15 +130,16 @@ my $lid   = box(-$e - 0.002, $e + 0.002, -$e - 0.002, $e + 0.002, $LIFT, $LIFT +
 # along the foot of every shell wall was a hole into the sky below. It is the
 # LIFTED slab, not the floor one: the same sprites ring every lid at z=1, and
 # the ring's north and west pieces stand over the room's own top row and
-# column, so a slab hung below the floor line there would black out that
-# strip of ceiling exactly as the lid used to. At z=0 nobody stands in a wall
-# square, so a centimetre of lift there is invisible.
-obj("wall_w.obj",  "wall",  $west, $lid);
-obj("wall_n.obj",  "wall",  $north, $lid);
-obj("wall_nw.obj", "wall",  $west, $north, $lid);
-obj("post_se.obj", "wall",  $post, $lid);
+# column, where the lid is too, so a black slab below the floor line there
+# would draw a black strip along two edges of the ceiling. Lifted, the lid is
+# nearer the tenant. At z=0 nobody stands in a wall square, so a centimetre
+# of lift there is invisible.
+obj("wall_w.obj",  "wall",  $west, $lifted);
+obj("wall_n.obj",  "wall",  $north, $lifted);
+obj("wall_nw.obj", "wall",  $west, $north, $lifted);
+obj("post_se.obj", "wall",  $post, $lifted);
 obj("floor.obj",   "floor", $floor);
-obj("lid.obj",     "floor", $lid);
+obj("lid.obj",     "ceiling", $lid);
 
 # --- material --------------------------------------------------------------
 
@@ -160,13 +166,14 @@ sub material {
 }
 material("wall",  @WALL);
 material("floor", @FLOOR);
+material("ceiling", @CEIL);
 unlink "$out/black.mtl", "$out/black.png";
 
 # --- manifest --------------------------------------------------------------
 
 my %bind = (
     "phuninteriors_01_0"  => "pi-floor",    # the ground under the whole block
-    "phuninteriors_01_1"  => "pi-lid",      # the black lid over every room
+    "phuninteriors_01_1"  => "pi-lid",      # the lid over every room, the ceiling in 3D
     "phuninteriors_01_8"  => "pi-wall-w",   # WallW
     "phuninteriors_01_9"  => "pi-wall-n",   # WallN
     "phuninteriors_01_10" => "pi-wall-nw",  # WallNW

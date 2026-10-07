@@ -2358,11 +2358,15 @@ cells are actually towns.
   well**, because a square holding a shell wall holds no ground tile at all
   (2331 of them in 87,46, none with both); the iso view hides that under the
   wall sprite, and in 3D it was a hole into the sky along every wall's foot.
-  `--debug` paints floor red and walls green to tell surfaces apart; never
-  ship it. The lid (`_1`) and the slab under each wall model sit just
-  ABOVE the floor line rather than below it: the lid is painted over each
-  room's own ceiling sprite, and hung below the line it was the ceiling a
-  tenant saw, black. The exporter writes no ground on a square that carries
+  `--debug` paints floor red, walls green and the ceiling blue; never
+  ship it. The lid (`_1`) is painted over each room's own ceiling sprite,
+  and Viewpoint does not draw that sprite from below, so the lid IS the
+  ceiling in 3D: a floor slab below the line in a pale grey. Lifting it
+  above the line to let the room's ceiling show was tried; the ceiling
+  stayed black and the roof's rain barrels showed through as discs. The
+  slab under each wall model IS lifted, so the lid ring's north and west
+  pieces do not draw a black strip along the ceiling's edges.
+  The exporter writes no ground on a square that carries
   a wall unless a real room claims it, so a room's south and east wall
   lines, the shell ring and the generator box were bare in 3D;
   `scripts/blackground.pl` paints `phuninteriors_01_0` on each as a z=0
@@ -2370,7 +2374,8 @@ cells are actually towns.
   the wall object's EXTERIOR tile, PZ keeping one sprite per edge, and
   Viewpoint draws it on both faces, so from inside they were truck-body
   metal; `scripts/innerwalls.pl` points their `Tile`, not their trim, at
-  an appended copy of the room's own interior wall set. A bind REPLACES Viewpoint's geometry for that
+  an appended copy of the room's own interior wall set. A bind REPLACES
+  Viewpoint's geometry for that
   sprite: `WorldMesher.square` tests it before `FloorGather` and `WallMesher`.
   Model space is tile centre origin, x east, y SOUTH, z up, ~2.45 a level.
   Height costs the iso view nothing, since only Viewpoint draws a model; the
