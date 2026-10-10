@@ -43,6 +43,7 @@ description=
 description=[h2]For server owners[/h2]
 description=[list]
 description=[*][b]Set AntiCheatSpeed=4 in your server .ini[/b] or the game kicks players for every trip in or out.
+description=[*]Ensure you add phuninteriors to your server.ini's Map setting, it comes before Muldraugh. eg: [b]Map=phuninteriors;Muldraugh, KY;[/b]
 description=[*]Every constraint is a sandbox option: entry time, zombie gathering, the weight factor, battery drain, how long a room is protected, unbreakable walls. Turn off whatever is taking the phun out of it.
 description=[*]An in-game room window for admins: see every room and slot, port into any of them, reset or scrub one, open or close a room, and remap vehicles and edit rooms live. Changes save to PhunInteriors.json as a patch, so mod updates still reach everything you did not change.
 description=[*]No required mods. PhunServer2 adds an /interiors chat command if you have it.
