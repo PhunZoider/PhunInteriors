@@ -171,6 +171,20 @@ local function attemptLights(occupancy)
     end
 end
 
+--- Make the roof's rain collectors plumbable, once per visit.
+--
+-- After capture and scrub for the same reason as the lights. Once per visit
+-- rather than once per lease because a scrub can recreate a barrel between
+-- visits, and a second pass over a room whose barrels are already working
+-- touches nothing.
+local function attemptCollectors(occupancy)
+    if occupancy.collectorsChecked then
+        return
+    end
+    occupancy.collectorsChecked = true
+    require("PhunInteriors/rainwater").rebuildCollectors(occupancy.room, occupancy.index)
+end
+
 --- Does walking out of this room put you out, or back on the spawn square?
 --
 -- Out, normally. Back, when the server turned ejection off, or when the room
@@ -197,6 +211,7 @@ local function checkOne(player, occupancy)
         else
             attemptPower(occupancy)
             attemptLights(occupancy)
+            attemptCollectors(occupancy)
         end
     end
 

@@ -104,4 +104,32 @@ check("no squares above the room is no roof", select(2, Core.reservoirPlan(three
     "IGUI_PhunInteriors_ReservoirNoRoof")
 check("and yields no spots", (Core.reservoirPlan(threeByFour, 0)), nil)
 
+-- Which entity rebuilds a map barrel, and which barrels need it. A map-placed
+-- collector is a plain IsoObject that still holds a FluidContainer, and only
+-- the thumpable can be plumbed to.
+check("the round barrel builds RainCollectorRound", Core.rainCollectorEntity("carpentry_02_122"),
+    "RainCollectorRound")
+check("a closed tarped barrel keeps its own entity", Core.rainCollectorEntity("carpentry_02_127"),
+    "RainCollectorRound_TarpClosed")
+check("a sink is not a collector", Core.rainCollectorEntity("fixtures_sinks_01_16"), nil)
+check("no sprite is not a collector", Core.rainCollectorEntity(nil), nil)
+
+local savedInstanceof = instanceof
+instanceof = function(object, class)
+    return object.class == class
+end
+local fluid = {}
+local function barrel(class, container)
+    return {
+        class = class,
+        getFluidContainer = function()
+            return container
+        end
+    }
+end
+check("a map barrel with water is not plumbable", Core.isPlumbableCollector(barrel("IsoObject", fluid)), false)
+check("a thumpable with a container is", Core.isPlumbableCollector(barrel("IsoThumpable", fluid)), true)
+check("a thumpable with no container is not", Core.isPlumbableCollector(barrel("IsoThumpable", nil)), false)
+instanceof = savedInstanceof
+
 os.exit(report.finish("reservoir") == 0 and 0 or 1)

@@ -18,17 +18,37 @@ local Core = PhunInteriors
 -- ---------------------------------------------------------------------------
 
 -- Every sprite vanilla's rain collectors use -- crate and round, open, closed
--- and tarped. Matched by NAME as well as by behaviour, because a barrel the map
--- author painted on may have loaded as a plain IsoObject with no fluid
--- container behind it, and it still means the room came with water.
+-- and tarped -- and the entity script that builds each one, read out of
+-- scripts/generated/entities/outdoors/entity_raincollector{,_tarp}.txt.
+-- Matched by NAME as well as by behaviour, because a barrel the map author
+-- painted on may have loaded as a plain IsoObject, and it still means the room
+-- came with water.
 local RAIN_SPRITES = {
-    carpentry_02_54 = true,
-    carpentry_02_120 = true,
-    carpentry_02_122 = true,
-    carpentry_02_124 = true,
-    carpentry_02_126 = true,
-    carpentry_02_127 = true
+    carpentry_02_54 = "RainCollector",
+    carpentry_02_120 = "RainCollector_Tarp",
+    carpentry_02_122 = "RainCollectorRound",
+    carpentry_02_124 = "RainCollectorRound_Tarp",
+    carpentry_02_126 = "RainCollectorRoundClosed",
+    carpentry_02_127 = "RainCollectorRound_TarpClosed"
 }
+
+--- The entity script that builds a working collector wearing this sprite, or
+--- nil if the sprite is not a rain collector.
+function Core.rainCollectorEntity(spriteName)
+    return spriteName and RAIN_SPRITES[spriteName] or nil
+end
+
+--- Is this a rain collector that plumbing can actually draw from?
+--
+-- A collector the MAP placed loads as a plain IsoObject that still carries the
+-- entity's FluidContainer: it fills with rain and a player can drink from it,
+-- but IsoObject.FindWaterSourceOnSquare only ever accepts an IsoThumpable, so
+-- no sink below it can be plumbed to it. Confirmed in game: carpentry_02_122
+-- on a camper roof, FluidContainer of 600, instanceof IsoThumpable false, and
+-- FindExternalWaterSource nil from the sink beneath it.
+function Core.isPlumbableCollector(object)
+    return instanceof(object, "IsoThumpable") and object:getFluidContainer() ~= nil
+end
 
 --- Positions along one axis such that every square from first to last is
 --- within one of a position.

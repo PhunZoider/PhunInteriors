@@ -91,4 +91,71 @@ function Rainwater.install(player, itemId)
     return true
 end
 
+--- Swap one collector the map placed for one plumbing can see.
+--
+-- ISOpenCloseLid:complete's recipe: copy the water out, take the old object
+-- off the square, build the entity in its place and pour the water back. The
+-- sprite is unchanged, so the slot's manifest still describes the room and a
+-- scrub keeps the new object as the one it expected.
+local function rebuild(square, object, entity, sprite)
+    local water = object:getFluidContainer()
+    water = water and water:copy()
+    square:transmitRemoveItemFromSquare(object)
+    square:RemoveTileObject(object)
+
+    local barrel = square:addWorkstationEntity(entity, sprite)
+    if barrel and water and barrel:getFluidContainer() then
+        barrel:getFluidContainer():copyFluidsFrom(water)
+    end
+    if water then
+        FluidContainer.DisposeContainer(water)
+    end
+    if barrel then
+        barrel:sync()
+    end
+    return barrel ~= nil
+end
+
+--- Make every rain collector on this slot's roof one a sink can be plumbed to.
+--
+-- The map's own barrels load as plain IsoObjects -- see
+-- Core.isPlumbableCollector -- so a sink beneath one is never offered Plumb,
+-- and one a player re-places to force the option is plumbed to nothing. The
+-- lotpack cannot say IsoThumpable, so the fix is here rather than on the map.
+--
+-- Over the FOOTPRINT, one level up, which is every square the 3x3 search from
+-- any floor square can reach. Runs with the room's chunk loaded, which means
+-- from the leash. Returns how many were rebuilt.
+function Rainwater.rebuildCollectors(roomId, index)
+    local bounds = Core.slotBounds(Core.rooms[roomId], index)
+    if not bounds then
+        return 0
+    end
+    local cell = getCell()
+    local above = bounds.z + 1
+    local rebuilt = 0
+    for x = bounds.x1, bounds.x2 do
+        for y = bounds.y1, bounds.y2 do
+            local square = cell:getGridSquare(x, y, above)
+            if square then
+                local objects = square:getObjects()
+                for i = objects:size() - 1, 0, -1 do
+                    local object = objects:get(i)
+                    local sprite = object and object:getSprite()
+                    local name = sprite and sprite:getName()
+                    local entity = Core.rainCollectorEntity(name)
+                    if entity and not Core.isPlumbableCollector(object) and rebuild(square, object, entity, name) then
+                        rebuilt = rebuilt + 1
+                    end
+                end
+            end
+        end
+    end
+    if rebuilt > 0 then
+        Core.logLn("rebuilt " .. rebuilt .. " map rain collector(s) on " .. tostring(roomId) .. "#" .. tostring(index) ..
+                       " so they can be plumbed")
+    end
+    return rebuilt
+end
+
 return Rainwater

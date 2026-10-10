@@ -2,6 +2,7 @@ if isClient() then
     return
 end
 require "PhunInteriors/registry"
+require "PhunInteriors/reservoir"
 local Core = PhunInteriors
 local Manifest = require "PhunInteriors/manifest"
 local Slots = require "PhunInteriors/slots"
@@ -75,6 +76,15 @@ local function createFromSprite(square, name)
     if not sprite then
         Core.logLn("no sprite named '" .. tostring(name) .. "', skipping it")
         return nil
+    end
+
+    -- A rain collector is an entity, and addWorkstationEntity puts it on the
+    -- square and transmits it itself -- hence the second return, so the caller
+    -- does not add it twice. Built from the sprite alone it would be scenery
+    -- no sink could be plumbed to; see Core.isPlumbableCollector.
+    local entity = Core.rainCollectorEntity(name)
+    if entity then
+        return square:addWorkstationEntity(entity, name), true
     end
 
     if sprite:getType() == IsoObjectType.lightswitch then
@@ -159,8 +169,8 @@ local function reconcileSquare(square, wanted)
     -- new object, and the only one that can produce an inert fixture.
     for name, count in pairs(needed) do
         for _ = 1, count do
-            local object = createFromSprite(square, name)
-            if object then
+            local object, placed = createFromSprite(square, name)
+            if object and not placed then
                 square:AddTileObject(object)
                 object:transmitCompleteItemToClients()
             end

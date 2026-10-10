@@ -3290,10 +3290,21 @@ cells are actually towns.
     since it stopped demanding squares above the room. The spec covers where
     barrels go and the opt out; everything that touches a square does not.
     In rough order of risk:
-    - **Whether the map's barrels are working collectors at all.** Map-loaded
-      `carpentry_02_122` may be a plain `IsoObject`. Port into a `_barrels`
-      room and check a roof barrel for fluid. The kit refuses those rooms
-      either way.
+    - **The map's barrels are half working, and that is settled.** Confirmed
+      in game on 2026-10-10 on Camper - Large: a map-loaded
+      `carpentry_02_122` is a plain `IsoObject` that still carries the
+      entity's `FluidContainer` (600), so it fills with rain and can be drunk
+      from, but `IsoObject.FindWaterSourceOnSquare` accepts only an
+      `IsoThumpable`, so `FindExternalWaterSource` from the sink below was nil
+      and no sink could be plumbed to it. Re-placing the SINK looked like a
+      fix and is not: a player-placed sink carries `canBeWaterPiped`, and
+      `ISWorldObjectContextMenuLogic.fetch` then offers Plumb in a room once
+      the mains are off **without checking for a barrel at all**, so it
+      plumbs to nothing. `Rainwater.rebuildCollectors` now swaps each roof
+      collector for `addWorkstationEntity(entity, sprite)` once per visit,
+      carrying the water across the way `ISOpenCloseLid:complete` does, and
+      `Scrub.createFromSprite` builds a recreated barrel the same way. Neither
+      has run in game. The kit still refuses these rooms.
     - **`addWorkstationEntity` from our code**, and whether our modData tag
       survives a save and reload -- if it does not, the next capture of that
       slot records the barrels and they become permanent.
