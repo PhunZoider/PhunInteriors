@@ -31,7 +31,8 @@ local check = r.check
 
 -- ---------------------------------------------------------------------------
 -- Fakes. A vehicle sits at the origin and never turns, so a script offset IS a
--- world offset. Areas are squares of side 2 centred where the spec says.
+-- world offset. Areas are squares of side 2 centred where the spec says,
+-- unless the spec gives a third and fourth number for w and h.
 -- ---------------------------------------------------------------------------
 
 local function fakeVehicle(scriptName, spec)
@@ -39,7 +40,13 @@ local function fakeVehicle(scriptName, spec)
     local doors = spec.doors or {}
     local v = {}
     function v:getScript()
-        return {getFullName = function() return scriptName end}
+        return {
+            getFullName = function() return scriptName end,
+            getAreaById = function(_, id)
+                local a = areas[id]
+                return a and {getW = function() return a[3] or 2 end, getH = function() return a[4] or 2 end} or nil
+            end
+        }
     end
     function v:getAreaCenter(id)
         local a = areas[id]
@@ -59,17 +66,11 @@ local function fakeVehicle(scriptName, spec)
     end
     function v:isInArea(id, chr)
         local a = areas[id]
-        return a ~= nil and math.abs(chr:getX() - a[1]) <= 1 and math.abs(chr:getY() - a[2]) <= 1
+        return a ~= nil and math.abs(chr:getX() - a[1]) <= (a[3] or 2) / 2
+            and math.abs(chr:getY() - a[2]) <= (a[4] or 2) / 2
     end
-    function v:getAreaDist(id, chr)
-        local a = areas[id]
-        if not a then
-            return 10000
-        end
-        local dx = math.max(0, math.abs(chr:getX() - a[1]) - 1)
-        local dy = math.max(0, math.abs(chr:getY() - a[2]) - 1)
-        return math.sqrt(dx * dx + dy * dy)
-    end
+    -- No getAreaDist: it measures to one corner of the area, not to the
+    -- rectangle, and calling it is the bug Core.nearArea replaced.
     return v
 end
 
@@ -137,6 +138,17 @@ check("junk entries are ignored", Core.boarding["base.odd"], nil)
 Core.registerBoarding({["Base.Van"] = "TruckBed"})
 check("inside the TruckBed is at the rear", Core.atBoardingPoint(van, standing(0.5, 4.5)), true)
 check("just outside it, within the slack, still counts", Core.atBoardingPoint(van, standing(0, 5.8)), true)
+
+-- The vanilla livestock trailer: a TruckBed 0.8 x 0.44, a hull about 1.1 wide.
+-- The walk to it stops beside it rather than in it, and getAreaDist read the
+-- far rear corner as well over a tile away.
+local livestock = fakeVehicle("Base.Trailer_Livestock", {areas = {TruckBed = {0, 1.19, 0.8, 0.44}}})
+check("beside a thin TruckBed, at the back corner, counts",
+    Core.atBoardingPoint(livestock, standing(0.9, 1.2)), true)
+check("at the other back corner too", Core.atBoardingPoint(livestock, standing(-0.9, 1.3)), true)
+check("halfway along the trailer side does not",
+    (Core.atBoardingPoint(livestock, standing(0.9, 0))), false)
+check("nor the hitch end", (Core.atBoardingPoint(livestock, standing(0, -1.5))), false)
 local ok, point = Core.atBoardingPoint(van, standing(0, -6))
 check("in front of the van is not at the rear", ok, false)
 check("and the refusal says the back", Core.boardingRefusal(point), "IGUI_PhunInteriors_BoardAtRear")

@@ -332,6 +332,22 @@ function Client.groundBeside(vehicle, toward)
         return nil
     end
 
+    -- Half the hull in the direction walked, from the script's extents (x is
+    -- the width, z the length), which every step must clear as well as the
+    -- square test. getVehicleContainer alone is not enough: it is
+    -- isIntersectingSquare, which answers false for EVERY square when the
+    -- vehicle's floored z is not the square's level or it has no physics
+    -- controller -- an unhitched FlyingCloud on its jack -- and then the
+    -- first step reads as clear and lands the tenant inside the caravan.
+    local clearance = 0
+    local script = vehicle:getScript()
+    local extents = script and script:getExtents()
+    if extents then
+        local across = toward == "left" or toward == "right"
+        -- plus half a square, because the step is snapped to a tile centre
+        clearance = (across and extents:x() or extents:z()) / 2 + 0.5
+    end
+
     local z = vehicle:getZ()
     for step = 1, STEP_LIMIT do
         -- Tile centres, not the raw float. Everything else in this file lands
@@ -340,7 +356,7 @@ function Client.groundBeside(vehicle, toward)
         local tx = math.floor(cx + dx * step) + 0.5
         local ty = math.floor(cy + dy * step) + 0.5
         local square = getSquare(tx, ty, z)
-        if square and not square:getVehicleContainer() and not square:isSolid() then
+        if step >= clearance and square and not square:getVehicleContainer() and not square:isSolid() then
             return tx, ty
         end
     end

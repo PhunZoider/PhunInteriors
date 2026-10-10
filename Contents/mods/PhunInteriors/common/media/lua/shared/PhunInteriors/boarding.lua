@@ -47,7 +47,7 @@ local REAR = {"TruckBed", "TrunkDoor"}
 -- outside position, so that is the distance a door means. The extra half is
 -- for the server's copy of the position, which can trail the client's.
 local DOOR_REACH = 2.5
--- getAreaDist is measured from the rectangle; the same allowance.
+-- How far outside an area's rectangle still counts as standing at it.
 local AREA_SLACK = 1.0
 
 --- Say where a script is boarded. `map` is {[script] = "AreaName" | "door"}.
@@ -139,6 +139,31 @@ function Core.boardingFor(vehicle)
     return nil
 end
 
+--- Is this character within `slack` of the named area?
+--
+-- Measured from the area's centre against a circle round its rectangle, so
+-- it needs no heading and no local frame. Deliberately NOT getAreaDist: from
+-- the bytecode that is |lx + |x - w/2|| + |lz + |y - h/2||, a Manhattan
+-- distance to one corner of the area rather than to the rectangle, so a
+-- player at the other rear corner of a trailer read as well over a tile away
+-- while standing at its back. w and h are the script's own numbers, the ones
+-- isInArea compares the local position against.
+function Core.nearArea(vehicle, areaId, character, slack)
+    local centre = vehicle:getAreaCenter(areaId)
+    if not centre then
+        return false
+    end
+    local script = vehicle:getScript()
+    local area = script and script:getAreaById(areaId)
+    local reach = slack
+    if area then
+        local hw, hh = (area:getW() or 0) / 2, (area:getH() or 0) / 2
+        reach = reach + math.sqrt(hw * hw + hh * hh)
+    end
+    local dx, dy = character:getX() - centre:getX(), character:getY() - centre:getY()
+    return dx * dx + dy * dy <= reach * reach
+end
+
 --- Is this character standing where the vehicle is boarded?
 -- Returns true, or false plus the boarding point it wanted.
 --
@@ -155,12 +180,14 @@ function Core.atBoardingPoint(vehicle, character)
     end
     if point.area then
         -- isInArea is what vanilla's own server side trunk access gates on
-        -- (Vehicles.ContainerAccess); getAreaDist, which vanilla uses for the
-        -- animal trailer, gives the slack.
+        -- (Vehicles.ContainerAccess). It is exact, and pathToVehicleArea stops
+        -- "close enough" to its target, so on a thin area -- the livestock
+        -- trailer's TruckBed is 0.8 x 0.44 -- the walk routinely ends just
+        -- outside it and needs the slack.
         if vehicle:isInArea(point.area, character) then
             return true
         end
-        if vehicle:getAreaDist(point.area, character) <= AREA_SLACK then
+        if Core.nearArea(vehicle, point.area, character, AREA_SLACK) then
             return true
         end
         return false, point

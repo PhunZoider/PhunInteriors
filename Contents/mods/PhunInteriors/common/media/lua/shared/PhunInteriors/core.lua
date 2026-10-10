@@ -351,7 +351,54 @@ function Core.vehicleNear(x, y, z, vehicleId, radius)
             end
         end
     end
-    return nil
+    return Core.loadedVehicleNear(x, y, z, radius, function(vehicle)
+        return Core.vehicleId(vehicle, false) == vehicleId
+    end)
+end
+
+--- The loaded vehicle whose middle is nearest a position, by distance alone.
+--
+-- The fallback for the square sweeps here, because getVehicleContainer is
+-- stricter than it reads. From the bytecode it is BaseVehicle.
+-- isIntersectingSquare, which refuses outright unless floor(getZ()) equals the
+-- square's level AND the vehicle has a physics controller, before it ever
+-- tests the outline. An unhitched KI5 FlyingCloud, resting on its jack, fails
+-- one of those: it answered no square at all, so every exit from its room
+-- ended in "your vehicle is gone" while it stood exactly where it was left.
+-- Hitched, it answered normally.
+--
+-- Walks getCell():getVehicles() with iterator(), as compat_whennyago does;
+-- the Set has no get(i). pcall'd, so a failed iterator is just "none found".
+-- `accept` filters candidates. Logs which of the two tests refused a vehicle
+-- this found, because that is the half of this nobody has seen yet.
+function Core.loadedVehicleNear(x, y, z, radius, accept)
+    local cell = getCell()
+    if not cell then
+        return nil
+    end
+    local best, bestDistance = nil, nil
+    pcall(function()
+        local it = cell:getVehicles():iterator()
+        while it:hasNext() do
+            local vehicle = it:next()
+            if vehicle and not vehicle:isRemovedFromWorld() and math.abs(vehicle:getZ() - z) < 1.5 and
+                (not accept or accept(vehicle)) then
+                local dx, dy = vehicle:getX() - x, vehicle:getY() - y
+                local distance = dx * dx + dy * dy
+                if distance <= radius * radius and (not bestDistance or distance < bestDistance) then
+                    best, bestDistance = vehicle, distance
+                end
+            end
+        end
+    end)
+    if best then
+        local script = best:getScript()
+        Core.logLn(string.format(
+            "found %s at %.1f,%.1f by distance; the square test refused it (z %.3f against level %s, controller %s)",
+            tostring(script and script:getFullName()), best:getX(), best:getY(), best:getZ(), tostring(z),
+            tostring(best:getController() ~= nil)))
+    end
+    return best
 end
 
 --- The vehicle nearest a position, whatever it is.
@@ -386,7 +433,7 @@ function Core.nearestVehicle(x, y, z, radius)
             end
         end
     end
-    return best
+    return best or Core.loadedVehicleNear(x, y, z, radius)
 end
 
 function Core.now()
