@@ -9,7 +9,25 @@ local Commands = {}
 
 --- Find the vehicle a client claims to be interacting with, without trusting
 --- the client about which vehicle that is.
+local function nearPlayer(player, x, y)
+    local dx, dy = x - player:getX(), y - player:getY()
+    return (dx * dx + dy * dy) <= 100
+end
+
 local function resolveVehicle(player, args)
+    -- The id the client picked, first. getVehicleById is the direction vanilla
+    -- proves (VehicleCommands resolves a client's getId() that way about thirty
+    -- times), and it is the one route that does not go through a square. The
+    -- square test refuses a vehicle with no physics controller, which is an
+    -- unhitched KI5 caravan on its jack: entry said "there is no vehicle here"
+    -- until the player sat in it and gave it a controller back. Still checked
+    -- for distance, so the id is never taken on trust.
+    local id = args and tonumber(args.id)
+    local byId = id and getVehicleById(id)
+    if byId and nearPlayer(player, byId:getX(), byId:getY()) then
+        return byId
+    end
+
     local vehicle = player:getVehicle() or player:getUseableVehicle()
     if vehicle then
         return vehicle
@@ -21,14 +39,14 @@ local function resolveVehicle(player, args)
 
     -- The client sent a position. Accept it only if it is close enough to the
     -- player to be plausible.
-    local dx, dy = args.x - player:getX(), args.y - player:getY()
-    if (dx * dx + dy * dy) > 100 then
+    if not nearPlayer(player, args.x, args.y) then
         Core.debugLn("rejected an enter request for a vehicle too far from the player")
         return nil
     end
 
-    local square = getCell():getGridSquare(args.x, args.y, args.z or 0)
-    return square and square:getVehicleContainer() or nil
+    local z = math.floor(args.z or 0)
+    local square = getCell():getGridSquare(args.x, args.y, z)
+    return (square and square:getVehicleContainer()) or Core.loadedVehicleNear(args.x, args.y, z, 3)
 end
 
 Commands[Core.commands.playerSetup] = function(player, args)

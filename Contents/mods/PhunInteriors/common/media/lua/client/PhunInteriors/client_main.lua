@@ -643,6 +643,8 @@ function Client.requestEnter(vehicle, seat, standSeat)
         return
     end
     Core.dispatch(Core.commands.enter, {
+        -- Resolved first server side; the position is the fallback.
+        id = vehicle:getId(),
         x = vehicle:getX(),
         y = vehicle:getY(),
         z = vehicle:getZ(),
