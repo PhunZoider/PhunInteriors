@@ -40,6 +40,7 @@ local function door(north)
     local d = {open = true, north = north, toggles = 0}
     function d:IsOpen() return self.open end
     function d:getNorth() return self.north end
+    function d:getSprite() return {getName = function() return "fixtures_doors_01_61" end} end
     function d:ToggleDoorActual(character)
         self.toggles = self.toggles + 1
         self.by = character
@@ -100,8 +101,20 @@ check("so nothing was toggled twice", northDoor.toggles + southDoor.toggles, 2)
 -- A door that throws is logged and skipped, not fatal to the others.
 northDoor.open, southDoor.open = true, true
 function northDoor:ToggleDoorActual() error("boom") end
-check("one bad door does not stop the rest", Doors.closeExterior("r.box", 0, alice), 1)
+local closedCount, seen = Doors.closeExterior("r.box", 0, alice)
+check("one bad door does not stop the rest", closedCount, 1)
 check("and the rest still close", southDoor:IsOpen(), false)
+check("every door in the footprint is reported", #seen, 3)
+check("the bad one says it threw", seen[2]:find("threw:", 1, true) ~= nil, true)
+check("the internal one says so", seen[1]:find("internal", 1, true) ~= nil, true)
+
+-- A door the server closes but which reads open afterwards is the failure the
+-- report exists to name.
+northDoor.open = true
+function northDoor:ToggleDoorActual() end
+closedCount, seen = Doors.closeExterior("r.box", 0, alice)
+check("a door that would not close is not counted", closedCount, 0)
+check("and is named as still open", seen[2]:find("STILL OPEN", 1, true) ~= nil, true)
 
 check("an unknown room closes nothing", Doors.closeExterior("r.nope", 0, alice), 0)
 

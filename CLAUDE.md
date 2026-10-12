@@ -3748,6 +3748,27 @@ cells are actually towns.
     on other clients on a dedicated server, whether the close sound plays
     from a server side emitter, and whether a garage door (`3x6_bedroom`,
     `3x9_shed`) closes all three squares from whichever one is found first.
+    **Reported not working on a dedicated server on 2026-10-12**, Camper -
+    Large and the step vans, with no error and nothing in the log, because a
+    successful close only logged at debug. The lotpacks put both rooms' doors
+    where the edge rule expects (step van `fixtures_doors_01_61` on the north
+    row, caravan `fixtures_doors_01_60` in the east wall column), and the
+    bytecode shows the server close and the client apply both sound, so the
+    cause is not known. `closeExterior` now returns a line per door it saw
+    and why it did or did not close, a door left open is always logged, and
+    `admin("doors")` runs it in the slot you stand in.
+    **The pattern then gave it away: it closed only when the player logged
+    in already inside.** Walking in is a teleport, and the server's copy of
+    the position reaches "inside" before the room's chunk is loaded server
+    side, so the one attempt per visit found every square nil, saw no doors,
+    and marked the visit done. On a login the server loads the chunk before
+    the player appears. `Rainwater.rebuildCollectors` had the same flaw and
+    silently skipped the nil squares. Both now wait for `roomLoaded` in
+    `leash.lua`: every square of the room's own level present. The lesson
+    generalises to anything hung off the leash's "inside": **the tenant
+    being inside does not mean the room is loaded**, and a once-per-visit job
+    must not mark itself done on a read that found nothing. Fix not yet
+    confirmed in game.
 
 ## v2, deliberately not in v1
 

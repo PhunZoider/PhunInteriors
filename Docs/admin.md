@@ -132,6 +132,7 @@ PhunServer2 is installed.
 | `admin("reclaim", {room = ...})` | Take the lease a full pool would take next. Room is optional. |
 | `admin("age", {vehicleId = ..., days = ...})` | Make a lease look idle for that many days. |
 | `admin("shove", {radius = ...})` | Run the exit zombie shove where you stand. |
+| `admin("doors")` | Close the outside doors of the room you are standing in, and list every door in it: where it is, which way it faces, whether it counts as a way out, and what happened to it. Runs even with somebody else inside. |
 | `admin("gather", {hours = ...} or {count = ...})` | Spawn the zombies an exit after that many hours inside would gather, around where you stand. Defaults to a full day. |
 
 All are called as `PhunInteriors.admin(...)`. They run on the server, and the result is printed to the console log rather than returned.

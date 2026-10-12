@@ -171,14 +171,43 @@ local function attemptLights(occupancy)
     end
 end
 
+--- Has the server loaded every square of the room's own level yet?
+--
+-- Seeing the tenant inside does NOT mean it has. Entering is a teleport, the
+-- server's copy of their position catches up first, and the room's chunk is
+-- loaded after that, so the first "inside" ticks of a visit can find every
+-- square nil. A once-per-visit job that runs then sees an empty room, does
+-- nothing, and marks itself done: closing the doors worked when a player
+-- logged in already inside, whose chunk the server loads before they appear,
+-- and never on an ordinary walk in. Capture refuses an unloaded room and
+-- retries for the same reason. Only the room's own level, because a square
+-- above it may be absent for good -- see "Only the room's own level has to
+-- read completely".
+local function roomLoaded(occupancy)
+    local bounds = Core.slotBounds(Core.rooms[occupancy.room], occupancy.index)
+    if not bounds then
+        return false
+    end
+    local cell = getCell()
+    for x = bounds.x1, bounds.x2 do
+        for y = bounds.y1, bounds.y2 do
+            if not cell:getGridSquare(x, y, bounds.z) then
+                return false
+            end
+        end
+    end
+    return true
+end
+
 --- Make the roof's rain collectors plumbable, once per visit.
 --
 -- After capture and scrub for the same reason as the lights. Once per visit
 -- rather than once per lease because a scrub can recreate a barrel between
 -- visits, and a second pass over a room whose barrels are already working
--- touches nothing.
-local function attemptCollectors(occupancy)
-    if occupancy.collectorsChecked then
+-- touches nothing. Not until the room is loaded, or it walks squares that are
+-- not there yet and calls the visit done.
+local function attemptCollectors(occupancy, loaded)
+    if occupancy.collectorsChecked or not loaded then
         return
     end
     occupancy.collectorsChecked = true
@@ -189,9 +218,10 @@ end
 --
 -- On the way in rather than the way out, and only into an empty room; see
 -- doors.lua. After capture and scrub, so neither records nor restores a door
--- this has just swung.
-local function attemptDoors(player, occupancy)
-    if occupancy.doorsChecked then
+-- this has just swung. Not until the room is loaded, for the reason
+-- roomLoaded gives.
+local function attemptDoors(player, occupancy, loaded)
+    if occupancy.doorsChecked or not loaded then
         return
     end
     occupancy.doorsChecked = true
@@ -226,8 +256,12 @@ local function checkOne(player, occupancy)
         else
             attemptPower(occupancy)
             attemptLights(occupancy)
-            attemptCollectors(occupancy)
-            attemptDoors(player, occupancy)
+            -- Asked only while either job is still owed, so a settled visit
+            -- costs nothing here.
+            local loaded = (not occupancy.collectorsChecked or not occupancy.doorsChecked)
+                and roomLoaded(occupancy)
+            attemptCollectors(occupancy, loaded)
+            attemptDoors(player, occupancy, loaded)
         end
     end
 

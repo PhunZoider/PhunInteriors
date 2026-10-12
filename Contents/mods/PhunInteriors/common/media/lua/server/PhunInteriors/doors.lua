@@ -60,19 +60,23 @@ function Doors.othersInside(key, holder)
     return false
 end
 
---- Close every open door leading out of this slot. Returns how many it closed.
+--- Close every open door leading out of this slot.
 --
 -- Scans the footprint rather than the floor, because a south or east door
 -- stands on the square beyond the floor, and only the room's own level.
+--
+-- Returns how many it closed, and a line per door it saw, outside or not, so
+-- a door that should have shut and did not can say why: not found, not
+-- counted as a way out, not open as far as the server knows, or open still.
 function Doors.closeExterior(roomId, index, character)
     local room = Core.rooms[roomId]
     local bounds = room and Core.slotBounds(room, index)
     local floor = room and Core.slotFloor(room, index)
     if not bounds or not floor then
-        return 0
+        return 0, {}
     end
     local cell = getCell()
-    local closed = 0
+    local closed, seen = 0, {}
     for x = bounds.x1, bounds.x2 do
         for y = bounds.y1, bounds.y2 do
             local square = cell:getGridSquare(x, y, bounds.z)
@@ -88,34 +92,59 @@ function Doors.closeExterior(roomId, index, character)
                     end
                 end
                 for _, door in ipairs(doors) do
+                    local north = door:getNorth()
+                    local exterior = Doors.isExterior(floor, x, y, north)
                     -- Asked again per door, since closing one leaf of a double
                     -- door closes the rest with it.
-                    if door:IsOpen() and Doors.isExterior(floor, x, y, door:getNorth()) then
+                    local wasOpen = door:IsOpen()
+                    local result
+                    if not exterior then
+                        result = "internal, left alone"
+                    elseif not wasOpen then
+                        result = "already closed"
+                    else
                         local ok, err = pcall(door.ToggleDoorActual, door, character)
                         if not ok then
-                            Core.logLn(string.format("could not close the door at %d,%d,%d in %s#%s: %s", x, y,
-                                bounds.z, tostring(roomId), tostring(index), tostring(err)))
-                        elseif not door:IsOpen() then
+                            result = "threw: " .. tostring(err)
+                        elseif door:IsOpen() then
+                            result = "STILL OPEN after the close"
+                        else
                             closed = closed + 1
+                            result = "closed"
                         end
                     end
+                    seen[#seen + 1] = string.format("%d,%d %s %s: %s", x, y, north and "N" or "W",
+                        door:getSprite() and door:getSprite():getName() or "?", result)
                 end
             end
         end
     end
-    return closed
+    return closed, seen
 end
 
 --- Close the doors behind a tenant who has just arrived in an empty room.
 function Doors.closeBehind(player, occupancy)
     local key = Core.playerKey(player)
     if occupancy.vehicleId and Doors.othersInside(key, occupancy.vehicleId) then
+        Core.debugLn(string.format("left the doors of %s#%s alone: somebody else is inside",
+            tostring(occupancy.room), tostring(occupancy.index)))
         return 0
     end
-    local closed = Doors.closeExterior(occupancy.room, occupancy.index, player)
-    if closed > 0 then
-        Core.debugLn(string.format("closed %d door(s) in %s#%s for %s", closed, tostring(occupancy.room),
-            tostring(occupancy.index), tostring(key)))
+    local closed, seen = Doors.closeExterior(occupancy.room, occupancy.index, player)
+    -- A door that was open and is still open is the feature failing, so that
+    -- is always logged; the rest is only interesting while debugging.
+    local failed = false
+    for _, line in ipairs(seen) do
+        if line:find("STILL OPEN", 1, true) or line:find("threw:", 1, true) then
+            failed = true
+        end
+    end
+    local summary = string.format("doors in %s#%s for %s: closed %d of %d seen [%s]", tostring(occupancy.room),
+        tostring(occupancy.index), tostring(key), closed, #seen, table.concat(seen, "; "))
+    if failed then
+        Core.logLn(summary)
+    else
+        Core.debugLn(summary)
     end
     return closed
 end

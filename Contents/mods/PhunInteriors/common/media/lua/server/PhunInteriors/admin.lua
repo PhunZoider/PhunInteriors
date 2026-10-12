@@ -807,6 +807,29 @@ actions.shove = function(args, player)
     return {string.format("shoved %d zombie(s) out of %d squares", moved, radius)}
 end
 
+-- Closing the doors behind a tenant, on demand, in the slot you are standing
+-- in. The real trigger is walking back into an empty room, and when it does
+-- nothing there is no way to tell which of four things went wrong. This
+-- names every door in the footprint, which way it faces, whether it counts as
+-- a way out, and what happened to it. The same Doors.closeExterior the leash
+-- calls, and deliberately without the "anybody else inside" gate, so it can
+-- be run with the door you just opened standing open behind you.
+actions.doors = function(args, player)
+    if not player then
+        return {"doors needs a player standing in a room"}
+    end
+    local roomId, index = Core.slotAt(player:getX(), player:getY(), player:getZ())
+    if not roomId then
+        return {"you are not standing in a registered slot"}
+    end
+    local closed, seen = require("PhunInteriors/doors").closeExterior(roomId, index, player)
+    local lines = {string.format("%s#%s: closed %d, %d door(s) in the footprint", roomId, index, closed, #seen)}
+    for _, line in ipairs(seen) do
+        lines[#lines + 1] = "  " .. line
+    end
+    return lines
+end
+
 -- The exit tax, on demand and from wherever you are standing: what an exit
 -- after `hours` inside would put on the ground around you, or `count` if
 -- given. Same reason as shove -- the real trigger is a night spent inside.
