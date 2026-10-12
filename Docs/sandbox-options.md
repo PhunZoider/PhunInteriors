@@ -71,7 +71,7 @@ above: every shipped room relies on a generator 17 squares away.
 
 ## Vanilla settings that matter
 
-- **Set `AntiCheatSpeed=3` in the server `.ini` for multiplayer.** This one is
+- **Set `AntiCheatSpeed=4` in the server `.ini` for multiplayer.** This one is
   a server option, not a sandbox option, and it matters most. See
   [Running a server](admin.md#the-speed-anti-cheat).
 

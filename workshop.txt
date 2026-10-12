@@ -1,7 +1,9 @@
 version=1
 id=3812500419
-title=PhunInteriors
-description=1,000+ instances of 83 themed interiors for 168 vehicles (and tents). Walk out the back to the tailgate, out the front into the driver's seat.
+title=PhunInteriors: Interiors for RVs, Campers, Tents and more
+description=Step into the back of your van, RV, camper, box truck or tent and find a real furnished room inside. 83 themed interiors across 168 vehicles, built for Build 42 single player and multiplayer.
+description=
+description=Looking for an RV interior mod for B42? This is a ground-up Build 42 mod: walk out the back to the tailgate, out the front into the driver's seat.
 description=
 description=[h2]The big four[/h2]
 description=[list]
@@ -71,5 +73,5 @@ description=[h2]More Phun Mods[/h2]
 description=[url=https://steamcommunity.com/sharedfiles/filedetails/?id=3812506730][img]https://i.ibb.co/QvxxrqJD/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3689006725][img]https://i.ibb.co/4ZLgMZ4m/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3793624522][img]https://i.ibb.co/k2k39f8w/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3816322755][img]https://i.ibb.co/GfPVgK6f/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676252660][img]https://i.ibb.co/3mQpB8ST/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676252110][img]https://i.ibb.co/4rxBnRX/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676251425][img]https://i.ibb.co/fYNn5BLC/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3676250472][img]https://i.ibb.co/svW9sVvK/preview.png[/img][/url] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3792193021][img]https://i.ibb.co/vCBcKtp8/preview.png[/img][/url] 
 description=
 description=Coded with love for our awesome [url=https://discord.gg/v2USyAtP6q]PhunZoid[/url] community.
-tags=Build 42;Vehicles;Multiplayer;map
+tags=Build 42;Vehicles;Multiplayer;Map;Framework
 visibility=public

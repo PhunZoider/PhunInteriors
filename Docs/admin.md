@@ -8,7 +8,7 @@ Everything an admin can see and change, in game and from the console.
 else:**
 
 ```
-AntiCheatSpeed=3
+AntiCheatSpeed=4
 ```
 
 Going into a room and coming back out are both teleports, and Build 42 gives
@@ -21,8 +21,11 @@ default setting (`2`, Kick) it kicks them after one or two trips, with
 |---|---|
 | 1 | Ban |
 | 2 | Kick (the default) |
-| 3 | Log only (recommended) |
-| 4 | Disabled |
+| 3 | Log only |
+| 4 | Disabled (recommended) |
+
+`3` stops the kick too, but every trip in or out writes a line to the server
+log, so a busy server fills its log with false alarms. `4` keeps it quiet.
 
 Until it is 3 or 4, PhunInteriors refuses entry rather than let anybody be
 kicked. The player is told the anti-cheat would kick them, and the server

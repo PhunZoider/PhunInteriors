@@ -61,7 +61,7 @@ parked.
 Build 42. Nothing else: there are no required mods. PhunServer2 adds an
 `/interiors` chat command when it is installed.
 
-**Multiplayer servers need `AntiCheatSpeed=3` in the server `.ini`.** Every
+**Multiplayer servers need `AntiCheatSpeed=4` in the server `.ini`.** Every
 trip in or out of a room is a teleport, and the default setting kicks players
 for it. See [Running a server](Docs/admin.md#the-speed-anti-cheat).
 

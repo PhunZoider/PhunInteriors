@@ -1,7 +1,7 @@
 name=PhunInteriors
 id=phuninteriors
 author=UburGeek
-description=Instanced vehicle interiors that recycle their space, contain the player, and cost something to use
+description=Step into the back of your van, RV, camper, box truck or tent and find a real furnished room inside.
 poster=poster.png
 icon=icon.png
 versionMin=42.0.0
