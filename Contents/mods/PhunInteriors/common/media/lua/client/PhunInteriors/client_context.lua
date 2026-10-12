@@ -103,6 +103,32 @@ function ISVehicleMenu.showRadialMenuOutside(playerObj, ...)
     end
 end
 
+-- The right click on a vehicle. Vanilla's OnFillWorldObjectContextMenu picks
+-- the vehicle (under the mouse, or ahead of a joypad player) and hands it to
+-- FillMenuOutsideVehicle, read off the table at call time, so wrapping that
+-- covers both and needs no picking of our own. Only reached on foot; a seated
+-- player has the radial.
+--
+-- The vehicle rides as the option's argument, which onEnter wants anyway and
+-- which is what Project Viewpoint keeps an option by (see the world object
+-- menu below).
+local baseFillMenuOutsideVehicle = ISVehicleMenu.FillMenuOutsideVehicle
+
+function ISVehicleMenu.FillMenuOutsideVehicle(player, context, vehicle, test, ...)
+    local result = baseFillMenuOutsideVehicle(player, context, vehicle, test, ...)
+    if test or not vehicle or Client.inside or not Core.vehicleHasRooms(vehicle) then
+        return result
+    end
+    local playerObj = getSpecificPlayer(player)
+    if playerObj then
+        local option = context:addOptionOnTop(getText("ContextMenu_PhunInteriors_Enter"), playerObj, onEnter, vehicle)
+        if option then
+            option.iconTexture = modTexture()
+        end
+    end
+    return result
+end
+
 --- The bound object on the clicked square, if there is one.
 --
 -- Read client side purely to decide whether to draw the option; the server
@@ -144,7 +170,7 @@ local function onFillWorldObjectContextMenu(playerNum, context, worldObjects, te
         local object = boundObjectIn(worldObjects)
         local square = object and object:getSquare()
         if square then
-            context:addOption(getText("ContextMenu_PhunInteriors_EnterObject"), player, function()
+            context:addOptionOnTop(getText("ContextMenu_PhunInteriors_EnterObject"), player, function()
                 Client.requestEnterObject(square)
             end, object)
         end
@@ -156,7 +182,9 @@ local function onFillWorldObjectContextMenu(playerNum, context, worldObjects, te
         local leave = context:addOption(getText("ContextMenu_PhunInteriors_Leave"), player, function()
             Client.requestLeave()
         end, clicked)
-        leave.iconTexture = modTexture()
+        if leave then
+            leave.iconTexture = modTexture()
+        end
     end
     if Client.reservoirOption then
         Client.reservoirOption(context, player, clicked)

@@ -7,7 +7,10 @@ default a new server gets; the server owner can change all of them (see
 ## Getting in
 
 Right click a supported vehicle and choose **Go inside**. The option is also on
-the vehicle radial menu, seated or standing.
+the vehicle radial menu, seated or standing. The game's own **Enter Vehicle**
+is a different option and always puts you in a seat. No **Go inside** on a
+vehicle means it has no room; [vehicles.md](vehicles.md) lists the ones that
+do.
 
 - **You get in at the door.** On a van that is the back, on a caravan or RV it
   is the side door. Your character walks there first. If they cannot reach it,
