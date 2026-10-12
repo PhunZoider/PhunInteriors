@@ -119,6 +119,14 @@ option PhunInteriors.BreachEjects
     translation = PhunInteriors_BreachEjects,
 }
 
+option PhunInteriors.CloseDoorsOnEntry
+{
+    type = boolean,
+    default = true,
+    page = PhunInteriors,
+    translation = PhunInteriors_CloseDoorsOnEntry,
+}
+
 option PhunInteriors.AdminNoClipExempt
 {
     type = boolean,

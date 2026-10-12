@@ -27,6 +27,7 @@ server, turn it off.
 | Most That Gather | 3 | 0 to 20 | The most that can gather in one visit, however long it lasts. 0 turns gathering off. |
 | Exit Clears Zombies | 6 | 0 to 30 | Squares of ground cleared around you as you land. Anything inside is pushed to the edge of the ring, as far as walls allow. Nothing is removed. 0 turns it off. |
 | Breaching Ejects You | on | | Leaving the room any way other than the door (a broken wall, say) puts you back at the vehicle. Off moves you back inside instead. |
+| Doors Shut Behind You | on | | When you come back in to an empty room, its outside doors are closed again rather than standing open the way you left them. Not when somebody else is already inside. Doors inside the room, like a caravan's bathroom door, are left alone. |
 
 ## Keeping rooms
 

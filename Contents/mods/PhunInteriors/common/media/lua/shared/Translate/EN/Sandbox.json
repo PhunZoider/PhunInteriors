@@ -48,6 +48,9 @@
   "Sandbox_PhunInteriors_BreachEjects": "Breaching Ejects You",
   "Sandbox_PhunInteriors_BreachEjects_tooltip": "If yes, leaving the room any way other than the door puts you back at the vehicle. If no, you are simply moved back inside",
 
+  "Sandbox_PhunInteriors_CloseDoorsOnEntry": "Doors Shut Behind You",
+  "Sandbox_PhunInteriors_CloseDoorsOnEntry_tooltip": "If yes, a room's outside doors are found closed when you come back in, rather than standing open the way you left them. Only when nobody else is inside. Doors inside the room are left alone",
+
   "Sandbox_PhunInteriors_AdminNoClipExempt": "Noclip Frees Admins",
   "Sandbox_PhunInteriors_AdminNoClipExempt_tooltip": "If yes, an admin with noclip turned on is ignored by room containment, so they can inspect and pass through rooms without being ejected. Turning noclip off puts them back under the normal rules",
 

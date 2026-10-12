@@ -185,6 +185,21 @@ local function attemptCollectors(occupancy)
     require("PhunInteriors/rainwater").rebuildCollectors(occupancy.room, occupancy.index)
 end
 
+--- Shut the door the last tenant walked out through, once per visit.
+--
+-- On the way in rather than the way out, and only into an empty room; see
+-- doors.lua. After capture and scrub, so neither records nor restores a door
+-- this has just swung.
+local function attemptDoors(player, occupancy)
+    if occupancy.doorsChecked then
+        return
+    end
+    occupancy.doorsChecked = true
+    if Core.settings.CloseDoorsOnEntry then
+        require("PhunInteriors/doors").closeBehind(player, occupancy)
+    end
+end
+
 --- Does walking out of this room put you out, or back on the spawn square?
 --
 -- Out, normally. Back, when the server turned ejection off, or when the room
@@ -212,6 +227,7 @@ local function checkOne(player, occupancy)
             attemptPower(occupancy)
             attemptLights(occupancy)
             attemptCollectors(occupancy)
+            attemptDoors(player, occupancy)
         end
     end
 

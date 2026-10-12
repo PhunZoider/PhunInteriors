@@ -228,6 +228,7 @@ Core.defaults = {
     RoomProtectedDays = 14,
     HardenShell = true,
     BreachEjects = true,
+    CloseDoorsOnEntry = true,
     AdminNoClipExempt = true,
     PowerBinding = true,
     PowerDrainFactor = 100,
