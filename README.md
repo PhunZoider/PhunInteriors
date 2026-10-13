@@ -46,6 +46,7 @@ parked.
 | Page | For |
 |---|---|
 | [Playing](Docs/playing.md) | Players: getting in, getting out, power, water, tents, keeping your room |
+| [Adding it to an existing save](Docs/existing-save.md) | Players and server owners: going inside puts you in the woods instead of a room |
 | [Supported vehicles](Docs/vehicles.md) | Which vehicle gets which room |
 | [Sandbox options](Docs/sandbox-options.md) | Server owners: every option and its default |
 | [Running a server](Docs/admin.md) | Admins: the room window, the editor, console commands |

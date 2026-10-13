@@ -27,6 +27,11 @@ do.
   an open or smashed window. Most trailers have no lockable doors and are never
   locked.
 
+**The map has to be enabled before anybody goes inside.** The save's map list
+needs `phuninteriors;Muldraugh, KY`. Going inside without it puts you in an
+empty patch of woods, and the save keeps that woods even after the map is
+added. [existing-save.md](existing-save.md) is the fix.
+
 The first time a vehicle goes in, it is given a room of its own. That room is
 its room from then on: anything you leave there is still there next time,
 and everybody who goes in through the same vehicle ends up in the same room.
