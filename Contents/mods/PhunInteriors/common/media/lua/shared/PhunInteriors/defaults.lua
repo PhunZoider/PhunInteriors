@@ -8,7 +8,7 @@ local Core = PhunInteriors
 -- Docs/pi-mappings.csv and Docs/pi-vehicles.csv. Edit those and regenerate;
 -- an edit made here is lost on the next run.
 --
--- 83 rooms, 108 rows of ten stamps, 1080 slots.
+-- 84 rooms, 108 rows of ten stamps, 1080 slots.
 --
 -- A ROOM is a contract: one shape, and every place on the map it is stamped.
 -- Two rooms whose CONTRACT differs are two registrations. What is on the
@@ -1496,8 +1496,32 @@ local function registerRooms()
         }
     })
 
-    -- Van -- floor 2x3, 80 slots, room def 'shed'.
-    -- Stamped at 87,46 row 1, 87,46 row 2, 90,46 row 4, 90,46 row 5, 90,46 row 6, 91,49 row 1, 91,49 row 2, 91,49 row 3.
+    -- Truck - Sleeper Cab -- floor 2x3, 10 slots, room def 'camping'.
+    -- Stamped at 91,49 row 1.
+    Core.registerRoom("phun.room.Truck_Sleeper_Cab", {
+        label = "Truck - Sleeper Cab",
+        source = SOURCE,
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 1},
+        front = "east",
+        cab = true,
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23311, 12549, 0},
+            [1] = {23336, 12549, 0},
+            [2] = {23361, 12549, 0},
+            [3] = {23386, 12549, 0},
+            [4] = {23411, 12549, 0},
+            [5] = {23436, 12549, 0},
+            [6] = {23461, 12549, 0},
+            [7] = {23486, 12549, 0},
+            [8] = {23511, 12549, 0},
+            [9] = {23536, 12549, 0}
+        }
+    })
+
+    -- Van -- floor 2x3, 70 slots, room def 'shed'.
+    -- Stamped at 87,46 row 1, 87,46 row 2, 90,46 row 4, 90,46 row 5, 90,46 row 6, 91,49 row 2, 91,49 row 3.
     Core.registerRoom("phun.room.Van", {
         label = "Van",
         source = SOURCE,
@@ -1556,36 +1580,26 @@ local function registerRooms()
             [47] = {23230, 11991, 0},
             [48] = {23255, 11991, 0},
             [49] = {23280, 11991, 0},
-            [50] = {23311, 12549, 0},
-            [51] = {23336, 12549, 0},
-            [52] = {23361, 12549, 0},
-            [53] = {23386, 12549, 0},
-            [54] = {23411, 12549, 0},
-            [55] = {23436, 12549, 0},
-            [56] = {23461, 12549, 0},
-            [57] = {23486, 12549, 0},
-            [58] = {23511, 12549, 0},
-            [59] = {23536, 12549, 0},
-            [60] = {23311, 12591, 0},
-            [61] = {23336, 12591, 0},
-            [62] = {23361, 12591, 0},
-            [63] = {23386, 12591, 0},
-            [64] = {23411, 12591, 0},
-            [65] = {23436, 12591, 0},
-            [66] = {23461, 12591, 0},
-            [67] = {23486, 12591, 0},
-            [68] = {23511, 12591, 0},
-            [69] = {23536, 12591, 0},
-            [70] = {23311, 12633, 0},
-            [71] = {23336, 12633, 0},
-            [72] = {23361, 12633, 0},
-            [73] = {23386, 12633, 0},
-            [74] = {23411, 12633, 0},
-            [75] = {23436, 12633, 0},
-            [76] = {23461, 12633, 0},
-            [77] = {23486, 12633, 0},
-            [78] = {23511, 12633, 0},
-            [79] = {23536, 12633, 0}
+            [50] = {23311, 12591, 0},
+            [51] = {23336, 12591, 0},
+            [52] = {23361, 12591, 0},
+            [53] = {23386, 12591, 0},
+            [54] = {23411, 12591, 0},
+            [55] = {23436, 12591, 0},
+            [56] = {23461, 12591, 0},
+            [57] = {23486, 12591, 0},
+            [58] = {23511, 12591, 0},
+            [59] = {23536, 12591, 0},
+            [60] = {23311, 12633, 0},
+            [61] = {23336, 12633, 0},
+            [62] = {23361, 12633, 0},
+            [63] = {23386, 12633, 0},
+            [64] = {23411, 12633, 0},
+            [65] = {23436, 12633, 0},
+            [66] = {23461, 12633, 0},
+            [67] = {23486, 12633, 0},
+            [68] = {23511, 12633, 0},
+            [69] = {23536, 12633, 0}
         }
     })
 
@@ -2255,6 +2269,7 @@ local function registerVehicles()
         ["Base.63Type2VanHippie"] = "SeatRearRight",
         ["Base.63Type2VanMilitary"] = "SeatRearRight",
         ["Base.RollingRefuge"] = "door",
+        ["Base.SemiTruck"] = "door",
         ["Base.Trailer54FlyingCloud22"] = "door",
         ["Base.Trailer61Airflyte"] = "door",
         ["Base.Trailer61Astrodome"] = "door",
@@ -2678,6 +2693,14 @@ local function registerVehicles()
         source = SOURCE,
         rooms = {"phun.room.Truck_Furniture"},
         scripts = {"Base.87fordF700box"}
+    })
+
+    -- Truck - Sleeper Cab: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Truck_Sleeper_Cab",
+        source = SOURCE,
+        rooms = {"phun.room.Truck_Sleeper_Cab"},
+        scripts = {"Base.SemiTruck"}
     })
 
     -- Van: 12 bound directly, 122 more overflowing in.
