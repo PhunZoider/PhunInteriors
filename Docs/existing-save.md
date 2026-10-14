@@ -14,7 +14,7 @@ with the same mods works.
 ## Why it happens
 
 The rooms live on a map of their own, `phuninteriors`, in an empty area off
-the edge of the normal world (cells 87,46 to 91,49). The map has to be in the
+the edge of the normal world (cells 87,46 to 92,49). The map has to be in the
 save's map list, ahead of `Muldraugh, KY`:
 
 ```
@@ -52,6 +52,7 @@ from the map the next time it loads.
    $save = "$env:USERPROFILE\Zomboid\Saves\Sandbox\YOUR_SAVE_NAME"
    $cells = @(); foreach ($x in 87..91) { foreach ($y in 46..48) { $cells += "$($x)_$y" } }
    foreach ($x in 89..91) { $cells += "$($x)_49" }
+   $cells += "92_46"
    foreach ($c in $cells) {
      "chunkdata\chunkdata_$c.bin","metagrid\metacell_$c.bin","apop\apop_$c.bin","zpop\zpop_$c.bin" |
        ForEach-Object { Remove-Item (Join-Path $save $_) -ErrorAction SilentlyContinue }
@@ -91,7 +92,7 @@ depends on your host: look for the folder holding `Server` and `Saves`.
 ### If you only have FTP
 
 FileZilla and most host file managers cannot do this in one go: the files are
-spread across 160 folders. [WinSCP](https://winscp.net) (free, Windows) can,
+spread across 192 folders. [WinSCP](https://winscp.net) (free, Windows) can,
 from a script. First build the script: open PowerShell in a folder you can
 find again, change the first two lines, and paste the block straight into the
 window:
@@ -102,6 +103,7 @@ $remote = "/Zomboid/Saves/Multiplayer/servertest"
 $out = @("option batch continue", "option confirm off", "open $server")
 $cells = @(); foreach ($x in 87..91) { foreach ($y in 46..48) { $cells += "$($x)_$y" } }
 foreach ($x in 89..91) { $cells += "$($x)_49" }
+$cells += "92_46"
 foreach ($c in $cells) {
   foreach ($f in "chunkdata/chunkdata_$c.bin","metagrid/metacell_$c.bin","apop/apop_$c.bin","zpop/zpop_$c.bin") {
     $out += "rm `"$remote/$f`""
@@ -115,6 +117,12 @@ foreach ($cell in 87..91) {
     if ($cell -le 88) { foreach ($y in 1560..1567) { $out += "rm `"$d/$y.bin`"" } }
     else { foreach ($t in 156..159) { $out += "rm `"$d/$($t)?.bin`"" } }
   }
+}
+foreach ($cx in (92 * 32)..(92 * 32 + 31)) {
+  $d = "$remote/map/$cx"
+  foreach ($y in 1472..1479) { $out += "rm `"$d/$y.bin`"" }
+  foreach ($t in 148..149) { $out += "rm `"$d/$($t)?.bin`"" }
+  foreach ($y in 1500..1503) { $out += "rm `"$d/$y.bin`"" }
 }
 $out += "exit"
 $out | Set-Content "pi-reset.txt" -Encoding ascii
@@ -146,8 +154,9 @@ Change the first line to the save folder on the server and paste the rest:
 ```sh
 SAVE="/home/YOU/Zomboid/Saves/Multiplayer/servertest"
 cd "$SAVE" || exit 1
-for x in 87 88 89 90 91; do for y in 46 47 48 49; do
+for x in 87 88 89 90 91 92; do for y in 46 47 48 49; do
   if [ $y = 49 ] && [ $x -lt 89 ]; then continue; fi
+  if [ $x = 92 ] && [ $y != 46 ]; then continue; fi
   c=${x}_$y
   rm -f chunkdata/chunkdata_$c.bin metagrid/metacell_$c.bin apop/apop_$c.bin zpop/zpop_$c.bin
   for cx in $(seq $((x*32)) $((x*32+31))); do

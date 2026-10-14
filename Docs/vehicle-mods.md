@@ -1,7 +1,7 @@
 # Giving your vehicles a room
 
 If you make vehicle mods, you can give your vehicles an interior with about
-ten lines of Lua and no map work at all. PhunInteriors ships 83 furnished
+ten lines of Lua and no map work at all. PhunInteriors ships 89 furnished
 rooms; you just say which of them your vehicles open onto.
 
 Your mod does **not** need to depend on PhunInteriors. If a player does not

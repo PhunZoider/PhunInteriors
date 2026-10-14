@@ -31,6 +31,7 @@ these:
 |---|---|
 | 87,46 to 91,48 | PhunInteriors |
 | 89,49 to 91,49 | PhunInteriors |
+| 92,46 | PhunInteriors |
 | 87,49 | PhunTaxi |
 | 88,49 | PhunRooms |
 

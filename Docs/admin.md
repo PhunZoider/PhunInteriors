@@ -186,5 +186,6 @@ safehouse. To free one, remove the claim the vanilla way first.
   box trucks and trailers, so its own load damping applies.
 - **PhunTaxi** and **PhunRooms** register rooms of their own through this mod
   and ship map cells beside ours.
-- **Other map mods** must not use cells 87,46 to 91,48 or 89,49 to 91,49.
+- **Other map mods** must not use cells 87,46 to 91,48, 89,49 to 91,49
+  or 92,46.
   Two maps claiming the same cell means one silently loses it.

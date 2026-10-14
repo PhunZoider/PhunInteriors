@@ -18,29 +18,31 @@ room editor ([remapping.md](remapping.md)), and a vehicle mod can bind its own
 
 | Room | Floor | Vehicles | Overflow |
 |---|---|---|---|
-| Ambulance Bay | 3x3 | `90fordF350ambulance` | Van - Ambulance |
+| Ambulance Bay | 3x3 | `90fordF350ambulance`, `fr_fo_econoline_86_ambulance`, `fr_fo_f350_ambulance_80` | Van - Ambulance |
 | Bus | 3x9 | *none yet* |  |
 | Bus - Military | 3x9 | `87fordB700military` | Bus |
-| Bus - Prison | 3x9 | `87fordB700prison` | Bus |
-| Bus - School | 3x9 | `87fordB700school` | Bus |
+| Bus - Plain | 3x9 | `fr_gm_newlook_70_35foot` | Bus |
+| Bus - Prison | 3x9 | `87fordB700prison`, `fr_fo_b700_prisonlong` | Bus |
+| Bus - School | 3x9 | `87fordB700school`, `fr_fo_b700_schoollong` | Bus |
+| Bus - School Small | 3x5 | `fr_fo_b700_schoolshort` | Bus - School |
 | Camper - Dasher | 2x4 | `DashRoamer` |  |
 | Camper - Large | 3x9 | `Trailer54FlyingCloud22` |  |
-| Camper - Medium | 3x5 | `Trailer61Airflyte`, `Trailer61Astrodome`, `Trailer61Bambi16` |  |
+| Camper - Medium | 3x5 | `Trailer61Airflyte`, `Trailer61Astrodome`, `Trailer61Bambi16`, `Trailer_fr_camper_scamp` |  |
 | Camper - Mini | 2x3 | `Trailer87Scamp13` |  |
 | Camper - Small | 2x4 | `Trailer87Scamp16` |  |
 | Container - Factory | 3x6 | `isoContainer4`, `TrailerM747lowbed` |  |
-| Container - Storage | 3x6 | `isoContainer5`, `TrailerM747lowbed` |  |
+| Container - Storage | 3x6 | `fr_fo_f700_90_boxmed`, `isoContainer5`, `TrailerM747lowbed` |  |
 | Container - Warehouse | 3x6 | `isoContainer2`, `TrailerM747lowbed` |  |
 | GAGE KI5 | 4x5 | `84gageV300apc`, `84gageV300fsv`, `lockMartM577` |  |
 | Military Box | 4x4 | `86chevyM1010`, `86chevyM1031` |  |
-| RV - Large | 3x9 | `RollingRefuge` |  |
-| RV - Small | 3x5 | `WhennyagoInitiative` |  |
+| RV - Large | 3x9 | `fr_fl_bounder_86`, `RollingRefuge` |  |
+| RV - Small | 3x5 | `fr_fo_econoline_rv_86`, `WhennyagoInitiative` |  |
 | RV - Spare 1 | 3x9 | *none yet* |  |
 | RV - Spare 2 | 3x9 | *none yet* |  |
 | Semi Trailer - Factory | 3x13 | `SemiTrailerVanCattle` | Semi Trailer - Water |
-| Semi Trailer - Warehouse | 3x13 | `SemiTrailerVan`, `W900_Container` | Semi Trailer - Water |
+| Semi Trailer - Warehouse | 3x13 | `SemiTrailerVan`, `Trailer_fr_semi_container`, `Trailer_fr_semi_van`, `W900_Container` | Semi Trailer - Water |
 | Semi Trailer - Water | 3x13 | `SemiTrailerVan_mil` | Semi Trailer - Warehouse |
-| Step Van | 3x4 | `85chevyStepVan`, `StepVan`, `TrailerKI5cargoLarge` | Van |
+| Step Van | 3x4 | `85chevyStepVan`, `fr_ch_stepvan_80`, `StepVan`, `TrailerKI5cargoLarge` | Van |
 | Step Van - Beer | 3x4 | `85chevyStepVanGenuine`, `StepVan_Genuine_Beer` | Step Van |
 | Step Van - Blacksmith | 3x4 | `85chevyStepVanBlacksmith`, `StepVan_Blacksmith` | Step Van |
 | Step Van - Book | 3x4 | `85chevyStepVanLibrary`, `StepVan_MobileLibrary` | Step Van |
@@ -63,17 +65,19 @@ room editor ([remapping.md](remapping.md)), and a vehicle mod can bind its own
 | Step Van - Plonkies | 3x4 | `85chevyStepVanDelirosPlonkies`, `StepVan_Plonkies` | Step Van |
 | Step Van - Propane | 3x4 | `85chevyStepVanPropane`, `StepVan_Propane` | Step Van |
 | Step Van - Repair | 3x4 | `85chevyStepVanTheCompleteRepair`, `StepVan_CompleteRepairShop` | Step Van |
-| Step Van - SWAT | 3x4 | `85chevyStepVanSWAT`, `87fordF700swat`, `90fordF350SWAT`, `StepVan_LouisvilleSWAT` | Step Van |
+| Step Van - SWAT | 3x4 | `85chevyStepVanSWAT`, `87fordF700swat`, `90fordF350SWAT`, `fr_ch_stepvan_80_police`, `StepVan_LouisvilleSWAT` | Step Van |
 | Step Van - Tailoring | 3x4 | `85chevyStepVanSmartCut`, `StepVan_SmartKut` | Step Van |
 | Step Van - Whiskey | 3x4 | `85chevyStepVanScarletOak`, `StepVan_Scarlet` | Step Van |
 | Tent | 2x3 | `TentBlue`, `TentBrown`, `TentGreen`, `TentYellow` |  |
 | Trailer - Livestock | 3x4 | `Trailer_Horsebox`, `Trailer_Livestock`, `TrailerKI5livestock` |  |
 | Trailer - Medium | 3x9 | `SemiTruckBox`, `SemiTruckBox_mil` |  |
 | Trailer - Military | 3x9 | `TrailerM128van`, `TrailerM129van` |  |
+| Trailer - Moving Med | 3x6 | `Trailer_fr_moving_large` |  |
+| Trailer - Moving Small | 3x3 | `fr_do_ram_90_moving`, `Trailer_fr_moving_medium` |  |
 | Truck - Armored | 2x4 | `87fordF700bank` | Van |
-| Truck - Furniture | 3x6 | `87fordF700box` | Van |
-| Truck - Sleeper Cab | 2x3 | `SemiTruck` |  |
-| Van | 2x3 | `83gmcG1500aTeam`, `83gmcG1500lwb`, `TrailerKI5cargoMedium`, `Van`, `Van_BugWipers`, `Van_Locksmith`, `VanDeerValley`, `VanJonesFabrication`, `VanMetalheads`, `VanOldMill`, `VanRiversideFabrication`, `VanSeats_Valkyrie` |  |
+| Truck - Furniture | 3x6 | `87fordF700box`, `fr_fo_f700_90_boxlarge`, `fr_is_nrr_93_boxmed` | Van |
+| Truck - Sleeper Cab | 2x3 | `fr_pe_359_82_long`, `fr_pe_359_82_med`, `SemiTruck` |  |
+| Van | 2x3 | `83gmcG1500aTeam`, `83gmcG1500lwb`, `fr_ch_astro_92`, `fr_fo_econoline_86`, `TrailerKI5cargoMedium`, `Van`, `Van_BugWipers`, `Van_Locksmith`, `VanDeerValley`, `VanJonesFabrication`, `VanMetalheads`, `VanOldMill`, `VanRiversideFabrication`, `VanSeats_Valkyrie` |  |
 | Van - Alcohol | 2x3 | `Van_Charlemange_Beer`, `Van_KnoxDisti` | Van |
 | Van - Ambulance | 2x3 | `VanAmbulance` |  |
 | Van - Art Supply | 2x3 | `Van_CraftSupplies` | Van |
@@ -84,6 +88,7 @@ room editor ([remapping.md](remapping.md)), and a vehicle mod can bind its own
 | Van - Construction | 2x3 | `VanBeckmans`, `VanBuilder`, `VanCoastToCoast`, `VanKerrHomes`, `VanPennSHam` | Van |
 | Van - Electrical | 2x3 | `Van_LectroMax`, `Van_VoltMojo`, `VanPluggedInElectrics` | Van |
 | Van - Farm | 2x3 | `VanOvoFarm` | Van |
+| Van - Florist | 2x3 | `fr_fo_econoline_86_florist` | Van |
 | Van - Fossil | 2x3 | `VanFossoil` | Van |
 | Van - Gardening | 2x3 | `VanGardener`, `VanGardenGods`, `VanLouisvilleLandscaping`, `VanMooreMechanics`, `VanTreyBaines` | Van |
 | Van - Gas and Electric | 2x3 | `VanKnobCreekGas`, `VanUtility` | Van |
@@ -91,7 +96,7 @@ room editor ([remapping.md](remapping.md)), and a vehicle mod can bind its own
 | Van - Greens | 2x3 | `Van_Perfick_Potato`, `VanGreenes` | Van |
 | Van - Leather | 2x3 | `Van_Leather` | Van |
 | Van - Love | 2x3 | `Van_Transit`, `VanSeats_LadyDelighter`, `VanSeats_Mural`, `VanSeats_Space`, `VanSeats_Trippy` | Van |
-| Van - Mail | 2x3 | `VanMail` | Van |
+| Van - Mail | 2x3 | `fr_gr_llv_89`, `VanMail` | Van |
 | Van - Masonry | 2x3 | `Van_Masonry` | Van |
 | Van - Mechanic | 2x3 | `VanBrewsterHarbin`, `VanKorshunovs`, `VanMechanic`, `VanMobileMechanics`, `VanPlattAuto` | Van |
 | Van - Plumbing | 2x3 | `VanUncloggers` | Van |

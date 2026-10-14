@@ -76,6 +76,14 @@ sub inside {
     return 0 unless $cell{"$cx,$cy"};
     return 0 if $x % $CELL == $CELL - 1 and not $cell{($cx + 1) . ",$cy"};
     return 0 if $y % $CELL == $CELL - 1 and not $cell{"$cx," . ($cy + 1)};
+    # The corner square of a cell with both an east and a south neighbour but
+    # no SOUTH-EAST one. 91,46 next to 92,46 is the case: without this rule
+    # 91,46's 255,255 counts as inside, and the fence has to jog one square
+    # around it, which wants a post in 92,47 -- a cell that does not ship.
+    # Excluding it puts the turn on that square instead, as one concave
+    # WallNW post, the same shape as the one at 89,48's 0,255.
+    return 0 if $x % $CELL == $CELL - 1 and $y % $CELL == $CELL - 1
+            and not $cell{($cx + 1) . "," . ($cy + 1)};
     return 1;
 }
 

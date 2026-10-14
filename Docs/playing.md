@@ -40,7 +40,7 @@ and everybody who goes in through the same vehicle ends up in the same room.
 
 Each vehicle gets a room that suits it. A mechanic's van opens onto a small
 workshop, a mail van onto a sorting room, a school bus onto a classroom, a
-caravan onto a caravan. There are 83 room designs; see
+caravan onto a caravan. There are 89 room designs; see
 [vehicles.md](vehicles.md) for which vehicle gets which.
 
 Rooms are furnished, and their containers roll loot the first time they load,
@@ -94,6 +94,10 @@ lighter than it would in a van.
 **The lights run off the vehicle battery.** A real generator powers the room,
 and the vehicle's battery pays for its fuel. Time spent with the fridge
 running costs charge, and a flat battery means a dark room.
+
+Most trailers have no battery of their own. While one is hitched, its room
+runs off the towing vehicle's battery; unhitched, it has no power and the room
+is dark. Hitch it up before you go in if you want the lights.
 
 A tent has no battery, so a tent room is lit only if you park a working
 generator beside the tent, close enough to power the tent's own square. The

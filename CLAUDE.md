@@ -10,7 +10,7 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 **The registry was reshaped and has not run in game since.** Rooms, bindings
 and blueprints all changed shape -- see "A room is a contract" in Architecture.
-`Tests/run.sh` is green across 871 checks, which is real verification of the
+`Tests/run.sh` is green across 906 checks, which is real verification of the
 logic and no verification at all that PZ agrees. Everything below describes
 what was proven *before* that change; the mechanics are the same, but the
 registry underneath them is not.
@@ -293,7 +293,7 @@ Contents/mods/PhunInteriors/common/
   media/lua/shared/Translate/EN/     ContextMenu.json, IG_UI.json, Sandbox.json,
                                     ItemName.json, Recipes.json
   media/scripts/PhunInteriors.txt    the reservoir kit item and its recipe
-  media/maps/phuninteriors/          the map: 18 cells of lotpack, lotheader
+  media/maps/phuninteriors/          the map: 19 cells of lotpack, lotheader
                                     and chunkdata, plus map.info, objects.lua
                                     (the NoPowerOrWater zones) and roomtones.lua.
                                     16MB, tracked, binary -- see .gitattributes
@@ -2433,11 +2433,13 @@ cells are actually towns.
        x = 22272, y = 11776, z = 0, width = 512, height = 768 },
      { name = "Waterless", type = "NoPowerOrWater",
        x = 22784, y = 11776, z = 0, width = 768, height = 1024 },
+     { name = "Waterless", type = "NoPowerOrWater",
+       x = 23552, y = 11776, z = 0, width = 256, height = 256 },
    }
    ```
 
    That is the L the block actually is: cells 87..88 x 46..48, then cells
-   89..91 x 46..49. Both are drawn as objects at 0,0 in the north-west cell of
+   89..91 x 46..49, then 92,46 on its own. All three are drawn as objects at 0,0 in the north-west cell of
    `phuninteriors.pzw` in cell-local coordinates; the exporter offsets them by
    the world origin and does not clip either to its cell, so a rectangle in
    the editor covers as many cells as it likes. Read them out of the export
@@ -2456,7 +2458,11 @@ cells are actually towns.
 
    `Zone.contains` is half open — `x >= zone.x` and `x < zone.x + width` — so
    a width is the cell count times 256 **exactly**, not one more, and the two
-   rectangles tile at x 22784 with no gap and no overlap. A first pass at this
+   rectangles tile at x 22784 with no gap and no overlap, as the third does
+   at 23552. That third one exists only in the editor project until the next
+   export: the shipped `objects.lua` must not get it before the cell does,
+   because `registerZone` also refuses a zone reaching more than 100 squares
+   past the last cell the world loaded, and 23808 is 156 past 91,46. A first pass at this
    file had `x = 22527, width = 513`, which covers 88,46 and one column of
    87,46, silently leaving the whole `phun.van.plain` set on the mains. Check
    the arithmetic against the cell bounds, not against a corner read off a map
@@ -2577,6 +2583,23 @@ cells are actually towns.
    rest of this item below the next few paragraphs still describes the
    superseded two-cell, two-room map and needs a pass.** The top of
    `defaults.lua` is the current description.
+
+   **92,46 was added on 2026-10-14.** Rows 1-6 are `Bus_School_3x5`,
+   `Van_Moving_3x3`, `Van_Florist_2x3`, `Bus_Plain_3x9`,
+   `Trailer_Furniture_3x6` and `Cab_2x3`, registered as Bus_School_Small,
+   Trailer_Moving_Small, Van_Florist, Bus_Plain, Trailer_Moving_Med and
+   Truck_Sleeper_Cab. The cab moved here from 91,49 row 1, which is Van again,
+   so Van's slots are numbered as they were before the cab took that row. None
+   of the five new rooms is bound to a vehicle yet. It is in
+   `phuninteriors.pzw` and has not been exported yet, so the shipped map is
+   still the eighteen below. 91,46 lost its east fence and NE post to it and
+   gained a concave `Border_NW` at local 255,255; 92,46 carries `Border_N` at
+   y=0 and y=255, `Border_W` at x=255 and posts at 255,0 and 255,255.
+   `fencecheck.pl` learned one rule for it: the 255,255 square of a cell with
+   an east and a south neighbour but no south-east one is outside, otherwise
+   the fence has to jog round that square and wants a post in 92,47, which
+   does not ship. The PhunZones void (`compat_phunzones.lua`) already
+   includes it.
 
    **Eighteen cells**, an L: five across (87..91) by three down (46..48), plus
    89..91 on row 49. Each is a 10 x 6 grid at a pitch of 25 across and 42
@@ -3198,7 +3221,7 @@ cells are actually towns.
    `Tests/root/PhunInteriors/common/` carries its own pair for the test id.
    GIMP sources are in `Docs/images/` and are deliberately untracked.
 3. **`workshop.txt` has an empty `id=`.** Fill on first publish.
-4. **The registry is fully populated.** `defaults.lua` registers 83 rooms, 78
+4. **The registry is fully populated.** `defaults.lua` registers 89 rooms, 84
    vehicle bindings and one object binding, generated by `scripts/gendefaults.pl`
    from the three CSVs. There is no `phun.van` binding any more -- every
    binding is `phun.vehicles.*` and the matcher is gone, so the sandbox
@@ -3208,7 +3231,7 @@ cells are actually towns.
    about.
 5. **The reshaped registry has never run in game.** Rooms, bindings, per-slot
    blueprint capture and the nullable generator are all
-   covered by `Tests/lua/` -- 871 checks, all green -- which is real verification
+   covered by `Tests/lua/` -- 906 checks, all green -- which is real verification
    of the logic and no verification at all that PZ agrees. In particular:
    - **Capture is now load bearing and has never succeeded on this map.** The
      `bounds.z + 1` sweep used to count a nil square above the room as a

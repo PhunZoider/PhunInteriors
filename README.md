@@ -11,7 +11,7 @@ parked.
 
 ## Features
 
-- **83 furnished rooms** for vans, step vans, ambulances, buses, trucks,
+- **89 furnished rooms** for vans, step vans, ambulances, buses, trucks,
   semi trailers, caravans, RVs, shipping containers and tents, including
   vehicles from several popular vehicle mods. See
   [the full list](Docs/vehicles.md).
@@ -22,7 +22,8 @@ parked.
   and yours has gone unused for two weeks (configurable, or never). You are
   told if it happens. A room claimed as a safehouse is never reused.
 - **It costs something.** What you store adds to the vehicle's weight. The
-  lights run off the vehicle battery. Zombies gather while you are inside.
+  lights run off the vehicle battery, and a trailer off whatever is towing it.
+  Zombies gather while you are inside.
 - **Coming out is survivable.** The ground around you is cleared as you land,
   because you cannot see what you are stepping into.
 - **Rain water.** Craft a reservoir kit and put barrels on your room's roof.
@@ -57,6 +58,30 @@ parked.
 | [How it works](Docs/how-it-works.md) | Anybody curious why it behaves the way it does |
 | [Test plan](Docs/testplan.md) | Testers |
 
+## Vehicle mods supported out of the box
+
+None are required. Install any of these and its vehicles get rooms:
+
+- [Filibuster Rhymes' Certified Used Cars!](https://steamcommunity.com/sharedfiles/filedetails/?id=3683878228)
+- ['90 Ford F350 Ambulance Type 1](https://steamcommunity.com/sharedfiles/filedetails/?id=2952802178)
+- [Lock-Mart Industries M577](https://steamcommunity.com/sharedfiles/filedetails/?id=3652371248)
+- ['86 Chevrolet CUCVs + M101A2 Trailer](https://steamcommunity.com/sharedfiles/filedetails/?id=3428008364)
+- ['63 Volkswagen Type 2 Van](https://steamcommunity.com/sharedfiles/filedetails/?id=3041122351)
+- [Containers!](https://steamcommunity.com/sharedfiles/filedetails/?id=2625625421)
+- [Campers!](https://steamcommunity.com/sharedfiles/filedetails/?id=3670064951)
+- ['87 Ford B700/F700 Trucks](https://steamcommunity.com/sharedfiles/filedetails/?id=3110911330)
+- ['82 Oshkosh M911](https://steamcommunity.com/sharedfiles/filedetails/?id=2618213077)
+- ['84 Cadillac Gage LAV-300](https://steamcommunity.com/sharedfiles/filedetails/?id=3171184800)
+- ['83 GMC G-Series Vans](https://steamcommunity.com/sharedfiles/filedetails/?id=3799732653)
+- [W900 Semi-Truck](https://steamcommunity.com/sharedfiles/filedetails/?id=3409472393)
+- [Rolling Refuge](https://steamcommunity.com/sharedfiles/filedetails/?id=3788543896)
+- [Whennyago Initiative](https://steamcommunity.com/sharedfiles/filedetails/?id=3790153201)
+
+[Supported vehicles](Docs/vehicles.md) says which vehicle gets which room.
+[Another Vehicle Claim System](https://steamcommunity.com/sharedfiles/filedetails/?id=2957935793)
+claims are respected: a claimed vehicle's room is only open to those its claim
+lets into the trunk.
+
 ## Requirements
 
 Build 42. Nothing else: there are no required mods. PhunServer2 adds an
@@ -66,9 +91,9 @@ Build 42. Nothing else: there are no required mods. PhunServer2 adds an
 trip in or out of a room is a teleport, and the default setting kicks players
 for it. See [Running a server](Docs/admin.md#the-speed-anti-cheat).
 
-The mod ships its own map: a separate block of 18 cells, away from anywhere a
-player walks to, holding 1080 room slots. It uses cells 87,46 to 91,48 and
-89,49 to 91,49, and another map mod using any of them will conflict.
+The mod ships its own map: a separate block of 19 cells, away from anywhere a
+player walks to, holding 1140 room slots. It uses cells 87,46 to 91,48,
+89,49 to 91,49 and 92,46, and another map mod using any of them will conflict.
 
 ## Status
 
@@ -89,7 +114,7 @@ to watch for in each.
 bash Tests/run.sh
 ```
 
-Parses every Lua file, runs three static checks and then the specs (871
+Parses every Lua file, runs three static checks and then the specs (906
 checks). It fakes just enough of the game to test the pure Lua logic; anything
 needing a real map square is tested in game or not at all.
 
