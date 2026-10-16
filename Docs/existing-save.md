@@ -11,6 +11,12 @@ You enabled the mod on a save you already had, and going inside a vehicle puts
 you in an empty patch of woods or bare ground instead of a room. A new game
 with the same mods works.
 
+Current versions refuse to let anybody inside while the map is missing from
+the save, and say so when you log in, so this only happens to a save that
+went inside on an older version, or before the map was enabled on one. If
+you are being refused with "This interior is missing from your world", you
+do not need this page: add the map to the list (below) and restart.
+
 ## Why it happens
 
 The rooms live on a map of their own, `phuninteriors`, in an empty area off
@@ -164,6 +170,28 @@ for x in 87 88 89 90 91 92; do for y in 46 47 48 49; do
   done
 done; done
 ```
+
+## Rooms on mains power, or a "zones missing" warning
+
+This is a different problem, and you do not need to delete anything for it.
+
+The rooms are cut off from the mains by a map zone. A save keeps its own copy
+of the map zones from when it was first made, so a save older than the mod,
+or older than an update that extended the map, can be missing some of them.
+Rooms under a missing zone have mains power until the power grid shuts off.
+On a server, a map health check such as PhunServer's may report the
+`phuninteriors` map as broken or its zones as missing on the server and fine
+on clients.
+
+The mod puts any missing zones back each time the world loads, and the server
+log says so:
+
+```
+zones: this save was missing 1 of 3 power/water zone(s) ... registered them again
+```
+
+So restart the server, or reload the save in single player. Nothing else is
+needed.
 
 ## What it touches
 

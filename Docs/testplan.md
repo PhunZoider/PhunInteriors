@@ -410,6 +410,32 @@ generator sprite in the room, which the shipped map has at
 you confirm the `NoPowerOrWater` zone was painted. Without it the rooms sit on
 the mains for the first weeks of a save and the generator binding is invisible.
 
+### D1a. A save missing a zone gets it back
+
+On a world created before cell 92,46 shipped (or any world, after editing its
+`map_zone.bin` out of date by restoring an older copy), start the server.
+
+**Pass:** the log has `zones: this save was missing N of 3 power/water
+zone(s)` once, PhunServer's `/diag health` reads `present` on the server for
+`phuninteriors`, and `admin("power")` in a 92,46 room reports `isNoPower` on
+every square. Then restart again and note whether the line comes back. Either
+is a pass; it says whether a zone registered after load is written into
+`map_zone.bin`, which nothing has settled yet.
+
+### D1b. A missing map is refused, not entered
+
+Start a throwaway server with `phuninteriors` taken out of `Map=` (the mod
+still enabled), and log in as a non-admin and as an admin.
+
+**Pass:** the log has the `not in this world's map list` warning and a
+`WARNING: N of N registered slot(s) have no room on the map` block naming the
+cells. Both players see "Vehicle interiors are unavailable" on login. Entering
+any bound vehicle says "This interior is missing from your world" at the end
+of the action, nobody is teleported, and `admin("list")` shows no new lease.
+Put the map back, restart, and every room works and no lease was lost. If
+every slot reads present with the map out, `countRoomsIntersecting` is not
+answering from Lua: look for nothing at all in the log.
+
 ### D2. The generator exists and the lights come on
 
 **Pass:** `haveElectricity()` is true on the room squares. That call reads no

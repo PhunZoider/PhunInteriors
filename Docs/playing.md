@@ -28,9 +28,12 @@ do.
   locked.
 
 **The map has to be enabled before anybody goes inside.** The save's map list
-needs `phuninteriors;Muldraugh, KY`. Going inside without it puts you in an
-empty patch of woods, and the save keeps that woods even after the map is
-added. [existing-save.md](existing-save.md) is the fix.
+needs `phuninteriors;Muldraugh, KY`. Without it the mod says so when you log
+in, and refuses to let anybody inside ("This interior is missing from your
+world") rather than send them somewhere that is not there. Older versions did
+send you, to an empty patch of woods, and the save keeps that woods even after
+the map is added. [existing-save.md](existing-save.md) is the fix for a save
+that got that far.
 
 The first time a vehicle goes in, it is given a room of its own. That room is
 its room from then on: anything you leave there is still there next time,

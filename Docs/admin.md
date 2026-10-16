@@ -34,6 +34,30 @@ log says so at startup. Anybody whose role can teleport, or carries
 admins testing on a default server will not notice. A server started with
 `-debug` never kicks either.
 
+## When the map is missing
+
+The rooms live on a map of their own, `phuninteriors`, and it has to be in
+the server's map list, ahead of `Muldraugh, KY`:
+
+```
+Map=phuninteriors;Muldraugh, KY
+```
+
+At startup PhunInteriors checks that every room it knows about has a room on
+the map. Any that do not are named in the server log, cell by cell, and
+nobody is put into them: a player trying one is told the interior is missing
+from the world, instead of being sent into empty ground. Nobody loses their
+room over it. Fix the map list and restart, and every room comes back as it
+was.
+
+When no room is on the map at all, every player is told so as they log in.
+When only some are missing, only admins are told, and the log says which.
+
+The usual causes are the map missing from `Map=`, a world created before the
+map (or one of its cells) was added, and another mod's map using the same
+cells. A world that went inside before the map was enabled has its own fix:
+see [existing-save.md](existing-save.md).
+
 ## The room window
 
 Open it from the **admin panel**, the **debug menu** (PhunInteriors), or the

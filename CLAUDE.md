@@ -274,7 +274,8 @@ Contents/mods/PhunInteriors/common/
   media/lua/server/PhunInteriors/    slots, transit, leash, manifest, scrub,
                                     weight, power, harden, removal, admin,
                                     author, rainwater, loot, store, phunzones,
-                                    anticheat, server_{commands,events}
+                                    anticheat, zones, mapcheck,
+                                    server_{commands,events}
   .../server/PhunInteriors/blueprints/  NOT SHIPPED, deleted before release.
                                     Nothing ships a blueprint any more, because
                                     capture is per slot and falls back to a
@@ -311,8 +312,10 @@ Tests/lua/*_spec.lua               registry placement/links, allocation order,
                                    holderless entry (enterRoom) and the
                                    exit tax count and its cap, the
                                    Whennyago Initiative patch, the W900
-                                   payload hand-off, and who
-                                   the speed anti-cheat would punish
+                                   payload hand-off, who
+                                   the speed anti-cheat would punish,
+                                   the zone self-heal, and refusing
+                                   slots the map has no room for
 Tests/root/PhunInteriors/common/   overlay carrying the test ids, applied by
                                    deploy.cmd to build PhunInteriorsTest. The
                                    path must mirror the live mod folder or the
@@ -3793,6 +3796,60 @@ cells are actually towns.
     being inside does not mean the room is loaded**, and a once-per-visit job
     must not mark itself done on a read that found nothing. Fix not yet
     confirmed in game.
+
+22. **The zone self-heal has never run in game.** Reported 2026-10-15:
+    PhunServer's map health showed `phuninteriors` "broken" on a dedicated
+    server and present on its clients, with only the third `NoPowerOrWater`
+    zone (23552,11776, cell 92,46) missing. Nothing threw -- `AZSpawn`, which
+    loads after us, was present on the server. From the bytecode,
+    `IsoWorld.init` on a server or in single player runs `OnLoadMapZones`
+    (objects.lua), then `IsoMetaGrid.load` and `load("map_zone.bin")`, then
+    `processZones`, then `OnLoadedMapZones`; a client skips the save load. So
+    the save's zone list wins, and a world older than a zone never gets it.
+    That is also why adding any map mod to an existing world loses its zones
+    server side. **`OnInitGlobalModData` fires before all of that**, so the
+    heal cannot live in `start()`.
+
+    `server/PhunInteriors/zones.lua` runs on `OnLoadedMapZones`: it reads
+    our own `objects.lua` the way `metazoneHandler.lua` does (restoring the
+    `objects` global), takes the `NoPower`/`NoWater`/`NoPowerOrWater`
+    rectangles, tests each with `IsoMetaGrid.getZoneWithBoundsAndType`, and
+    `registerZone`s what is missing. It asks again afterwards, because
+    `registerZone` returns a zone even when it refuses one. Silent when
+    nothing was missing. `zones_spec.lua` covers it, and the re-ask and the
+    presence test were each confirmed to fail when removed. What it cannot
+    see: whether `reloadLuaFile` resolves our map path on a dedicated server
+    (PhunServer's diag does the same and works), whether a zone added after
+    `processZones` needs anything that pass would have done (a plain
+    rectangle should not), and whether it is then saved into `map_zone.bin`
+    or healed again every boot. Either is fine.
+
+23. **The map check is reported working in game (2026-10-16).** A room is
+    coordinates, and
+    when the map is not installed, not in `Map=`, or newer than the world,
+    the only thing that noticed was `placeInside`'s `isValidSquare` -- after
+    the entry action, after a slot was leased, saying "no free room". And
+    `isValidSquare` is a bounds test, so any map reaching past our block
+    makes it pass. `server/PhunInteriors/mapcheck.lua` asks the map instead:
+    `getMetaGrid():countRoomsIntersecting(x, y, w, h)` over each slot's
+    floor, from the bytecode `(x, y, width, height)` read out of the
+    lotheaders, so it answers with the chunk unloaded. Remembered per floor
+    geometry; an answer the engine would not give is "present" and is not
+    remembered.
+
+    `isSpare` refuses a missing slot, so allocation passes over it; a room
+    with none is no candidate and not reclaimable into; a holder with no
+    mapped room hears `RoomNotInWorld` rather than `NoFreeRoom`; a lease on
+    a missing slot is refused and **kept**, since the usual cause is a lost
+    `Map=` line. `acquireIn` refuses in plain English. `MapCheck.report` logs
+    the missing cells and rooms on `OnLoadedMapZones`, and `playerSetup`
+    tells everybody when nothing is on the map and admins when some is.
+    `mapcheck_spec.lua` covers it, and the `isSpare` check was confirmed to
+    fail when removed. What it cannot see: whether `countRoomsIntersecting`
+    is reachable from Lua on a dedicated server (if it throws, every slot
+    reads present and nothing changes), and a save that loaded our cells as
+    bare ground before the map was enabled, whose room defs are there and
+    whose chunks are woods (`Docs/existing-save.md`).
 
 ## v2, deliberately not in v1
 

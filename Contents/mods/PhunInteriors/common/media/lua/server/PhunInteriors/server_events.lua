@@ -82,6 +82,16 @@ end
 Events.OnInitGlobalModData.Add(start)
 Events.OnServerStarted.Add(start)
 
+-- Not in start(): OnInitGlobalModData fires before the save's zones load, and
+-- this is the first event after them. See zones.lua.
+Events.OnLoadedMapZones.Add(function()
+    require("PhunInteriors/zones").check()
+    -- Same timing for the same reason: the meta grid is final from here.
+    -- Rooms a third party registers later are asked about when somebody
+    -- tries one; see mapcheck.lua.
+    require("PhunInteriors/mapcheck").report()
+end)
+
 Events.OnClientCommand.Add(function(module, command, player, arguments)
     if module == Core.name and Commands[command] then
         Commands[command](player, arguments or {})

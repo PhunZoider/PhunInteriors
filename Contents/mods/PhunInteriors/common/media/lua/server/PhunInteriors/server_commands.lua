@@ -70,6 +70,10 @@ Commands[Core.commands.playerSetup] = function(player, args)
     -- without this an editor-made binding is invisible to it.
     require("PhunInteriors/admin").pushOverrides(player)
 
+    -- Rooms the map does not have. Everybody when that is all of them, admins
+    -- when it is some; see MapCheck.alert.
+    require("PhunInteriors/mapcheck").alert(player)
+
     local occupancy = Core.occupants[Core.playerKey(player)]
     Core.respond(player, Core.commands.state, {
         inside = occupancy ~= nil,

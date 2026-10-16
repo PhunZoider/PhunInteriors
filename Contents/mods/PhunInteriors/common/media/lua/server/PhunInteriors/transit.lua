@@ -11,6 +11,7 @@ local Slots = require "PhunInteriors/slots"
 local Weight = require "PhunInteriors/weight"
 local Power = require "PhunInteriors/power"
 local AntiCheat = require "PhunInteriors/anticheat"
+local MapCheck = require "PhunInteriors/mapcheck"
 local Avcs = require "PhunInteriors/avcs"
 local Transit = {}
 Core.modules.transit = Transit
@@ -883,8 +884,13 @@ function Transit.enterObject(player, object, anchor)
             })
             if not ok then
                 Core.logLn(string.format("%s refused the hub %s: %s", tostring(key), roomId, tostring(why)))
-                notify(player, Slots.isOpen(roomId) and "IGUI_PhunInteriors_NoFreeRoom" or
-                    "IGUI_PhunInteriors_RoomClosed", true)
+                local why = "IGUI_PhunInteriors_NoFreeRoom"
+                if not Slots.isOpen(roomId) then
+                    why = "IGUI_PhunInteriors_RoomClosed"
+                elseif not MapCheck.roomOnMap(roomId) then
+                    why = "IGUI_PhunInteriors_RoomNotInWorld"
+                end
+                notify(player, why, true)
             end
             return ok
         end

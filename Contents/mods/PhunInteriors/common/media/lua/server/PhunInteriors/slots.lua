@@ -4,6 +4,7 @@ end
 require "PhunInteriors/registry"
 require "PhunInteriors/tools"
 local Core = PhunInteriors
+local MapCheck = require "PhunInteriors/mapcheck"
 local Slots = {}
 Core.modules.slots = Slots
 
@@ -203,9 +204,11 @@ end
 --- May this slot be given to a vehicle that does not already hold it?
 --
 -- Cheapest test first: the claim walks a Java list, and allocation asks this
--- of every slot in a room until one answers yes.
+-- of every slot in a room until one answers yes. The map test is remembered
+-- after the first ask, so it costs a table read from then on.
 local function isSpare(roomId, index, occupied)
-    return not occupied[tostring(index)] and not Slots.safehouseOn(roomId, index)
+    return not occupied[tostring(index)] and MapCheck.slotOnMap(roomId, index)
+        and not Slots.safehouseOn(roomId, index)
 end
 
 --- Has this slot ever been handed out? Marks it if not, and says which.
@@ -354,7 +357,9 @@ function Slots.oldestReclaimable(rooms)
         -- A lease pointing at a slot that no longer exists is not a room to
         -- hand anybody. Slots.acquire lets those go when their own vehicle
         -- next asks.
+        -- Nor is one the map has no room for.
         local inScope = room and (not rooms or rooms[assignment.room]) and Core.slotOrigin(room, assignment.index)
+            and MapCheck.slotOnMap(assignment.room, assignment.index)
         if inScope and Slots.isReclaimable(vehicleId, assignment)
             and (not best or reclaimsBefore(vehicleId, assignment, bestId, best, rooms)) then
             bestId, best = vehicleId, assignment
@@ -408,6 +413,12 @@ function Slots.acquire(vehicleId, vehicle)
             if not Slots.isOpen(existing.room) then
                 return nil, "IGUI_PhunInteriors_RoomClosed"
             end
+            -- Same for a room the map no longer has. Kept rather than released:
+            -- the usual cause is a Map= line that went missing, and the room
+            -- and everything in it come back with it.
+            if not MapCheck.slotOnMap(existing.room, existing.index) then
+                return nil, "IGUI_PhunInteriors_RoomNotInWorld"
+            end
             existing.lastSeen = Core.now()
             return existing
         end
@@ -437,6 +448,7 @@ function Slots.acquire(vehicleId, vehicle)
     -- not because the set is ever smaller than `candidates`.
     local allowedRooms = {}
     local anyOpen = false
+    local anyMapped = false
     for rank, roomId in ipairs(candidates) do
         local room = Core.rooms[roomId]
 
@@ -448,10 +460,19 @@ function Slots.acquire(vehicleId, vehicle)
         -- its own would be a private room carved out of the hub. An object
         -- bound to a shared room never gets here -- Transit.enterObject routes
         -- it -- so this is what stops a VEHICLE binding doing that.
+        --
+        -- And a room with no stamp on the map is no candidate either, nor
+        -- reclaimable into. One with SOME stamps missing stays, and isSpare
+        -- passes over the missing ones.
+        local open = Slots.isOpen(roomId)
         if room.shared then
             anyOpen = true
-        elseif Slots.isOpen(roomId) then
+            anyMapped = true
+        elseif open then
             anyOpen = true
+        end
+        if not room.shared and open and MapCheck.roomOnMap(roomId) then
+            anyMapped = true
 
             -- Every candidate is allowed. A room used to be able to state demands
             -- on the holder here -- Core.roomAllows, `requires` -- tested per
@@ -507,6 +528,13 @@ function Slots.acquire(vehicleId, vehicle)
     if not anyOpen then
         Core.debugLn("every room for this holder is closed: " .. table.concat(candidates, ", "))
         return nil, "IGUI_PhunInteriors_RoomClosed"
+    end
+
+    -- Open, but not on this world's map. Also not "full": an admin can fix it.
+    if not anyMapped then
+        Core.logLn("no room on the map for this holder: " .. table.concat(candidates, ", ") ..
+                       " -- see the map warning at boot")
+        return nil, "IGUI_PhunInteriors_RoomNotInWorld"
     end
 
     -- Every room this vehicle could have is full. Take the one nobody has used
@@ -594,6 +622,9 @@ function Slots.acquireIn(vehicleId, roomId, index)
         if not Core.slotOrigin(room, index) then
             return nil, string.format("%s has no slot %s", roomId, tostring(index))
         end
+        if not MapCheck.slotOnMap(roomId, index) then
+            return nil, string.format("%s#%s has no room on this world's map", roomId, tostring(index))
+        end
         local holder = occupied[tostring(index)]
         if holder and holder ~= vehicleId then
             return nil, string.format("%s#%s is leased to %s", roomId, tostring(index), tostring(holder))
@@ -615,6 +646,9 @@ function Slots.acquireIn(vehicleId, roomId, index)
             end
         end
         if index == nil then
+            if not MapCheck.roomOnMap(roomId) then
+                return nil, roomId .. " has no room on this world's map"
+            end
             return nil, "every slot in " .. roomId .. " is leased or claimed as a safehouse"
         end
     end
