@@ -78,32 +78,6 @@ Core.modules.power = Power
 -- because the Set it walks has no get(i).
 -- ---------------------------------------------------------------------------
 
---- The battery part feeding this vehicle, and the vehicle that owns it.
---
--- Both are needed: the charge lives on the part's inventory item, and the
--- transmit that tells clients about a change is a method on the *vehicle*,
--- taking the part. They are not always the same vehicle -- a trailer has no
--- battery of its own and runs off whatever is towing it, which is worth
--- handling because a towed interior is supported everywhere else here.
---
--- getBattery rather than getPartById("Battery"): it is the purpose-built
--- accessor and the one vanilla's own VehicleUtils.chargeBattery uses.
-function Power.batteryPart(vehicle)
-    if not vehicle then
-        return nil, nil
-    end
-    local part = vehicle:getBattery()
-    if part and part:getInventoryItem() then
-        return part, vehicle
-    end
-    local tower = vehicle:getVehicleTowedBy()
-    part = tower and tower:getBattery()
-    if part and part:getInventoryItem() then
-        return part, tower
-    end
-    return nil, nil
-end
-
 -- Reading and writing a battery's charge.
 --
 -- getCurrentUsesFloat / setCurrentUsesFloat, both declared on InventoryItem
@@ -123,6 +97,46 @@ end
 
 local function writeCharge(battery, charge)
     battery:setCurrentUsesFloat(math.max(0, math.min(1, charge)))
+end
+
+--- The battery part feeding this vehicle, and the vehicle that owns it.
+--
+-- Both are needed: the charge lives on the part's inventory item, and the
+-- transmit that tells clients about a change is a method on the *vehicle*,
+-- taking the part. They are not always the same vehicle -- a trailer has no
+-- battery of its own and runs off whatever is towing it, which is worth
+-- handling because a towed interior is supported everywhere else here.
+--
+-- getBattery rather than getPartById("Battery"): it is the purpose-built
+-- accessor and the one vanilla's own VehicleUtils.chargeBattery uses.
+--
+-- A trailer that HAS a battery of its own does not settle it: the KI5 campers
+-- carry one, nothing in vanilla charges it, and it is usually flat. Preferring
+-- it whenever it was installed put the room on that 0% battery while the car
+-- towing it sat at 78%, reported as a dark caravan on 2026-10-16. So a flat
+-- battery of its own gives way to the tower's, and a charged one is still
+-- used first, since that is the tenant's own power and costs the car nothing.
+local function installed(part)
+    return part and part:getInventoryItem() and part or nil
+end
+
+function Power.batteryPart(vehicle)
+    if not vehicle then
+        return nil, nil
+    end
+    local own = installed(vehicle:getBattery())
+    if own and readCharge(own:getInventoryItem()) > 0 then
+        return own, vehicle
+    end
+    local tower = vehicle:getVehicleTowedBy()
+    local towed = tower and installed(tower:getBattery())
+    if towed then
+        return towed, tower
+    end
+    if own then
+        return own, vehicle
+    end
+    return nil, nil
 end
 
 
