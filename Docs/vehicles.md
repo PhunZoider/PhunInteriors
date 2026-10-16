@@ -35,9 +35,9 @@ room editor ([remapping.md](remapping.md)), and a vehicle mod can bind its own
 | Container - Warehouse | 3x6 | `isoContainer2`, `TrailerM747lowbed` |  |
 | GAGE KI5 | 4x5 | `84gageV300apc`, `84gageV300fsv`, `lockMartM577` |  |
 | Military Box | 4x4 | `86chevyM1010`, `86chevyM1031` |  |
+| RV - Class A | 3x9 | `FleetwoodBounder86` |  |
 | RV - Large | 3x9 | `fr_fl_bounder_86`, `RollingRefuge` |  |
 | RV - Small | 3x5 | `fr_fo_econoline_rv_86`, `WhennyagoInitiative` |  |
-| RV - Spare 1 | 3x9 | *none yet* |  |
 | RV - Spare 2 | 3x9 | *none yet* |  |
 | Semi Trailer - Factory | 3x13 | `SemiTrailerVanCattle` | Semi Trailer - Water |
 | Semi Trailer - Warehouse | 3x13 | `SemiTrailerVan`, `Trailer_fr_semi_container`, `Trailer_fr_semi_van`, `W900_Container` | Semi Trailer - Water |

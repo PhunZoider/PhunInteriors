@@ -45,8 +45,8 @@ In game, the admin room window (`PhunInteriors.roomList()`) shows every id,
 and so does `PhunInteriors.admin("rooms")` in the console.
 
 Pick one that suits the vehicle's size and job. A few are there for mods to
-claim and have nothing bound to them yet: **`phun.room.Bus`**,
-**`phun.room.RV_Spare_1`** and **`phun.room.RV_Spare_2`**.
+claim and have nothing bound to them yet: **`phun.room.Bus`** and
+**`phun.room.RV_Spare_2`**.
 
 **List more than one room** to give your vehicle somewhere to go when its
 favourite is full. You do not have to order them: the room reachable by the

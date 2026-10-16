@@ -506,6 +506,30 @@ local function registerRooms()
         }
     })
 
+    -- RV - Class A -- floor 3x9, 10 slots, room def 'camping'.
+    -- Stamped at 91,47 row 2.
+    Core.registerRoom("phun.room.RV_Class_A", {
+        label = "RV - Class A",
+        source = SOURCE,
+        size = {w = 4, h = 10},
+        spawn = {x = 1, y = 1},
+        front = "south",
+        cab = true,
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23311, 12079, 0},
+            [1] = {23336, 12079, 0},
+            [2] = {23361, 12079, 0},
+            [3] = {23386, 12079, 0},
+            [4] = {23411, 12079, 0},
+            [5] = {23436, 12079, 0},
+            [6] = {23461, 12079, 0},
+            [7] = {23486, 12079, 0},
+            [8] = {23511, 12079, 0},
+            [9] = {23536, 12079, 0}
+        }
+    })
+
     -- RV - Large -- floor 3x9, 20 slots, room def 'camping'.
     -- Stamped at 90,48 row 1, 90,48 row 2.
     Core.registerRoom("phun.room.RV_Large", {
@@ -561,30 +585,6 @@ local function registerRooms()
             [7] = {23486, 11907, 0},
             [8] = {23511, 11907, 0},
             [9] = {23536, 11907, 0}
-        }
-    })
-
-    -- RV - Spare 1 -- floor 3x9, 10 slots, room def 'camping'.
-    -- Stamped at 91,47 row 2.
-    Core.registerRoom("phun.room.RV_Spare_1", {
-        label = "RV - Spare 1",
-        source = SOURCE,
-        size = {w = 4, h = 10},
-        spawn = {x = 1, y = 1},
-        front = "south",
-        cab = true,
-        generator = {x = 1, y = 17, z = 0},
-        locations = {
-            [0] = {23311, 12079, 0},
-            [1] = {23336, 12079, 0},
-            [2] = {23361, 12079, 0},
-            [3] = {23386, 12079, 0},
-            [4] = {23411, 12079, 0},
-            [5] = {23436, 12079, 0},
-            [6] = {23461, 12079, 0},
-            [7] = {23486, 12079, 0},
-            [8] = {23511, 12079, 0},
-            [9] = {23536, 12079, 0}
         }
     })
 
@@ -2395,6 +2395,7 @@ local function registerVehicles()
         ["Base.63Type2VanApocalypse"] = "SeatRearRight",
         ["Base.63Type2VanHippie"] = "SeatRearRight",
         ["Base.63Type2VanMilitary"] = "SeatRearRight",
+        ["Base.FleetwoodBounder86"] = "door",
         ["Base.RollingRefuge"] = "door",
         ["Base.SemiTruck"] = "door",
         ["Base.Trailer54FlyingCloud22"] = "door",
@@ -2547,6 +2548,14 @@ local function registerVehicles()
         scripts = {"Base.86chevyM1010", "Base.86chevyM1031"}
     })
 
+    -- RV - Class A: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.RV_Class_A",
+        source = SOURCE,
+        rooms = {"phun.room.RV_Class_A"},
+        scripts = {"Base.FleetwoodBounder86"}
+    })
+
     -- RV - Large: 2 bound directly.
     Core.registerVehicles({
         id = "phun.vehicles.RV_Large",
@@ -2562,10 +2571,6 @@ local function registerVehicles()
         rooms = {"phun.room.RV_Small"},
         scripts = {"Base.WhennyagoInitiative", "Base.fr_fo_econoline_rv_86"}
     })
-
-    -- RV - Spare 1: NOTHING REACHES IT. No vehicle is
-    -- bound to phun.room.RV_Spare_1 and no room overflows into it, so its 10
-    -- slots stand empty.
 
     -- RV - Spare 2: NOTHING REACHES IT. No vehicle is
     -- bound to phun.room.RV_Spare_2 and no room overflows into it, so its 10

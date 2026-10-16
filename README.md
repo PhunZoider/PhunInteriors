@@ -76,6 +76,7 @@ None are required. Install any of these and its vehicles get rooms:
 - [W900 Semi-Truck](https://steamcommunity.com/sharedfiles/filedetails/?id=3409472393)
 - [Rolling Refuge](https://steamcommunity.com/sharedfiles/filedetails/?id=3788543896)
 - [Whennyago Initiative](https://steamcommunity.com/sharedfiles/filedetails/?id=3790153201)
+- 1986 Fleetwood Bounder (mod id `FleetwoodBounder86`)
 
 [Supported vehicles](Docs/vehicles.md) says which vehicle gets which room.
 [Another Vehicle Claim System](https://steamcommunity.com/sharedfiles/filedetails/?id=2957935793)

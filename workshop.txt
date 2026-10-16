@@ -39,6 +39,7 @@ description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=37997
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3409472393]W900 Semi-Truck[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3788543896]Rolling Refuge[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3790153201]Whennyago Initiative[/url]
+description=[*]1986 Fleetwood Bounder (FleetwoodBounder86)
 description=[/list]
 description=Missing one? An admin can give it a room in game. [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicles.md]Which vehicle gets which room[/url]
 description=
