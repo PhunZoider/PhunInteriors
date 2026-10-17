@@ -54,6 +54,10 @@ Commands[Core.commands.adminResult] = function(arguments)
     if shell and arguments.result[1] then
         shell:notice(tostring(arguments.result[1]))
     end
+    local bench = Core.ui.bench and Core.ui.bench.current()
+    if bench then
+        bench:notice(arguments.result)
+    end
 end
 
 -- A fresh picture of the registry.

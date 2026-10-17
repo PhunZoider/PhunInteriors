@@ -121,6 +121,37 @@ Some things worth knowing:
   changes where the mod thinks the room is. Use it to correct the registry,
   not to relocate rooms.
 
+## Binding a vehicle pack
+
+`PhunInteriors.vehicleBench()` in the client console opens the Vehicle Bench, a
+small window for working through a vehicle pack one vehicle at a time. It is an
+authoring tool, so it has no button.
+
+1. **Load list** reads `PhunInteriors_bench.csv` from your own `Zomboid/Lua`
+   folder: one `vehicle,room` per line, the room being a suggestion. Or type
+   part of a script name, such as `pzk`, and press **Unbound** to list every
+   loaded vehicle with that in its name that no binding reaches yet.
+2. **Spawn** removes every vehicle within 5 tiles of you and spawns the
+   current one three tiles east, repaired and pointing north, with its key in
+   your inventory. A removed vehicle's room is released first; one with
+   somebody inside its room is left alone.
+3. Pick a room and, if it needs one, a boarding point, then press **Bind**.
+   The binding is live at once, so walk in and check.
+4. **Next** spawns the next vehicle. **Skip** records the current one as having
+   no room and moves on. **Prev** and **Unbind** undo.
+
+Every decision is written to your own `Zomboid/Lua` folder as you go:
+`PhunInteriors_bench_out.txt` holds the bound vehicles in the
+`vehicle,room,boarding` shape of the mod's vehicle sheet, and
+`PhunInteriors_bench_skipped.txt` the skipped ones. Both are read back when the
+window opens, so you can stop and pick up later.
+
+The bindings are ordinary editor bindings named `bench.<script>`, so press
+**Save** in the room window to keep them past a restart. A boarding point
+lasts only until the next restart; it is there to try before you write it
+down. If an earlier session bound a vehicle and never saved, spawning it binds
+it again.
+
 ## Opening and closing rooms
 
 A closed room hands out no new leases and turns away tenants who already hold
@@ -160,6 +191,9 @@ PhunServer2 is installed.
 | `admin("age", {vehicleId = ..., days = ...})` | Make a lease look idle for that many days. |
 | `admin("shove", {radius = ...})` | Run the exit zombie shove where you stand. |
 | `admin("doors")` | Close the outside doors of the room you are standing in, and list every door in it: where it is, which way it faces, whether it counts as a way out, and what happened to it. Runs even with somebody else inside. |
+| `admin("benchNext", {script = ..., radius = 5})` | Remove the vehicles within the radius of you and spawn that script beside you, as the bench's Spawn does. |
+| `admin("benchClear", {radius = 5})` | Just the removal. |
+| `admin("benchBoarding", {script = ..., point = ...})` | Set where that vehicle is boarded until the next restart. An empty point goes back to the default. |
 | `admin("gather", {hours = ...} or {count = ...})` | Spawn the zombies an exit after that many hours inside would gather, around where you stand. Defaults to a full day. |
 
 All are called as `PhunInteriors.admin(...)`. They run on the server, and the result is printed to the console log rather than returned.

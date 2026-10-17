@@ -1084,6 +1084,46 @@ actions.editBinding = function(args)
     return {id .. " bound to " .. table.concat(args.rooms, ", ")}
 end
 
+--- The vehicle bench (ui/bench.lua). Clear the vehicles round you and spawn
+--- the next one, or just clear.
+---
+---     PhunInteriors.admin("benchNext", {script = "Base.StepVan", radius = 5})
+---     PhunInteriors.admin("benchClear", {radius = 5})
+actions.benchNext = function(args, player)
+    if not player then
+        return {"benchNext needs a player to spawn beside"}
+    end
+    return require("PhunInteriors/bench").next(player, args.script, args.radius)
+end
+
+-- Where you get in, for this session only. Boarding is not part of the
+-- override layer -- it is generated from the vehicle sheet -- so this is how
+-- the bench lets a choice be tried before it is written down. Empty clears it.
+actions.benchBoarding = function(args)
+    if not args.script or args.script == "" then
+        return {"benchBoarding needs a script"}
+    end
+    local key = string.lower(args.script)
+    if args.point and args.point ~= "" then
+        Core.boarding[key] = args.point
+        return {args.script .. " boards at " .. args.point .. " until the next restart"}
+    end
+    Core.boarding[key] = nil
+    return {args.script .. " boards wherever the defaults say"}
+end
+
+actions.benchClear = function(args, player)
+    if not player then
+        return {"benchClear needs a player to clear round"}
+    end
+    local removed, kept = require("PhunInteriors/bench").clear(player, args.radius)
+    local lines = {string.format("removed %d vehicle(s)", #removed)}
+    if #kept > 0 then
+        table.insert(lines, "left " .. table.concat(kept, ", ") .. ": somebody is inside its room")
+    end
+    return lines
+end
+
 --- Write every change to PhunInteriors.json.
 actions.save = function()
     local Store = require "PhunInteriors/store"

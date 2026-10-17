@@ -5,6 +5,7 @@ require "DebugUIs/DebugMenu/ISDebugMenu"
 require "PhunInteriors/tools"
 require "PhunInteriors/client_main"
 require "PhunInteriors/client_rooms"
+require "PhunInteriors/ui/bench"
 local Core = PhunInteriors
 local Client = Core.client
 
@@ -82,4 +83,19 @@ end
 function Core.roomList()
     openRooms()
     return "opening the room list"
+end
+
+-- The vehicle bench, for binding a vehicle pack one vehicle at a time.
+-- Console only, deliberately: it spawns and removes vehicles, and it is an
+-- authoring tool rather than something a server admin should meet in the
+-- room window.
+--
+--     PhunInteriors.vehicleBench()
+function Core.vehicleBench()
+    local player = getPlayer()
+    if not player or not Core.tools.isAdmin(player) then
+        return "admins only"
+    end
+    Core.ui.bench.open(player)
+    return "opening the vehicle bench"
 end

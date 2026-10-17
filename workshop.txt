@@ -1,7 +1,7 @@
 version=1
 id=3812500419
 title=PhunInteriors: Interiors for RVs, Campers, Tents and more
-description=Step into the back of your van, RV, camper, box truck or tent and find a real furnished room inside. 89 themed interiors across 194 vehicles, for Build 42 single player and multiplayer.
+description=Step into the back of your van, RV, camper, box truck or tent and find a real furnished room inside. 89 themed interiors across 306 vehicles, for Build 42 single player and multiplayer.
 description=
 description=A ground-up Build 42 RV interior mod: walk out the back to the tailgate, out the front into the driver's seat.
 description=
@@ -25,6 +25,8 @@ description=
 description=[h2]Vehicle mods supported out of the box[/h2]
 description=None are required. Install any and their vehicles get rooms.
 description=[list]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3217685049]PZK Vanilla Plus Car Pack[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3543325992]PZK Vehicle Pack Community Expansion[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3683878228]Filibuster Rhymes' Certified Used Cars![/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2952802178]'90 Ford F350 Ambulance Type 1[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3652371248]Lock-Mart Industries M577[/url]

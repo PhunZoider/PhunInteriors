@@ -62,6 +62,8 @@ parked.
 
 None are required. Install any of these and its vehicles get rooms:
 
+- [PZK Vanilla Plus Car Pack](https://steamcommunity.com/sharedfiles/filedetails/?id=3217685049)
+- [PZK Vehicle Pack Community Expansion](https://steamcommunity.com/sharedfiles/filedetails/?id=3543325992)
 - [Filibuster Rhymes' Certified Used Cars!](https://steamcommunity.com/sharedfiles/filedetails/?id=3683878228)
 - ['90 Ford F350 Ambulance Type 1](https://steamcommunity.com/sharedfiles/filedetails/?id=2952802178)
 - [Lock-Mart Industries M577](https://steamcommunity.com/sharedfiles/filedetails/?id=3652371248)
