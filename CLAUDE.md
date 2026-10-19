@@ -1646,8 +1646,8 @@ The server side calls other mods use, all plain-English on refusal:
 the rest per call site (`Docs/modding.md` lists them). The rule that makes it
 complete: **every site that sets an occupancy fires OnEnter, and every site
 that clears one fires OnExit.** That is `placeInside`, `recover` and
-`recoverInPlace` for the first, and `leave` and `rescueStranded` for the
-second. A new `setOccupancy` caller needs the matching event.
+`recoverInPlace` for the first, and `leave`, `rescueStranded` and
+`endVisitOnDeath` for the second. A new `setOccupancy` caller needs the matching event.
 
 `OnEnter` used to fire from `Transit.enter` alone, so a tent, an admin port
 and `enterRoom` were invisible to a listener. It lives in `placeInside` now,
@@ -3872,6 +3872,27 @@ cells are actually towns.
     server side on a dedicated server (it builds on `IsoWorld.currentCell`, as
     the command does), and `benchBoarding`, which writes `Core.boarding` on
     both sides for the session only.
+
+25. **Respawning has never run in game.** Reported 2026-10-19: with
+    safehouse respawn on and a room claimed as the safehouse, a player who
+    died respawned in the room and could not leave until they relogged. The
+    client sent `playerSetup` once, on its first tick, and a respawn is a new
+    `IsoPlayer` with no lua reload, so the server never recovered the new
+    character: no occupancy, no leash, no "Step outside". A relog sends it
+    again, which is why that fixed it. Now `client_events.lua` sends it again
+    with `respawned = true` from `OnCreatePlayer`, for a character other than
+    the one setup ran for. The server ends whatever the dead character held
+    (`Transit.endVisitOnDeath`, `OnExit` reason `"died"`) and recovers from
+    scratch, skipping the override push and map alert. The leash also ends a
+    visit the moment it sees the tenant dead, so a character respawned
+    somewhere else is not "returned" to the vehicle by an inherited
+    occupancy. `occupancy_spec.lua` covers the count and the event. What it
+    cannot see: that `OnCreatePlayer` fires on an MP respawn with index 0,
+    that the server's `isDead()` reads true for a remote corpse before the
+    respawn, and that the safehouse respawn lands inside the slot footprint
+    `recover` tests rather than in the shell. A new character has empty
+    modData, so `rescueStranded` has no entrance to fall back on; if the
+    lease has gone, the respawn stays stranded as before.
 
 ## v2, deliberately not in v1
 

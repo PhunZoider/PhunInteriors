@@ -2339,6 +2339,33 @@ function Transit.rescueStranded(player)
     return true
 end
 
+--- End a visit because the tenant died.
+--
+-- Death makes a new IsoPlayer under the same username, and nothing else here
+-- notices. Left alone, the dead character's occupancy is inherited by the new
+-- one: respawned somewhere else, the leash sees them out of bounds and
+-- "returns" them to the vehicle. And if the leash never saw the death, the new
+-- character respawns into the room (safehouse respawn) with whatever the old
+-- one left. So the visit ends here, and the respawn handshake in
+-- server_commands decides afresh where the new character is.
+--
+-- No teleport, no weight and no hand back. The lease stays theirs, since the
+-- room may well be their safehouse and is where their things are; the body
+-- stays where it fell. Safe to call with no occupancy.
+function Transit.endVisitOnDeath(player)
+    local occupancy = Core.occupants[Core.playerKey(player)]
+    if not occupancy then
+        return false
+    end
+    Transit.setOccupancy(player, nil)
+    Core.logLn(string.format("%s died inside %s#%s; visit ended", tostring(Core.playerKey(player)),
+        tostring(occupancy.room), tostring(occupancy.index)))
+    triggerEvent(Core.events.OnExit, player, visitInfo(occupancy, {
+        reason = "died"
+    }))
+    return true
+end
+
 --- Rebuild occupancy for a player who logged in already inside a room, eg
 --- after a server restart. Beats the reference approach of minting a fresh
 --- random id and guessing by proximity.

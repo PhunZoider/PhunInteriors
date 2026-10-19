@@ -371,7 +371,13 @@ function Leash.tick()
         if player then
             local occupancy = Core.occupants[Core.playerKey(player)]
             if occupancy then
-                checkOne(player, occupancy)
+                -- A corpse is not a tenant, and the next IsoPlayer under this
+                -- username must not inherit the visit. See endVisitOnDeath.
+                if player:isDead() then
+                    Transit.endVisitOnDeath(player)
+                else
+                    checkOne(player, occupancy)
+                end
             end
         end
     end

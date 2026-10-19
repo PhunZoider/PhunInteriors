@@ -57,6 +57,17 @@ Commands[Core.commands.playerSetup] = function(player, args)
     -- nobody's -- reclaimed while they were away, or released out from under
     -- them. Recover cannot help with that; rescueStranded puts them back where
     -- they went in, which is the one thing still known about them.
+    --
+    -- A respawn sends this too, because a new character is a new IsoPlayer and
+    -- the client's own setup runs only once. Without it a character respawned
+    -- into a room claimed as their safehouse had no occupancy, so no leash and
+    -- no "Step outside", until a relog sent the first one again. Whatever the
+    -- dead character held is ended first: the new one is wherever the respawn
+    -- put them, and recover asks that question from scratch.
+    local respawned = args and args.respawned
+    if respawned then
+        Transit.endVisitOnDeath(player)
+    end
     if not Core.occupants[Core.playerKey(player)] then
         if not Transit.recover(player) then
             Transit.rescueStranded(player)
@@ -67,12 +78,15 @@ Commands[Core.commands.playerSetup] = function(player, args)
     -- only learns it is inside from a teleport, and reconnecting is the one
     -- path into a room that does not involve one.
     -- What the editor changed. A client boots the shipped registry only, so
-    -- without this an editor-made binding is invisible to it.
-    require("PhunInteriors/admin").pushOverrides(player)
+    -- without this an editor-made binding is invisible to it. Not again on a
+    -- respawn: the client's lua, and the overrides it was sent, survive death.
+    if not respawned then
+        require("PhunInteriors/admin").pushOverrides(player)
 
-    -- Rooms the map does not have. Everybody when that is all of them, admins
-    -- when it is some; see MapCheck.alert.
-    require("PhunInteriors/mapcheck").alert(player)
+        -- Rooms the map does not have. Everybody when that is all of them,
+        -- admins when it is some; see MapCheck.alert.
+        require("PhunInteriors/mapcheck").alert(player)
+    end
 
     local occupancy = Core.occupants[Core.playerKey(player)]
     Core.respond(player, Core.commands.state, {

@@ -89,4 +89,23 @@ end
 check("the count never disagrees with the table", drifted, false)
 check("and ends where the table does", Transit.anyoneInside(), false)
 
+-- Dying ends the visit. The respawned character is a new IsoPlayer under the
+-- same username, so an occupancy left behind would be inherited by it.
+local exits = {}
+local realTrigger = triggerEvent
+triggerEvent = function(name, _, info)
+    if name == Core.events.OnExit then
+        exits[#exits + 1] = info
+    end
+end
+Transit.setOccupancy(bob, {room = "r", index = 2, vehicleId = "v"})
+check("a death ends the visit", Transit.endVisitOnDeath(bob), true)
+check("and clears the table", Core.occupants["bob"], nil)
+check("and the count", Transit.anyoneInside(), false)
+check("and fires OnExit once", #exits, 1)
+check("saying why", exits[1] and exits[1].reason, "died")
+check("a second death with nothing held is a no-op", Transit.endVisitOnDeath(bob), false)
+check("and fires nothing", #exits, 1)
+triggerEvent = realTrigger
+
 os.exit(report.finish("occupancy") == 0 and 0 or 1)

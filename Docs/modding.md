@@ -204,7 +204,7 @@ way in and every way out: a vehicle, a tent or other object, an admin port,
 
 | Field | Meaning |
 |---|---|
-| `reason` | Why they left: `"breach"` for walking out of the room, `"menu"` for "Step outside", `"admin"` for an eviction, or whatever a `sendTo` caller passed. `"stranded"` means their room was gone when they logged in and they were put back where they went in. |
+| `reason` | Why they left: `"breach"` for walking out of the room, `"menu"` for "Step outside", `"admin"` for an eviction, or whatever a `sendTo` caller passed. `"stranded"` means their room was gone when they logged in and they were put back where they went in. `"died"` means they died inside; nobody is moved and there is no `destination`. |
 | `destination` | `{x, y, z}` where they are being sent. For a vehicle exit this is the vehicle, not the exact square they land on. |
 | `vehicle` | The vehicle, if it happens to be loaded. Usually it is not. |
 | `cab` | `true` when they asked for a seat. It can still fail, in which case `PhunInteriorsOnEnter` follows with `reason = "cabFull"`. |
