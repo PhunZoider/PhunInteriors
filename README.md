@@ -27,6 +27,7 @@ parked.
 - **Coming out is survivable.** The ground around you is cleared as you land,
   because you cannot see what you are stepping into.
 - **Rain water.** Craft a reservoir kit and put barrels on your room's roof.
+  See [Rain water in your room](Docs/rain-water.md).
 - **Tents** open onto rooms too, powered by a generator you park beside them.
 - **Multiplayer first.** Tested on a real dedicated server, including towing
   and passengers going into the back of a moving van.
@@ -47,6 +48,7 @@ parked.
 | Page | For |
 |---|---|
 | [Playing](Docs/playing.md) | Players: getting in, getting out, power, water, tents, keeping your room |
+| [Rain water in your room](Docs/rain-water.md) | Players: crafting the reservoir kit and putting barrels on the roof |
 | [Adding it to an existing save](Docs/existing-save.md) | Players and server owners: going inside puts you in the woods instead of a room |
 | [Supported vehicles](Docs/vehicles.md) | Which vehicle gets which room |
 | [Sandbox options](Docs/sandbox-options.md) | Server owners: every option and its default |

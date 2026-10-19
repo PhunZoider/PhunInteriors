@@ -155,7 +155,7 @@ function BindingForm.open(player, bindingId)
                 form:setListItems("rooms", rooms)
             end)
         end,
-        onRemove = function(_, index)
+        onRemove = function(_, _, index)
             table.remove(rooms, index)
             form:setListItems("rooms", rooms)
         end
@@ -172,7 +172,7 @@ function BindingForm.open(player, bindingId)
                 form:setListItems("scripts", scripts)
             end)
         end,
-        onRemove = function(_, index)
+        onRemove = function(_, _, index)
             table.remove(scripts, index)
             form:setListItems("scripts", scripts)
         end
@@ -189,7 +189,7 @@ function BindingForm.open(player, bindingId)
                 form:setListItems("items", items)
             end)
         end,
-        onRemove = function(_, index)
+        onRemove = function(_, _, index)
             table.remove(items, index)
             form:setListItems("items", items)
         end
@@ -209,7 +209,7 @@ function BindingForm.open(player, bindingId)
                 form:setListItems("sprites", sprites)
             end)
         end,
-        onRemove = function(_, index)
+        onRemove = function(_, _, index)
             table.remove(sprites, index)
             form:setListItems("sprites", sprites)
         end

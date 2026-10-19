@@ -18,7 +18,7 @@ description=[list]
 description=[*][b]No cheesing.[/b] No climbing in with zombies close or from a moving vehicle, and zeds gather outside while you wait.
 description=[*][b]Coming out is survivable.[/b] The ground is cleared as you land. The crowd is not removed; you just get a moment to see it.
 description=[*][b]Contained, properly.[/b] The server keeps you in your room: no clipping, no roof walks, no wandering next door. Walls can be made unbreakable and fires inside are put out.
-description=[*][b]Rain water.[/b] Craft a Rain Reservoir Kit and put barrels on the roof for a plumbed sink.
+description=[*][b]Rain water.[/b] Craft a Rain Reservoir Kit (Carpentry, needs Woodwork 5 and Mechanics 2, and may not show in the crafting window until you have both). Then carry it into your room, right click the floor and choose Install rain reservoir. Barrels go on the roof for a plumbed sink; many rooms already have them. See [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/rain-water.md]rain water in your room[/url].
 description=[*][b]Put a room behind anything.[/b] Admins can map any vehicle or placed object to any room in game, no restart. A toilet that is secretly a portkey to a workshop? Easy! See [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/remapping.md]mapping a vehicle or object to a room[/url].
 description=[/list]
 description=

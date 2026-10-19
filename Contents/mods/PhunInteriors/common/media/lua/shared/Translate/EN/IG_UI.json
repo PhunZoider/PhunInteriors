@@ -33,7 +33,6 @@
   "IGUI_PhunInteriors_ReservoirNotInside": "You need to be inside your room",
   "IGUI_PhunInteriors_ReservoirNoKit": "You need a rain reservoir kit",
   "IGUI_PhunInteriors_AdminUsage": "/interiors rooms | list | enter <room> [index] | release <room> <index> | free <vehicleId> | scrub [room index] | power [room index] | evict <username> | shove [radius] | remanifest <room> <index>",
-
   "IGUI_PhunInteriors_Rooms_Title": "PhunInteriors",
   "IGUI_PhunInteriors_Rooms_NotAdmin": "That is an admin tool",
   "IGUI_PhunInteriors_Rooms_Captured": "Yes",
@@ -42,7 +41,6 @@
   "IGUI_PhunInteriors_Rooms_NoPosition": "missing",
   "IGUI_PhunInteriors_Rooms_FreeDirty": "%1 (%2 dirty)",
   "IGUI_PhunInteriors_Rooms_Closed": "closed, %1",
-
   "IGUI_PhunInteriors_Col_Room": "Room",
   "IGUI_PhunInteriors_Col_Slots": "Slots",
   "IGUI_PhunInteriors_Col_Free": "Free",
@@ -52,21 +50,17 @@
   "IGUI_PhunInteriors_Col_Position": "Position",
   "IGUI_PhunInteriors_Col_State": "State",
   "IGUI_PhunInteriors_Col_Blueprint": "Captured",
-
   "IGUI_PhunInteriors_State_Free": "free",
   "IGUI_PhunInteriors_State_Mine": "leased to you",
   "IGUI_PhunInteriors_State_Leased": "leased",
   "IGUI_PhunInteriors_State_Quarantine": "awaiting scrub",
   "IGUI_PhunInteriors_State_Occupied": "somebody is inside",
-
   "IGUI_PhunInteriors_Btn_Enter": "Enter",
   "IGUI_PhunInteriors_Btn_Refresh": "Refresh",
   "IGUI_PhunInteriors_Tip_Enter": "Lease a slot of this room and go and stand in it. With no slot selected, the next free one.",
-
   "IGUI_PhunInteriors_Tab_Rooms": "Rooms",
   "IGUI_PhunInteriors_Tab_Slots": "Slots",
   "IGUI_PhunInteriors_Tab_Bindings": "Bindings",
-
   "IGUI_PhunInteriors_Col_Size": "Floor",
   "IGUI_PhunInteriors_Col_Exit": "Way out",
   "IGUI_PhunInteriors_Col_Edited": "Edited",
@@ -75,7 +69,6 @@
   "IGUI_PhunInteriors_Col_Reaches": "Reached by",
   "IGUI_PhunInteriors_Col_Rooms": "Rooms",
   "IGUI_PhunInteriors_Col_Name": "Name",
-
   "IGUI_PhunInteriors_Exit_Beside": "beside",
   "IGUI_PhunInteriors_Exit_Cab": "%1 (cab)",
   "IGUI_PhunInteriors_Power_None": "no generator",
@@ -89,7 +82,6 @@
   "IGUI_PhunInteriors_Binding_Permanent": "%1 (permanent)",
   "IGUI_PhunInteriors_Binding_NoEditMatcher": "This binding uses a code predicate, which cannot be edited here",
   "IGUI_PhunInteriors_Binding_NeedsRoom": "A binding has to name at least one room",
-
   "IGUI_PhunInteriors_Btn_Save": "Save",
   "IGUI_PhunInteriors_Btn_Discard": "Discard",
   "IGUI_PhunInteriors_Btn_Edit": "Edit",
@@ -108,7 +100,6 @@
   "IGUI_PhunInteriors_Btn_Next": "Next",
   "IGUI_PhunInteriors_Btn_Back": "Back",
   "IGUI_PhunInteriors_Btn_Pick": "Pick",
-
   "IGUI_PhunInteriors_Tip_Save": "Write every change to PhunInteriors.json in the game's Lua folder. Changes apply the moment you make them; this is what keeps them across a restart.",
   "IGUI_PhunInteriors_Tip_Discard": "Throw away every unsaved change and re-read the file",
   "IGUI_PhunInteriors_Lbl_Unsaved": "unsaved changes",
@@ -121,20 +112,17 @@
   "IGUI_PhunInteriors_Lbl_UsedBy": "Used by %1",
   "IGUI_PhunInteriors_Lbl_UsedByNothing": "Used by nothing",
   "IGUI_PhunInteriors_Tip_UsedBy": "Show what refers to this",
-
   "IGUI_PhunInteriors_Form_NewRoom": "New room",
   "IGUI_PhunInteriors_Form_EditRoom": "Edit %1",
   "IGUI_PhunInteriors_Form_NewBinding": "New binding",
   "IGUI_PhunInteriors_Form_EditBinding": "Edit %1",
   "IGUI_PhunInteriors_Form_AddSlot": "Add a stamp to %1",
   "IGUI_PhunInteriors_Form_MoveSlot": "Move slot %1 of %2",
-
   "IGUI_PhunInteriors_Sec_Shape": "Shape",
   "IGUI_PhunInteriors_Sec_Exit": "Way out",
   "IGUI_PhunInteriors_Sec_Power": "Power",
   "IGUI_PhunInteriors_Sec_Other": "Other",
   "IGUI_PhunInteriors_Sec_FirstStamp": "Where the first stamp is",
-
   "IGUI_PhunInteriors_Fld_Id": "Room id",
   "IGUI_PhunInteriors_Fld_Label": "Label",
   "IGUI_PhunInteriors_Fld_SizeW": "Footprint width",
@@ -164,7 +152,6 @@
   "IGUI_PhunInteriors_Fld_Items": "Moveable items",
   "IGUI_PhunInteriors_Fld_Sprites": "Sprites",
   "IGUI_PhunInteriors_Fld_Rooms": "Rooms it reaches",
-
   "IGUI_PhunInteriors_Hint_RoomId": "Namespaced, like yourmod.room.van. This is what a lease remembers, so it can never be changed later.",
   "IGUI_PhunInteriors_Hint_Size": "The FOOTPRINT, not the floor. This map puts the south and east walls outside the floor, so a 2x3 floor is a 3x4 footprint.",
   "IGUI_PhunInteriors_Hint_Spawn": "An offset into the room, not a world position. Must be a square a tenant can stand on.",
@@ -191,18 +178,15 @@
   "IGUI_PhunInteriors_Hint_NewSlotIndex": "The next unused index. Never re-use a deleted one: a lease may still name it.",
   "IGUI_PhunInteriors_Hint_SlotPosition": "The north-west corner of the footprint, in world coordinates. Run scripts/roomcheck.pl against the map after saving.",
   "IGUI_PhunInteriors_Hint_Inherited": "inherited from %1",
-
   "IGUI_PhunInteriors_Ask_Script": "Vehicle script name, eg Base.StepVan",
   "IGUI_PhunInteriors_Ask_Item": "Moveable item type, eg Base.TentGreen",
   "IGUI_PhunInteriors_Ask_Sprite": "Sprite name, eg fixtures_bathroom_01_0",
-
   "IGUI_PhunInteriors_Confirm_RevertRoom": "Put %1 back to the room its code registered, throwing away every change made here?",
   "IGUI_PhunInteriors_Confirm_DeleteRoom": "%1 exists only because you made it. Deleting it removes the room and every stamp of it, and any lease on one is lost.",
   "IGUI_PhunInteriors_Confirm_DeleteSlot": "Delete slot %1 of %2? Its index stays a gap, so no other lease moves.",
   "IGUI_PhunInteriors_Confirm_DeleteBinding": "Delete the binding %1?",
   "IGUI_PhunInteriors_Confirm_DisableBinding": "%1 was registered in code. Removing it here lasts until the next restart, when its mod registers it again.",
   "IGUI_PhunInteriors_Confirm_Discard": "Throw away every unsaved change and go back to what is in PhunInteriors.json?",
-
   "IGUI_PhunInteriors_Err_Required": "Required",
   "IGUI_PhunInteriors_Err_Numeric": "Must be a number",
   "IGUI_PhunInteriors_Err_Integer": "Must be a whole number",
@@ -210,11 +194,9 @@
   "IGUI_PhunInteriors_Err_Max": "Must be at most %1",
   "IGUI_PhunInteriors_Err_RangeBoth": "Give both ends of the range",
   "IGUI_PhunInteriors_Err_RangeOrder": "The first must not be greater than the second",
-
   "IGUI_PhunInteriors_Lbl_Vehicle": "Reached by",
   "IGUI_PhunInteriors_Lbl_Room": "Room",
   "IGUI_PhunInteriors_Any": "(any)",
-
   "IGUI_PhunInteriors_Col_Label": "Name",
   "IGUI_PhunInteriors_Col_LastIn": "Last in",
   "IGUI_PhunInteriors_Col_LastUser": "By",
@@ -233,9 +215,7 @@
   "IGUI_PhunInteriors_Slot_Claimed": "That slot is somebody's safehouse. The claim has to go first.",
   "IGUI_PhunInteriors_Confirm_Reset": "Reset slot %1 of %2? Whoever holds it loses it, and everything in the room is cleared out the next time it is handed to anybody.",
   "IGUI_PhunInteriors_Confirm_CloseUnsaved": "You have changes that are not in PhunInteriors.json. They are live now, but a restart will lose them. Close anyway?",
-
   "IGUI_PhunInteriors_Trespassing": "Somebody has claimed this interior as a safehouse",
-
   "IGUI_PhunInteriors_Bench_Title": "Vehicle Bench",
   "IGUI_PhunInteriors_Bench_Load": "Load list",
   "IGUI_PhunInteriors_Bench_Tip_Load": "Read Zomboid/Lua/PhunInteriors_bench.csv: vehicle,room per line, the room a suggestion",

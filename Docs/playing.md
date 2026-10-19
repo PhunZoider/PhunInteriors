@@ -110,12 +110,14 @@ fuel for the room comes out of that generator.
 
 Rooms with a flat roof can collect rain. Craft a **Rain Reservoir Kit**
 (Carpentry, Woodwork 5 and Mechanics 2: a hammer, 8 planks, 8 nails and 2
-tarps), stand in your room, and choose **Install rain reservoir**. Barrels go
-up on the roof, and a sink in the room that has been plumbed draws from
-them.
+tarps), carry it into your room, right click the floor and choose **Install
+rain reservoir**. Barrels go up on the roof, and a sink in the room that has
+been plumbed draws from them.
 
-A room that already collects rain, or has no roof to put barrels on, refuses
-the kit.
+The recipe may not show in the crafting window until you have both skills,
+and the install option only appears while you are inside the room holding a
+kit. A room that already collects rain, or has no roof to put barrels on,
+refuses the kit. Step by step: [Rain water in your room](rain-water.md).
 
 ## Tents
 
