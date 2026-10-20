@@ -85,7 +85,9 @@ None are required. Install any of these and its vehicles get rooms:
 [Supported vehicles](Docs/vehicles.md) says which vehicle gets which room.
 [Another Vehicle Claim System](https://steamcommunity.com/sharedfiles/filedetails/?id=2957935793)
 claims are respected: a claimed vehicle's room is only open to those its claim
-lets into the trunk.
+lets into the trunk. Project A-Life NPCs (mod id `ProjectALifeNPCs`) count as
+people rather than zombies: one standing beside you does not stop you going
+in, and one at your landing spot is not pushed aside.
 
 ## Requirements
 

@@ -240,6 +240,10 @@ safehouse. To free one, remove the claim the vanilla way first.
   everything stored in it, so it is not worth doing for a cosmetic fault.
 - **Another Vehicle Claim System**, if installed, decides who may enter a
   claimed vehicle's room, by the same rule as its trunk.
+- **Project A-Life** (mod id `ProjectALifeNPCs`), if installed, has its NPCs
+  left out of the zombie checks. They are zombie bodies underneath, so without
+  this a friendly NPC refused entry as "zombies too close" and the exit shove
+  pushed it about.
 - **W900 Semi-Truck**, if installed, gets the room's weight as cargo on its
   box trucks and trailers, so its own load damping applies.
 - **PhunTaxi** and **PhunRooms** register rooms of their own through this mod

@@ -867,6 +867,36 @@ leaving or containment differs.
 
 ---
 
+## Phase J4: Project A-Life
+
+`compat_alife.lua` is new. Needs Project A-Life (`ProjectALifeNPCs`) and an NPC
+that follows you or stands still near a supported vehicle. Run it on a
+dedicated server as well as in single player: every check is server side, and
+there the NPC's modData flag is the marker that counts.
+
+### JA1. Entry beside an NPC
+
+1. With an NPC within 10 squares and no zombies, enter the vehicle.
+
+**Pass:** you go inside. **Fails as:** "zombies too close" with nothing but the
+NPC nearby, which means `ProjectALifeOwned` / `ProjectALifeActor` is not what
+A-Life writes (the names were taken from PhunZones2, not from A-Life).
+
+### JA2. A zombie still counts
+
+1. Repeat JA1 with a real zombie inside the radius as well.
+
+**Pass:** refused, as without the mod.
+
+### JA3. The exit shove
+
+1. Leave a room with an NPC standing within 6 squares of the landing.
+2. `PhunInteriors.admin("shove")` with an NPC and a zombie beside you.
+
+**Pass:** the NPC stays where it was; the zombie is pushed to the ring.
+
+---
+
 ## Phase K: multiplayer
 
 Everything above is single player unless noted. **Re-run on a real dedicated

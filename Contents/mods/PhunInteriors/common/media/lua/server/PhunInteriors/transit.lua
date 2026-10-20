@@ -13,6 +13,7 @@ local Power = require "PhunInteriors/power"
 local AntiCheat = require "PhunInteriors/anticheat"
 local MapCheck = require "PhunInteriors/mapcheck"
 local Avcs = require "PhunInteriors/avcs"
+local ALife = require "PhunInteriors/compat_alife"
 local Transit = {}
 Core.modules.transit = Transit
 
@@ -70,6 +71,9 @@ end
 
 --- Every live zombie within `radius` of a point.
 --
+-- An A-Life NPC is a zombie body and is not counted: it is a person to the
+-- player, so it neither blocks entry nor gets shoved. See compat_alife.lua.
+--
 -- Collected into a table rather than visited in place, because the caller that
 -- acts on the answer MOVES them, and a zombie leaving a square rearranges the
 -- list this sweep is walking. That is the same shape of bug as removing an
@@ -87,7 +91,8 @@ local function zombiesWithin(x, y, z, radius)
                 if moving then
                     for i = 0, moving:size() - 1 do
                         local object = moving:get(i)
-                        if object and instanceof(object, "IsoZombie") and not object:isDead() then
+                        if object and instanceof(object, "IsoZombie") and not object:isDead() and
+                            not ALife.isNpc(object) then
                             found[#found + 1] = object
                         end
                     end

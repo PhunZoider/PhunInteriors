@@ -52,6 +52,7 @@ description=[*]Add phuninteriors to the Map setting, before Muldraugh: [b]Map=ph
 description=[*]Every constraint is a sandbox option: entry time, zombie gathering, weight, battery drain, how long a room is protected, unbreakable walls.
 description=[*]An in-game room window for admins: port into any room, reset or scrub it, open or close it, and remap vehicles and edit rooms live. Edits save to PhunInteriors.json as a patch, so mod updates still reach the rest.
 description=[*]No required mods. PhunServer2 adds an /interiors chat command, and [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2957935793]Another Vehicle Claim System[/url] claims are respected.
+description=[*]Project A-Life NPCs count as people, not zombies: one standing beside you never stops you going in, and none is shoved aside when you come out.
 description=[/list]
 description=
 description=[h2]Project Viewpoint[/h2]

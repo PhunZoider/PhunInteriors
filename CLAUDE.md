@@ -270,7 +270,7 @@ Contents/mods/PhunInteriors/common/
   media/lua/shared/PhunInteriors/    core, tools, registry, bounds, defaults,
                                     reservoir, holders, overrides, json, boarding,
                                     compat_whennyago, compat_phunzones,
-                                    compat_rsemitruck
+                                    compat_rsemitruck, compat_alife
   media/lua/server/PhunInteriors/    slots, transit, leash, manifest, scrub,
                                     weight, power, harden, removal, admin,
                                     author, rainwater, loot, store, phunzones,
@@ -312,7 +312,8 @@ Tests/lua/*_spec.lua               registry placement/links, allocation order,
                                    holderless entry (enterRoom) and the
                                    exit tax count and its cap, the
                                    Whennyago Initiative patch, the W900
-                                   payload hand-off, who
+                                   payload hand-off, A-Life NPCs left out
+                                   of the zombie sweep, who
                                    the speed anti-cheat would punish,
                                    the zone self-heal, and refusing
                                    slots the map has no room for
@@ -2343,6 +2344,16 @@ cells are actually towns.
   vanilla's queue drops, so the tenant lands beside the vehicle while the
   arrival report still says `seated`. Never run in game; `avcs_spec.lua`
   covers the decision.
+- **Project A-Life (`ProjectALifeNPCs`) is a soft hook.** Its NPCs are
+  `IsoZombie` bodies, so `zombiesWithin` in `transit.lua` counted them: a
+  friendly NPC refused entry as "zombies too close" (reported 2026-10-20) and
+  the exit shove moved them. `shared/PhunInteriors/compat_alife.lua` skips
+  them with PhunZones2's `Core.isALife` test, copied rather than called so it
+  works without PhunZones: `ProjectALifeOwned` or `ProjectALifeActor` in
+  modData, or the `ALifeActor` animation variable. The flag names come from
+  PhunZones, not from A-Life itself, which the author does not have. Never run
+  in game; `alife_spec.lua` covers the test, Phase J4 of `Docs/testplan.md` is
+  the in-game check.
 - **Project Viewpoint (3809306528) needs nothing of its own, only two habits
   in our menus.** It is a ZombieBuddy Java renderer with a first person [F]
   menu built in `Viewpoint_Interact.lua` by harvesting vanilla's menus. For a

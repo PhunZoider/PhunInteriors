@@ -18,7 +18,8 @@ do.
 - **It takes a moment**, and walking, running or aiming cancels it.
 - **Not with zombies close.** If one is within 10 squares when the action
   finishes, you stay outside. Starting clear and finishing surrounded does not
-  count as clear.
+  count as clear. With Project A-Life installed, its NPCs are people, not
+  zombies, and never count.
 - **Not while it is moving**, unless you are already aboard. A passenger can
   climb into the back of a moving van. Nobody boards one from the road.
 - **Not from the driver's seat of a moving vehicle.** Somebody has to drive.
@@ -80,7 +81,7 @@ is cleared for you. Waiting out the night is not quite free.
 you cannot see what you are stepping into, so anything standing within 6
 squares is pushed back to the edge of that ring, as far as walls allow. It is
 not removed. It is still there and it is still coming; you just get a second
-or two to see it.
+or two to see it. Project A-Life NPCs are left where they stand.
 
 ## Weight
 
