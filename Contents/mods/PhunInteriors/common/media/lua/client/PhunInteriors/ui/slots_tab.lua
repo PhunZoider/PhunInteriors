@@ -232,6 +232,8 @@ function UI:createChildren()
     -- is looking at.
     self:addBottomButton(getText("IGUI_PhunInteriors_Btn_Reset"),
         self.onReleaseClick, true).tooltip = getText("IGUI_PhunInteriors_Tip_Reset")
+    self:addBottomButton(getText("IGUI_PhunInteriors_Btn_Reassign"),
+        self.onReassignClick, true).tooltip = getText("IGUI_PhunInteriors_Tip_Reassign")
     -- The refresh loop for a room that is never handed back, a hub above all:
     -- redecorate it, Recapture to make that the blueprint, and Scrub whenever
     -- it wants putting back to it. Both are the console's remanifest and
@@ -504,6 +506,30 @@ function UI:onReleaseClick()
     tools.confirm(getText("IGUI_PhunInteriors_Confirm_Reset", slot.index, self.roomId),
         function()
             Core.admin("release", {room = self.roomId, index = slot.index})
+        end, self)
+end
+
+--- Reassign this slot, contents and all, to the vehicle the admin is in or beside.
+---
+--- The client picks, with what the radial menu picks with, so the vehicle named
+--- in the confirm is the one a player would be offered Enter on, and its id goes
+--- with the request. The answer comes back as a dialog; see adminResult.
+function UI:onReassignClick()
+    local slot = self:selectedSlot()
+    if not slot or not self.roomId then
+        return
+    end
+    local tools = require "PhunInteriors/ui/ui_utils"
+    local vehicle = ISVehicleMenu.getVehicleToInteractWith(self.player)
+    if not vehicle then
+        tools.alert(getText("IGUI_PhunInteriors_Reassign_NoVehicle"))
+        return
+    end
+    local script = vehicle:getScript()
+    tools.confirm(getText("IGUI_PhunInteriors_Confirm_Reassign", slot.index, self.roomId,
+        script and script:getName() or "?"),
+        function()
+            Core.admin("reassign", {room = self.roomId, index = slot.index, id = vehicle:getId()})
         end, self)
 end
 

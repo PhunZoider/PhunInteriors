@@ -11,16 +11,18 @@ parked.
 
 ## Features
 
-- **89 furnished rooms** for vans, step vans, ambulances, buses, trucks,
-  semi trailers, caravans, RVs, shipping containers and tents, including
-  vehicles from several popular vehicle mods. See
+- **94 furnished rooms across 311 vehicles**, for vans, step vans, ambulances,
+  buses, trucks, semi trailers, caravans, RVs, shipping containers, boats and
+  tents, including vehicles from several popular vehicle mods. See
   [the full list](Docs/vehicles.md).
 - **Walk in, walk out.** Board at the door, and leave by walking out of the
   room. Which way you walk out decides which side of the vehicle you land on,
   and rooms with a cab can put you straight into a free seat.
 - **Your room is yours.** Rooms are only ever reused when every room is taken
   and yours has gone unused for two weeks (configurable, or never). You are
-  told if it happens. A room claimed as a safehouse is never reused.
+  told if it happens. A room claimed as a safehouse is never reused. If a
+  vehicle is lost to a glitch, an admin can reassign its room, contents and
+  all, to a replacement.
 - **It costs something.** What you store adds to the vehicle's weight. The
   lights run off the vehicle battery, and a trailer off whatever is towing it.
   Zombies gather while you are inside.
@@ -80,7 +82,7 @@ None are required. Install any of these and its vehicles get rooms:
 - [W900 Semi-Truck](https://steamcommunity.com/sharedfiles/filedetails/?id=3409472393)
 - [Rolling Refuge](https://steamcommunity.com/sharedfiles/filedetails/?id=3788543896)
 - [Whennyago Initiative](https://steamcommunity.com/sharedfiles/filedetails/?id=3790153201)
-- 1986 Fleetwood Bounder (mod id `FleetwoodBounder86`)
+- [1986 Fleetwood Bounder](https://steamcommunity.com/sharedfiles/filedetails/?id=3817986321)
 - [BoatCore SP Gold](https://steamcommunity.com/sharedfiles/filedetails/?id=3813791850):
   the yacht, both houseboats and the patrol boat. Every way out of a boat
   room puts you at the helm, so nobody steps out into the water.
@@ -113,12 +115,16 @@ Proven in game in single player and on a dedicated server: entering and
 leaving, containment, seat and door restore, blueprint capture and scrub, the
 lease lifecycle, weight, towing, the wall and fire guards, and fire dousing.
 
-Built and covered by the automated tests, but not yet seen in game: the
-current exit rules (which side you land on, and the cab seat), reclaiming on
-demand, power from the vehicle battery, the rain reservoir, tents and other
-placed objects, the room editor and its save file, the exit zombie clearing,
-and rooms with no vehicle behind them. `CLAUDE.md` under "Known gaps" says what
-to watch for in each.
+Seen working in game, without a full test pass yet: the current exit rules
+(which side you land on, and the cab seat), the exit zombie clearing, the room
+window and reassigning a room, the missing map check, and a placed object bound
+to a room.
+
+Built and covered by the automated tests, but not yet confirmed in game:
+reclaiming on demand, power from the vehicle battery, installing the rain
+reservoir kit, the tent pickup lock, the room editor's save file, and rooms
+with no vehicle behind them. `CLAUDE.md` under "Known gaps" says what to watch
+for in each.
 
 ## Development
 
@@ -126,7 +132,7 @@ to watch for in each.
 bash Tests/run.sh
 ```
 
-Parses every Lua file, runs three static checks and then the specs (906
+Parses every Lua file, runs three static checks and then the specs (1008
 checks). It fakes just enough of the game to test the pure Lua logic; anything
 needing a real map square is tested in game or not at all.
 
@@ -143,8 +149,8 @@ root (`perl scripts/roomcheck.pl`):
 - `roomcheck.pl` and `fencecheck.pl` check the registry and the fence against
   the map that ships.
 - `viewpointpack.pl` generates the Project Viewpoint model pack, and
-  `blackground.pl` and `innerwalls.pl` fix the map's buildings for first
-  person before lots are generated.
+  `blackroof.pl`, `blackground.pl` and `innerwalls.pl` fix the map's buildings
+  before lots are generated.
 - `gendefaults.pl` and `vehicledoc.pl` regenerate the room registry and
   [Docs/vehicles.md](Docs/vehicles.md) from the room and vehicle sheets. The
   sheets are not in the repository.

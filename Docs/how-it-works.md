@@ -43,6 +43,10 @@ room it could have is taken does it get the one unused the longest, and only
 if that one has gone unused for the server's protection period with nobody in
 it. Its owner is told the next time they go in.
 
+A lease is keyed by an id stored on the vehicle, so a room outlives a vehicle
+the game loses. Reassigning points the lease at a different vehicle's id and
+touches nothing in the room.
+
 A released room goes to quarantine. It is **reissued, then cleaned**, not
 cleaned and then reissued: cleaning needs the room's chunk loaded, and nothing
 loads the chunk of a room nobody has been near. So the cleaning happens the

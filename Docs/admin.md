@@ -80,6 +80,15 @@ Per slot:
 - **Reset** takes the slot back from whoever holds it. Everything in it is
   cleared the next time it is handed out. Refused while somebody is inside or
   while the slot is claimed as a safehouse.
+- **Reassign** moves the room, with everything in it, to the vehicle you
+  are sitting in or standing beside. This is the fix when a vehicle has fallen
+  through the map or been deleted. The slot list shows who was last in and when,
+  which is how to find the room. The confirmation names the vehicle, and a dialog
+  gives the result. Refused while you or anybody else is inside a room, for a
+  vehicle with no rooms bound to it, and for a vehicle that already holds a room:
+  a vehicle gets one the first time anybody enters it, and Reset on that slot
+  frees it, but clears out whatever is in there. If the old vehicle turns up, it
+  gets a new empty room.
 - **Scrub** puts the slot back to its blueprint now. The holder keeps it; what
   was left lying about does not survive.
 - **Recapture** takes the slot as it looks right now as its blueprint, so
@@ -178,6 +187,7 @@ PhunServer2 is installed.
 | `admin("enter", {room = ..., index = ...})` | Put yourself in a room. Index is optional. |
 | `admin("release", {room = ..., index = ...})` | Reset a slot, as the button does. Also takes `{vehicleId = ...}`. |
 | `admin("free", {vehicleId = ...})` | Release whatever a vehicle holds. Refused, like `release`, while somebody is inside or the slot is claimed as a safehouse. |
+| `admin("reassign", {room = ..., index = ...})` | Reassign a room and its contents to the vehicle you are in or beside, as the button does. Also takes `{vehicleId = ...}`. |
 | `admin("scrub", {room = ..., index = ...})` | Scrub one slot now. With no arguments, works through up to ten waiting slots. |
 | `admin("remanifest", {room = ..., index = ...})` | Recapture a slot's blueprint. |
 | `admin("manifests")` | How big every captured blueprint is. |

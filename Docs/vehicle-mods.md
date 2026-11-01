@@ -1,7 +1,7 @@
 # Giving your vehicles a room
 
 If you make vehicle mods, you can give your vehicles an interior with about
-ten lines of Lua and no map work at all. PhunInteriors ships 89 furnished
+ten lines of Lua and no map work at all. PhunInteriors ships 94 furnished
 rooms; you just say which of them your vehicles open onto.
 
 Your mod does **not** need to depend on PhunInteriors. If a player does not
@@ -44,9 +44,9 @@ spaces and dashes turned into single underscores:
 In game, the admin room window (`PhunInteriors.roomList()`) shows every id,
 and so does `PhunInteriors.admin("rooms")` in the console.
 
-Pick one that suits the vehicle's size and job. A few are there for mods to
-claim and have nothing bound to them yet: **`phun.room.Bus`** and
-**`phun.room.RV_Spare_2`**.
+Pick one that suits the vehicle's size and job. Two are there for mods to
+claim and have no vehicle of their own yet: **`phun.room.Bus`**, which the
+other bus rooms overflow into, and **`phun.room.Van_Butcher`**.
 
 **List more than one room** to give your vehicle somewhere to go when its
 favourite is full. You do not have to order them: the room reachable by the

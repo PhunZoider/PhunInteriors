@@ -679,6 +679,7 @@ end
 --     PhunInteriors.admin("enter", {room = "phun.van.roofed"})
 --     PhunInteriors.admin("enter", {room = "phun.van.roofed", index = 9})
 --     PhunInteriors.admin("release", {room = "phun.van.roofed", index = 9})
+--     PhunInteriors.admin("reassign", {room = "phun.van.roofed", index = 9})  -- to the vehicle beside you
 --     PhunInteriors.admin("remanifest", {room = "phun.van", index = 4})
 --     PhunInteriors.admin("scrub", {room = "phun.van", index = 3})
 --     PhunInteriors.admin("free", {vehicleId = "..."})

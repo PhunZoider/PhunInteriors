@@ -33,13 +33,15 @@ them now. Do that after every option change in this plan.
   `PhunInteriors.roomList()`.
 
 **The actions:** `list`, `rooms`, `bindings`, `enter`, `release`, `free`,
-`reclaim`, `age`, `scrub`, `evict`, `power`, `weight`, `manifests`,
-`remanifest`, `editRoom`, `editBinding`, `save`, `revertAll`, `reload`.
+`reassign`, `reclaim`, `age`, `scrub`, `evict`, `open`, `close`, `power`,
+`weight`, `doors`, `shove`, `gather`, `manifests`, `remanifest`, `editRoom`,
+`editBinding`, `save`, `revertAll`, `reload`, `benchNext`, `benchClear`,
+`benchBoarding`.
 
 **Getting a vehicle id.** `admin("list")` prints every lease with its holder
 id. That id is what `age`, `free` and `release` take.
 
-**The reclaim shortcut.** A real reclaim needs 990 leases. Instead:
+**The reclaim shortcut.** A real reclaim needs 1190 leases. Instead:
 
 ```lua
 PhunInteriors.admin("age", {vehicleId = "...", days = 99})
@@ -54,31 +56,25 @@ which is the mechanic working correctly, and it silently invalidates the test.
 Both run from the repo root, and both must be understood before any in-game
 result means anything.
 
-**1. `bash Tests/run.sh`** expects 637 checks, 0 failures, plus the three
+**1. `bash Tests/run.sh`** expects 1008 checks, 0 failures, plus the three
 static checks and the syntax pass. A failure here makes every phase below
 untrustworthy.
 
 **2. `perl scripts/roomcheck.pl`** compares `defaults.lua` against the shipped
 lotpacks, and it is the only thing that does.
 
-It currently **exits 1**, and the shape of the failure matters, because it is
-narrower than Known gap #1 in CLAUDE.md suggests:
+It should exit 0 and print:
 
 ```
-18 cells, 990 registered slots, 14540 interior squares, 1330 door squares,
-990 slots with a front
+20 cells, 1190 registered slots, 16870 interior squares, 1630 door squares,
+1190 slots with a front
 
 the registry matches the map
 ```
 
-Both of roomcheck's checks ran and both passed: no map content that no room
-claims, and no slot where the floor and the registered box disagree.
-
-The second of those is the one containment depends on, so the practical
-reading is: **the 990 registered slots are correctly aligned with the map and
-are testable now.** Cell 87,49 used to hold rooms nobody registered; it and
-88,49 have since been carved out into stand-alone mods, which is what closed
-that gap.
+Those are its two checks: no map content that no room claims, and no slot where
+the floor and the registered box disagree. The second is the one containment
+depends on. A failure names the squares and the slot.
 
 Re-run roomcheck after any map re-export, and expect the number to change.
 
@@ -119,10 +115,10 @@ signature; watch whether your position is restored a frame later.
 Proves the cab request path, which is the one way out that can fail, and the
 `seated` flag on the arrival handshake.
 
-Use a room that declares `cab` on its front edge. The `3x4_*` rooms carry a
-doorless south opening for exactly this.
+Use a room that declares `cab` on its front edge. The `Step Van - *` rooms
+carry a doorless south opening for exactly this.
 
-1. Enter from beside a StepVan bound to a `3x4_*` room.
+1. Enter from beside a step van, such as `Base.StepVanMail`.
 2. Leave through the **south** opening.
 
 **Pass:** you are in the first fitted free seat, counting from the driver's. No
@@ -143,22 +139,27 @@ and index did not change.
 
 ### A4. Leave by a side, which no room maps
 
-Proves the deliberate absence: nothing is listed for left and right, because no
-vanilla script declares an area meaning "the flank".
+No vanilla script declares an area meaning "the flank", so left and right are
+worked out from which way the vehicle is pointing, not from an area name.
 
 1. From any room, walk out through the east or west edge of the box.
 
-**Pass:** you land beside the vehicle by the nearest-door fallback. This is
-correct behaviour, not a miss.
+**Pass:** you land on that side of the vehicle, the first square past the
+bodywork. If `getForwardVector` gives no answer you land at the nearest door
+instead, which is the fallback working rather than a miss.
 
-### A5. The four rooms that declare no front
+### A5. A side door
 
-`2x4_campingstorage` and the three `*_camping` caravans deliberately register
-no `front`, because their doors are in the side and nobody has said which way a
-caravan points.
+Every shipped room now states a `front`, the campers and caravans included,
+whose doors are in the side. `Camper - *` rooms state `north`, the VW camper
+`south`.
 
-**Pass:** the tenant lands beside the holder. Expected, and worth confirming
-once so it is not mistaken for a fault later.
+1. Enter a caravan, leave by its door.
+2. Repeat with the caravan parked pointing each of the four compass directions.
+
+**Pass:** you come out on the caravan's door side every time. Right on two
+headings of four is the signature of reading the wrong component of
+`getForwardVector`.
 
 ### A6. Breach the leash rather than using a door
 
@@ -225,14 +226,14 @@ locked, and you do not have the key", refused at once, with no walk. Also:
 
 ## Phase B: the reshaped registry and allocation
 
-The registry has not run in game since it was reshaped. 637 bench checks are
-real verification of the logic and none at all that PZ agrees.
+The reshaped registry has run in game, but has not had a full pass. 1008 bench
+checks are real verification of the logic and none at all that PZ agrees.
 
 ### B1. Boot
 
-**Pass:** `Core.describeRegistry` logs counts at boot. Expect 83 rooms, 80
-vehicle bindings, one object binding. Zero anywhere means registration did not
-run, not that the map is missing.
+**Pass:** `Core.describeRegistry` logs counts at boot: `94 room(s), 1190
+slot(s), 93 binding(s)`, the bindings being 92 for vehicles and one for tents.
+Zero anywhere means registration did not run, not that the map is missing.
 
 ### B2. Allocation order
 
@@ -241,7 +242,7 @@ Proves specificity drains the most specialised room first, counted per
 
 1. `admin("rooms")` or the room list window. Note the free counts.
 2. Enter from a vehicle bound to exactly one room, then from one that overflows
-   into the shed.
+   into the plain `Van` room.
 
 **Pass:** the specialised room drains first; general-purpose capacity is saved
 for the vehicles with nowhere else to go.
@@ -249,7 +250,7 @@ for the vehicles with nowhere else to go.
 ### B3. A vehicle nobody listed
 
 The `phun.van` matcher is gone, so a modded van now gets no room rather than
-the shed.
+the plain `Van` room.
 
 **Pass:** refused with `IGUI_PhunInteriors_WrongVehicle`, and `Slots.acquire`
 names the missing set in the log at the point of refusal. That self-diagnosis
@@ -257,15 +258,16 @@ is the whole reason dropping the matcher was acceptable.
 
 ### B4. Per-slot blueprint capture
 
-**Capture is load bearing now and has never succeeded on this map.** The
-`bounds.z + 1` sweep used to count a nil square above the room as a failed
-read, which refused every capture on both cells.
+**Capture is load bearing.** It failed on every attempt until the `bounds.z +
+1` sweep stopped counting a nil square above the room as a failed read. Seen
+working on a dedicated server on 2026-11-01: `captured slot for
+phun.room.Camper_Medium#2: 53 objects, 31 distinct sprites`.
 
 1. Open the room list, port into a slot, read its **Captured** column.
 2. Or run `PhunInteriors.admin("manifests")`.
 
-**Pass:** the slot reports a capture, and `manifests` reports real figures.
-Expect roughly 42 placements from 14 sprites per slot.
+**Pass:** the slot reports a capture, and `manifests` reports real figures. A
+fitted room runs to about 50 objects from about 30 sprites.
 
 **Fails as:** Captured stays empty on every slot. The leash gives up after
 `Manifest.CAPTURE_ATTEMPTS` ticks and that slot falls through to a sibling for
@@ -301,9 +303,9 @@ soft-lock now.
 
 ## Phase C: the registry editor
 
-The newest thing in the mod and the least proven. None of
-`shared/PhunInteriors/{overrides,json}.lua`, `server/PhunInteriors/store.lua`
-or `client/PhunInteriors/ui/` has been drawn once.
+The window and the Slots tab have run on a dedicated server, so C1 and C2 are
+regressions now. What `shared/PhunInteriors/{overrides,json}.lua` and
+`server/PhunInteriors/store.lua` do to the save file is still unconfirmed.
 
 ### C1. The window opens and the three tabs draw
 
@@ -311,7 +313,7 @@ or `client/PhunInteriors/ui/` has been drawn once.
 that did not survive the port from PhunMart2; look at `Core.isShippedKey` and
 the `Core.references` stub in `ui/state.lua` first.
 
-### C2. The payload survives at 990 slots
+### C2. The payload survives at 1190 slots
 
 The list carries room summaries and bindings; a room's slots are fetched when
 its row is selected.
@@ -529,13 +531,14 @@ sandbox page shows.
 
 ## Phase F: world-object holders
 
-A tent can be bound, leased, entered and left. None of it has been in front of
-the game.
+A tent can be bound, leased, entered and left. A tent has been entered in game
+and a toilet bound to a room confirmed working; the pickup lock and the rest of
+this phase have not had a full pass.
 
 ### F1. Enter a tent
 
 **Pass:** a context-menu option appears on a bound tent and puts you in
-`phun.room.2x3_tent`. Any tile of the tent resolves to one holder square,
+`phun.room.Tent`. Any tile of the tent resolves to one holder square,
 because a multi-tile moveable normalises through its sprite grid.
 
 **Fails as:** `IGUI_PhunInteriors_WrongHolder`, or two leases taken on one
@@ -598,18 +601,21 @@ notice are stamped on vehicles only. Confirm the behaviour, do not file it.
 
 ## Phase G: the rain reservoir
 
-Nothing here has run, and neither has the scrub since it stopped demanding
-squares above the room. In rough order of risk:
+The kit has not been installed in game, and the scrub has not run since it
+stopped demanding squares above the room. In rough order of risk:
 
-### G1. Are the map's own barrels working collectors at all?
+### G1. Can a sink be plumbed to the map's own barrels?
 
 The map ships `carpentry_02_122` on roof squares in the ambulance bays and
-several fitted rooms. A map-loaded one may be a plain `IsoObject`.
+several fitted rooms. Settled on 2026-10-10: a map-loaded one is a plain
+`IsoObject` that fills with rain but cannot be plumbed to.
+`Rainwater.rebuildCollectors` now swaps each one for a real collector, once per
+visit, and that swap has not run.
 
-1. Port into one of those rooms and check a roof barrel for fluid.
+1. Enter one of those rooms and right click its sink.
 
-**Pass either way**, since the kit refuses those rooms regardless, but the
-answer decides whether the shipped barrels mean anything.
+**Pass:** the sink plumbs to the barrel above it and draws water. Whatever the
+barrel already held is still in it.
 
 ### G2. Install a kit
 
@@ -897,6 +903,53 @@ A-Life writes (the names were taken from PhunZones2, not from A-Life).
 
 ---
 
+## Phase J5: reassigning a room
+
+Reported working on 2026-11-01. Run as a regression after any change to leases.
+
+### JR1. A move, end to end
+
+1. Enter a vehicle, leave something in its room, step out.
+2. Beside a vehicle nobody has entered, open the Slots tab, select that slot and
+   press **Reassign**.
+
+**Pass:** the confirm names the vehicle, a dialog gives the result, and going in
+through the new vehicle finds the same room with the item in it. Stepping out
+lands you at the new vehicle, not where the old one stood. Going in through the
+old vehicle, if it still exists, gives a new empty room and the reclaim notice.
+
+### JR2. The refusals
+
+Each ends in a dialog, and the lease does not move: a destination that already
+holds a room, one with no rooms bound to it, somebody inside the room, and
+pressing it while standing in any room yourself.
+
+### JR3. The weight
+
+**Pass:** `admin("weight")` shows no delta left on the old vehicle if it was
+loaded, and the new vehicle is charged at its first exit.
+
+---
+
+## Phase J6: other mods and late additions
+
+Each of these has a Known gap in CLAUDE.md saying what to watch for.
+
+- **Doors (#21).** Leave a door open, walk out, come back: it is closed, and
+  the log says so. A garage door closes all three squares.
+- **Respawning (#25).** Die in a claimed room with safehouse respawn on. You
+  respawn contained, and can leave.
+- **AVCS (Dependencies).** A claimed vehicle's room is refused unless its trunk
+  would open for you. Leaving is never refused.
+- **Boats (#26).** Needs BoatCore SP Gold. Enter from a seat and from a dock,
+  leave by the door, and check you land in a seat rather than the water. The
+  Enter slice appears exactly once while seated. Boarding from a dock must not
+  be refused as moving, since nobody knows yet what `isStopped()` says afloat.
+- **The vehicle bench (#24).** `PhunInteriors.vehicleBench()`: spawn, bind,
+  walk in, next.
+
+---
+
 ## Phase K: multiplayer
 
 Everything above is single player unless noted. **Re-run on a real dedicated
@@ -937,8 +990,9 @@ them changed even though the mechanics did not.
 - **A room with four solid walls.** `roomcheck.pl` lost that check along with
   the `landing` table, because a doorless opening, a window and a garage door
   are all invisible in a lotpack. It is now caught by walking into the room.
-- **Climbing out of a window.** `4x5_armysurplus` has no door at all. Nothing
-  has confirmed a tenant can climb one, and if they cannot, the room is a
+- **Climbing out of a window.** The `GAGE KI5` room has no door at all, only a
+  window in its north wall and another in its south. Nothing has confirmed a
+  tenant can climb one, and if they cannot, the room is a
   soft-lock. Worth an explicit visit.
 - **The zombie perimeter.** The block is fenced, but the void starts
   immediately beyond it on every edge, and a fence stops pathing rather than

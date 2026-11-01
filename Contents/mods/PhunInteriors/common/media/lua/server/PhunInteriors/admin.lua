@@ -775,6 +775,85 @@ actions.release = function(args, player)
     return {"no room is leased to " .. tostring(vehicleId)}
 end
 
+--- The vehicle a reassign is aimed at.
+---
+--- The window sends the id of the vehicle it named in its confirm. That is the
+--- answer or nothing: falling through to a guess could hand the room to a
+--- vehicle the admin never agreed to. Still checked for distance, as
+--- resolveVehicle does, so the id is not taken on trust.
+---
+--- The guesses are for the console, and the server is bad at them.
+--- getUseableVehicle came back nil beside a Trailer61Airflyte on a dedicated
+--- server, and 6 is roughly half the length of a long trailer, since distance
+--- is measured to the vehicle's middle.
+local function reassignTarget(args, player)
+    if not player then
+        return nil
+    end
+    local id = tonumber(args.id)
+    if id then
+        local vehicle = getVehicleById(id)
+        if vehicle then
+            local dx, dy = vehicle:getX() - player:getX(), vehicle:getY() - player:getY()
+            if (dx * dx + dy * dy) <= 100 then
+                return vehicle
+            end
+        end
+        return nil
+    end
+    return player:getVehicle() or player:getUseableVehicle() or
+        Core.loadedVehicleNear(player:getX(), player:getY(), player:getZ(), 6)
+end
+
+-- Reassign a room to the vehicle you are in or standing beside, contents and all.
+-- For a vehicle the save has lost. See Slots.reassign.
+--
+--     PhunInteriors.admin("reassign", {room = "phun.room.Trailer_Livestock", index = 3})
+--     PhunInteriors.admin("reassign", {vehicleId = "..."})
+--
+-- Room and index win over vehicleId, because the chat command fills in both
+-- from one word.
+actions.reassign = function(args, player)
+    -- The occupancy for an ordinary visit, the position for an admin who walked
+    -- in with noclip and holds none. Either way the vehicle is outside.
+    if player and (Core.occupants[Core.playerKey(player)] or
+        Core.slotAt(player:getX(), player:getY(), player:getZ())) then
+        return {"you are inside a room; come out and stand beside the vehicle that should get it"}
+    end
+
+    local fromId
+    if args.room and args.index ~= nil then
+        local index = tonumber(args.index)
+        for id, assignment in pairs(Slots.store().assignments) do
+            if assignment.room == args.room and assignment.index == index then
+                fromId = id
+                break
+            end
+        end
+        if not fromId then
+            return {string.format("%s#%s is not leased to anybody", args.room, tostring(index))}
+        end
+    else
+        fromId = args.vehicleId
+    end
+    if not fromId then
+        return {"reassign needs a room and an index, or a vehicleId"}
+    end
+
+    local vehicle = reassignTarget(args, player)
+    if not vehicle then
+        return {"stand beside the vehicle that should get this room, or sit in it"}
+    end
+
+    local ok, result = Slots.reassign(fromId, vehicle)
+    if not ok then
+        return {result}
+    end
+    -- All on one line, because the window only shows the first.
+    return {"reassigned the room to that vehicle" ..
+        (result and "" or ", which is not normally bound to it, but will keep it")}
+end
+
 actions.scrub = function(args)
     if args.room and args.index then
         local ok, reason = Scrub.slot(args.room, tonumber(args.index))

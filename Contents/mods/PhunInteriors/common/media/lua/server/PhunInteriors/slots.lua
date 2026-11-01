@@ -744,6 +744,98 @@ function Slots.release(vehicleId, reason)
     return true
 end
 
+--- Hand a lease, and the room behind it, to a different vehicle.
+--
+-- For a vehicle that is gone: a lease is keyed by a UUID in the vehicle's own
+-- modData, so when a save loses the vehicle nothing can ever open its room
+-- again, and everything in it waits there for a reclaim. Only the key changes.
+-- Nothing is scrubbed, nothing goes through quarantine, and the slot's manifest
+-- is per slot rather than per holder, so it does not notice.
+--
+-- `Slots.acquire` returns an existing lease without asking whether that room is
+-- still bound, so a vehicle bound to OTHER rooms can hold this one. A vehicle
+-- bound to none cannot: acquire refuses it before it looks at the lease. The
+-- second return says whether the room is one this vehicle would normally reach.
+--
+-- The old vehicle may well exist, because nothing server side can tell unloaded
+-- from destroyed. If it turns up it keeps leasedKey with no lease, so it gets a
+-- new room and the reclaim notice, which is what has happened to it.
+--
+-- Returns true and that flag, or false and why in plain English.
+function Slots.reassign(fromId, vehicle)
+    local d = store()
+    local assignment = d.assignments[fromId]
+    if not assignment then
+        return false, "no room is leased to " .. tostring(fromId)
+    end
+    -- A tent's lease is tied to the object by its pickup lock, an admin's and a
+    -- holderless room's to somebody standing in it. None has a vehicle to lose.
+    if Core.holderKind(fromId) ~= "vehicle" then
+        return false, string.format("%s#%s is not held by a vehicle", assignment.room,
+            tostring(assignment.index))
+    end
+    -- The occupancy names the old key, so moving it would strand them: their
+    -- exit would look for a lease that has gone.
+    if isOccupied(fromId) then
+        return false, string.format("somebody is inside %s#%s; they have to come out first",
+            assignment.room, tostring(assignment.index))
+    end
+
+    local candidates = Core.roomsForHolder(vehicle)
+    if #candidates == 0 then
+        return false, "that vehicle has no rooms bound to it, so it could never open this one"
+    end
+
+    local toId = Core.vehicleId(vehicle, true)
+    if toId == fromId then
+        return false, "that vehicle already holds this room"
+    end
+    -- Refused rather than released to make way: that room holds somebody's
+    -- belongings too, and resetting it is a decision with its own confirmation.
+    local held = d.assignments[toId]
+    if held then
+        return false, string.format("that vehicle already holds %s#%s; reset that slot first",
+            held.room, tostring(held.index))
+    end
+
+    -- One sweep and no poll, as Slots.release does it: if the old vehicle does
+    -- still exist and is loaded, it should not carry this room's mass any more.
+    local at = assignment.lastKnownVehiclePos
+    local old = at and Core.vehicleNear(at.x, at.y, at.z, fromId)
+    if old then
+        require("PhunInteriors/weight").apply(old, 0)
+    end
+
+    occupiedFor(assignment.room)[tostring(assignment.index)] = toId
+    d.assignments[fromId] = nil
+    d.assignments[toId] = assignment
+
+    -- Everything on the lease that described the old vehicle. resolveReturn
+    -- reads the position, and leaving it would put the next exit where the old
+    -- vehicle last stood. The debt was the old battery's; the tank level is the
+    -- room's and stays. Entering takes a true reading off the new battery.
+    assignment.lastKnownVehiclePos = {
+        x = vehicle:getX(),
+        y = vehicle:getY(),
+        z = vehicle:getZ()
+    }
+    assignment.lastKnownHandle = vehicle:getId()
+    assignment.fuelOwed = 0
+    assignment.batteryKnown = nil
+    assignment.lastSeen = Core.now()
+    -- So losing this room later is reported, even if nobody ever enters first.
+    vehicle:getModData()[Core.consts.leasedKey] = true
+
+    local bound = false
+    for _, roomId in ipairs(candidates) do
+        bound = bound or roomId == assignment.room
+    end
+
+    Core.logLn(string.format("moved %s#%s from %s to %s", assignment.room, tostring(assignment.index),
+        tostring(fromId), tostring(toId)))
+    return true, bound
+end
+
 --- Keep a lease alive. Called on every entry and exit.
 function Slots.touch(vehicleId)
     local assignment = store().assignments[vehicleId]

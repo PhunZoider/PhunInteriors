@@ -44,7 +44,7 @@ and everybody who goes in through the same vehicle ends up in the same room.
 
 Each vehicle gets a room that suits it. A mechanic's van opens onto a small
 workshop, a mail van onto a sorting room, a school bus onto a classroom, a
-caravan onto a caravan. There are 89 room designs; see
+caravan onto a caravan. There are 94 room designs; see
 [vehicles.md](vehicles.md) for which vehicle gets which.
 
 Rooms are furnished, and their containers roll loot the first time they load,
@@ -163,6 +163,11 @@ ticks "Allow opening trunk". Anybody already inside can always leave.
 
 If a vehicle is scrapped with a blowtorch, or removed by an admin, its room is
 freed for somebody else.
+
+If a vehicle is lost any other way, say it falls through the map or vanishes,
+its room and everything in it are still there. An admin can reassign the room
+to a replacement vehicle. Ask before you enter the replacement, because a
+vehicle that already has a room has to give that one up first.
 
 ## First person (Project Viewpoint)
 

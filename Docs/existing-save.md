@@ -20,8 +20,8 @@ do not need this page: add the map to the list (below) and restart.
 ## Why it happens
 
 The rooms live on a map of their own, `phuninteriors`, in an empty area off
-the edge of the normal world (cells 87,46 to 92,49). The map has to be in the
-save's map list, ahead of `Muldraugh, KY`:
+the edge of the normal world (cells 87,46 to 91,48, 89,49 to 91,49 and 92,46
+to 92,47). The map has to be in the save's map list, ahead of `Muldraugh, KY`:
 
 ```
 phuninteriors;Muldraugh, KY
@@ -127,8 +127,8 @@ foreach ($cell in 87..91) {
 foreach ($cx in (92 * 32)..(92 * 32 + 31)) {
   $d = "$remote/map/$cx"
   foreach ($y in 1472..1479) { $out += "rm `"$d/$y.bin`"" }
-  foreach ($t in 148..149) { $out += "rm `"$d/$($t)?.bin`"" }
-  foreach ($y in 1500..1503) { $out += "rm `"$d/$y.bin`"" }
+  foreach ($t in 148..152) { $out += "rm `"$d/$($t)?.bin`"" }
+  foreach ($y in 1530..1535) { $out += "rm `"$d/$y.bin`"" }
 }
 $out += "exit"
 $out | Set-Content "pi-reset.txt" -Encoding ascii
@@ -141,7 +141,7 @@ $out | Set-Content "pi-reset.txt" -Encoding ascii
   the folder you land in when you log in. Open it in any FTP client first and
   copy the path, because hosts lay this out differently.
 
-That writes `pi-reset.txt`, about 3,500 lines. Then run it from the same
+That writes `pi-reset.txt`, about 4,100 lines. Then run it from the same
 folder:
 
 ```powershell
@@ -162,7 +162,7 @@ SAVE="/home/YOU/Zomboid/Saves/Multiplayer/servertest"
 cd "$SAVE" || exit 1
 for x in 87 88 89 90 91 92; do for y in 46 47 48 49; do
   if [ $y = 49 ] && [ $x -lt 89 ]; then continue; fi
-  if [ $x = 92 ] && [ $y != 46 ]; then continue; fi
+  if [ $x = 92 ] && [ $y -gt 47 ]; then continue; fi
   c=${x}_$y
   rm -f chunkdata/chunkdata_$c.bin metagrid/metacell_$c.bin apop/apop_$c.bin zpop/zpop_$c.bin
   for cx in $(seq $((x*32)) $((x*32+31))); do

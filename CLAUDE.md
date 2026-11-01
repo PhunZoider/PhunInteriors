@@ -8,12 +8,14 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 ## Status
 
-**The registry was reshaped and has not run in game since.** Rooms, bindings
-and blueprints all changed shape -- see "A room is a contract" in Architecture.
-`Tests/run.sh` is green across 969 checks, which is real verification of the
-logic and no verification at all that PZ agrees. Everything below describes
-what was proven *before* that change; the mechanics are the same, but the
-registry underneath them is not.
+**The registry was reshaped, and has since run in game without a full test
+pass.** Rooms, bindings and blueprints all changed shape -- see "A room is a
+contract" in Architecture. `Tests/run.sh` is green across 1008 checks, which is
+real verification of the logic and no verification at all that PZ agrees. A
+dedicated server log of 2026-11-01 has it booting 94 rooms, 1190 slots and 93
+bindings, entering through vehicles and capturing a slot, with the room window
+open on the client. Many "never run" notes below predate that and have not all
+been revisited; a report recorded in Known gaps outranks them.
 
 **And the registry can now be edited from inside the game, which has also never
 run.** An edit is a sparse patch kept in `PhunInteriors.json` in the Lua
@@ -83,7 +85,7 @@ runs off the arrival report, so it covers every tenant exit and no admin port.
 Known gaps #14 says what to watch, and the multiplayer half of it is the
 zombie authority row in the API table.
 
-A reclaim is reachable without waiting out the sandbox or filling 1200 rooms:
+A reclaim is reachable without waiting out the sandbox or filling 1190 rooms:
 `PhunInteriors.admin("age", {vehicleId = ..., days = 99})` then
 `admin("reclaim")`, which picks with the same function allocation uses. Do not
 enter the room in between -- entering renews the lease, which is the mechanic
@@ -274,8 +276,8 @@ Contents/mods/PhunInteriors/common/
   media/lua/server/PhunInteriors/    slots, transit, leash, manifest, scrub,
                                     weight, power, harden, removal, admin,
                                     author, rainwater, loot, store, phunzones,
-                                    anticheat, zones, mapcheck, bench,
-                                    server_{commands,events}
+                                    anticheat, zones, mapcheck, bench, avcs,
+                                    doors, server_{commands,events}
   .../server/PhunInteriors/blueprints/  NOT SHIPPED, deleted before release.
                                     Nothing ships a blueprint any more, because
                                     capture is per slot and falls back to a
@@ -315,8 +317,9 @@ Tests/lua/*_spec.lua               registry placement/links, allocation order,
                                    payload hand-off, A-Life NPCs left out
                                    of the zombie sweep, who
                                    the speed anti-cheat would punish,
-                                   the zone self-heal, and refusing
-                                   slots the map has no room for
+                                   the zone self-heal, refusing slots the
+                                   map has no room for, boarding points,
+                                   the lock check, closing doors, and AVCS
 Tests/root/PhunInteriors/common/   overlay carrying the test ids, applied by
                                    deploy.cmd to build PhunInteriorsTest. The
                                    path must mirror the live mod folder or the
@@ -626,7 +629,7 @@ allocation, so a vehicle refused its first room would carry one too.
 
 `admin("reclaim")` takes what a full pool would take next, through the same
 `Slots.oldestReclaimable`, because on the shipped map the real trigger needs
-1200 leases.
+1190 leases.
 
 **A quarantined slot is reissued and then scrubbed, not scrubbed and then
 reissued.** The original order could not work: a scrub needs the chunk loaded,
@@ -912,7 +915,7 @@ door.
   `Van - Mechanic` does not. Rooms come down sorted by id (`Admin.roomState`),
   so the two orders agree.
 - **A family is a kind of HOLDER, never a room def and never a brand.** Van,
-  Step Van, Truck, Bus, Semi Trailer, Trailer, Container, Camper, RV, Tent.
+  Step Van, Truck, Bus, Semi Trailer, Trailer, Container, Camper, RV, Boat, Tent.
   Naming one after its def would make "family" mean two things in one column,
   and it is the `requires` category error again: a fact about what is *in* the
   room standing in for a fact about what *carries* it. The nine rooms with room
@@ -1369,10 +1372,10 @@ Enter, and you are standing in it.
 `client_rooms.lua` used to *be* that window, hand drawn, with rooms in the top
 third and slots below. It is three lines in front of the shell now, and the
 map forced the move rather than taste: that layout was right for 2 rooms of 60
-slots and is wrong for 81 rooms of about 12, so the rooms became the long list
+slots and is wrong for 94 rooms of about 12, so the rooms became the long list
 and a room's stamps became a detour off one. The payload followed the same
 shape — it carried every slot of every room on every refresh, which was 120
-records and is 960, all but one room's worth of it drawn by nothing. Slots are
+records and is 1190, all but one room's worth of it drawn by nothing. Slots are
 fetched per room now (`Core.commands.roomSlots`).
 
 **The Slots tab has its own two dropdowns**, because reaching it otherwise
@@ -1383,7 +1386,7 @@ the room picker decides whose slots are drawn. That is deliberately a different
 question from the filter box at the bottom of the same panel, which searches
 *within* the slots on screen; two controls both labelled "filter" meaning
 different things would be worse than either. The vehicle one earns its place on
-this map specifically — 81 rooms, most reachable by exactly one script, so
+this map specifically -- 94 rooms, most reachable by exactly one script, so
 "which room does the mail van get" is otherwise a scroll through ids that do
 not mention the van.
 
@@ -1397,7 +1400,7 @@ That needed one addition to the vendored list panel: `layoutHeaderRow(y, width)`
 an optional hook between the description and the list, four lines and marked as
 ours. The existing `_filterTabs` row sits in that position and could not be
 used — it is a row of toggles over a fixed handful of values, not a dropdown
-over eighty rooms.
+over ninety rooms.
 
 The name `Client.openRooms` is kept, because `client_admin.lua`, the debug menu
 entry and `PhunInteriors.roomList()` all call it, and renaming a function to
@@ -2028,7 +2031,7 @@ B41 tutorial applies.
 | Putting out a fire is `square:stopFire()` **then** `square:transmitStopFire()`, which is what vanilla's fire brush does (`FireBrushUI.lua:265`). `IsoFire.extinctFire()` and `IsoFireManager.RemoveAllOn(square)` are both declared and both read exactly right — and both have **zero** uses in vanilla lua. | `Harden.sweepFire` used `fire:removeFromWorld()` on the object from `square:getFire()`. That is `IsoObject`'s generic removal: the engine answered every call with `IsoFireManager.Remove unknown fire, ignoring`, so the same fires were re-found and "doused" on every sweep, forever, while still burning. The log said it worked. A plausible-looking declared method with no vanilla uses is the tell, and here there were *two* of them next to the right answer. |
 | `IsoGridSquare` has **no `setBloodSplatLifetime`**. Vanilla `ISCleanBlood:complete()` uses `square:removeBlood(false, false)` then `square:removeGrime()`. | Confirmed absent from the jar. |
 | Vanilla only ever exits a vehicle from a **client** timed action (`ISExitVehicle`). | `vehicle:exit()` lives in `Client.teleport`, not in server-side `Transit.enter`. |
-| `getCell():getVehicles()` returns a **`java.util.Set`** — `size()` but no `get(i)`, so it cannot be indexed from Lua, and **loaded vehicles cannot be enumerated from Lua at all**. Vanilla's own `ISVehicleBloodUI.lua:81` does `vehicles:get(i-1)` and is therefore broken; so does RV Interior's entire exit path. | `resolveReturn` uses `getVehicleById(handle)`, and position tracking is pushed by the driver's client rather than swept for. Vanilla Lua shows intent, **not** correctness — and neither does a shipped mod that works on B41. |
+| `getCell():getVehicles()` returns a **`java.util.Set`** -- `size()` but no `get(i)`, so it cannot be indexed from Lua. **Its `iterator()` does work**, which this row used to deny: `Core.loadedVehicleNear` found a `Trailer61Airflyte` through it on a dedicated server on 2026-11-01. Vanilla's own `ISVehicleBloodUI.lua:81` does `vehicles:get(i-1)` and is therefore broken; so does RV Interior's entire exit path. | `resolveReturn` uses `getVehicleById(handle)`, and position tracking is pushed by the driver's client rather than swept for; both predate the iterator and are fine as they are. Vanilla Lua shows intent, **not** correctness -- and neither does a shipped mod that works on B41. |
 | **Vehicle level modData is never transmitted to a client.** `IsoObject` declares the whole sync path — `transmitModData`, `sendObjectModData`, `ObjectModData`, `IsoObjectChange`. `BaseVehicle` declares `getModData`/`setModData`/`hasModData` and `transmitPartModData(VehiclePart)` and **none** of it. Vanilla never calls `transmitModData()` on a vehicle (only doors, players, characters, carcasses, plain objects) and every vanilla client-side vehicle modData read is `part:getModData()`. | Anything a client must know about a vehicle has to be *sent* to it, or discovered client side and confirmed by the server. A client-side UUID match cannot work. `transmitModData()` on a vehicle is worse than a no-op: `IsoObject`'s version addresses an object by square plus index in that square's object list, and a vehicle is not in `square:getObjects()`. |
 | **B42 has no server side "a player left" event.** `OnDisconnect` is a *client* event meaning "you were disconnected"; it takes no player argument and vanilla uses it only in `ConnectToServer.lua` and `ISMPEditAccount.lua`. Dumping every name from `LuaEventManager` finds no `OnPlayerDisconnect` or equivalent. | `server_events.lua` deliberately has no disconnect handler. It had one, hooked to `OnDisconnect`, and it never fired once. Keeping the occupancy is the better behaviour anyway — `playerSetup` finds it on reconnect. |
 | **B42 has no "a vehicle was destroyed" event either**, and **`isRemovedFromWorld()` does not mean removed.** `LuaEventManager` declares no `OnVehicleDestroyed`. From the bytecode, `permanentlyRemove()` is exit every passenger, `breakConstraint`, `removeFromWorld()`, `removeFromSquare()`, `VehiclesDB2.removeVehicle` — and `removeFromWorld()` is also what an ordinary chunk unload calls (it starts with `VehiclesDB2.setVehicleUnloaded`), so the `removedFromWorld` flag is true of every parked vehicle out of range. Vanilla calls `permanentlyRemove()` from exactly three places: `ISRemoveBurntVehicle:complete()` (blowtorch on a wreck), and the admin "remove vehicle" cheat in `ISVehicleMechanics.onCheatRemoveAux` and `VehicleCommands.remove`. Stripping parts never removes a vehicle. | `server_events.lua` had an `OnVehicleDestroyed` handler guarded by an existence test, so it skipped itself and a removed vehicle's room stayed leased — which under reclaim-on-demand means a full pool may take a living player's older room instead of this abandoned one. `removal.lua` now hooks the removal *calls* and releases on the flag **changing** across them, never on its value: `complete()` is wrapped server side, and since `VehicleCommands` is a local table the client warns first (`vehicleRemoving`) and the server watches for five seconds. Anything else calling `permanentlyRemove()` is not seen; its room goes unrenewed and is reclaimed like any other. |
@@ -2046,7 +2049,7 @@ B41 tutorial applies.
 | **`isEnterBlocked` refuses every seat of a boat afloat.** `isExitBlocked` ends in `PolygonalMap2.lineClearCollide` between the inside and outside positions, which reaches `LineClearCollide.isNotClearOld`: any pathfind `Square` the line crosses that `isReallySolid` is "not clear", and `isReallySolid` is the solid bit OR the `solidtrans` bit (bar a window or hoppable beside it). Every vanilla water tile (`blends_natural_02_0`, `_5`, `_6`, `_7`) is `solidfloor` plus `solidtrans` plus `water`. BoatCore boards with a bare `ISEnterVehicle` and never asks. | `Core.seatIsEnterable` drops the line test when the vehicle's own square `has(IsoFlagType.water)`, the test vanilla's fishing code makes, and keeps only the null position check that prevents the crash. Without it a cab exit from a boat room could never find a seat and would put its tenant back inside every time. |
 | `vehicle:getSeat(player)` returns -1 once the character is out of the seat, and our entry action refuses to run until exactly that. | The seat **must** be captured client side in `Client.beginEnter`, before `ISExitVehicle` is queued, and sent with the enter request. Reading it server side in `Transit.enter` always yielded -1. |
 | From the server, an unloaded vehicle and a destroyed one are indistinguishable: `getVehicleById` returns nil for both. The vehicle's chunk is always unloaded while its owner is in a room, **and it reloads with a different `getId()`**, so the captured handle never resolves again. Confirmed from the logs. | `Transit.leave` must **not** warn `VehicleGone`; it fired on every normal exit. The client raises it after arrival, where the chunk is loaded and the question is answerable. `getVehicleById` is in `LuaManager$GlobalObject`, so it works client side too. |
-| **`square:getVehicleContainer()` is stricter than it reads.** From the bytecode it walks the vehicles of nearby chunks and returns the first whose `isIntersectingSquare(x, y, z)` is true, and that refuses outright unless `fastfloor(vehicle:getZ())` equals the square's level **and** `getController()` is non-nil, before it tests the outline. | An unhitched KI5 `Trailer54FlyingCloud22`, resting on its jack, answered no square at all: every exit from Camper - Large ended in `VehicleGone` while the caravan stood where it was left, and hitched it worked (reported on a dedicated server, 2026-10-10). `Core.nearestVehicle` and `Core.vehicleNear` now fall back to `Core.loadedVehicleNear`, nearest middle by distance over `getCell():getVehicles():iterator()`, which logs the z and controller it saw so the actual cause gets recorded. Entry had the same fault (reported 2026-10-11: after towing, "there is no vehicle here" until the player sat in the caravan): `resolveVehicle` in `server_commands.lua` now resolves the client's `getId()` with `getVehicleById` first, distance checked, before the square and the distance fallback. `Client.groundBeside` also requires each step to clear half the script's extents, since a blind square test calls the first step clear. Neither has run in game. |
+| **`square:getVehicleContainer()` is stricter than it reads.** From the bytecode it walks the vehicles of nearby chunks and returns the first whose `isIntersectingSquare(x, y, z)` is true, and that refuses outright unless `fastfloor(vehicle:getZ())` equals the square's level **and** `getController()` is non-nil, before it tests the outline. | An unhitched KI5 `Trailer54FlyingCloud22`, resting on its jack, answered no square at all: every exit from Camper - Large ended in `VehicleGone` while the caravan stood where it was left, and hitched it worked (reported on a dedicated server, 2026-10-10). `Core.nearestVehicle` and `Core.vehicleNear` now fall back to `Core.loadedVehicleNear`, nearest middle by distance over `getCell():getVehicles():iterator()`, which logs the z and controller it saw so the actual cause gets recorded. Entry had the same fault (reported 2026-10-11: after towing, "there is no vehicle here" until the player sat in the caravan): `resolveVehicle` in `server_commands.lua` now resolves the client's `getId()` with `getVehicleById` first, distance checked, before the square and the distance fallback. `Client.groundBeside` also requires each step to clear half the script's extents, since a blind square test calls the first step clear. The distance fallback itself is confirmed: the 2026-11-01 log has `found Base.Trailer61Airflyte ... by distance`. That call came from the reassign path, which runs no square test, so the words `the square test refused it` in that line mean nothing there. The rest has not been confirmed. |
 | `instanceof(object, "IsoFloor")` has **zero** uses in vanilla Lua and filters nothing — a room captured with and without it returned the identical 29 objects. Vanilla finds a floor with `square:getFloor()`, which every build and debug tool uses. | Identify a floor by identity against `square:getFloor()`, not by class. Zero vanilla uses of a plausible-sounding call is the tell, and it applies to `instanceof` class names as much as to methods. |
 | **B42 translations are `.json`, not `.txt`.** The stock install ships 43 `.json` files in `media/lua/shared/Translate/EN` and zero `.txt`. The format is a flat JSON object of key/value pairs, with no `ContextMenu_EN = {}` wrapper, and the `_EN` filename suffix is gone: `ContextMenu.json`, `IG_UI.json`, `Sandbox.json`. | The B41 `.txt` files load silently and every `getText` falls through to the raw key. Confirmed in game: nothing translated until these were converted. Sandbox keys are still `Sandbox_<Mod>_<Option>` and `_tooltip`. |
 | **B42.20.4 removed `loadstring`, `load` and `loadfile`.** Not deprecated — absent. The classic "write a Lua table as `return { ... }` and read it back with loadstring" round trip no longer completes. | Any config a mod persists and re-reads has to be in a format that needs a *parser* rather than an interpreter, which is why `PhunInteriors.json` is json and why `shared/PhunInteriors/json.lua` is vendored from PhunMart2 (which hit this first, in `utils_file.lua`). The failure mode is the dangerous part: nothing errors, `loadstring` is simply nil, the pcall around it fails, and every override file on disk reads back as nil — so an admin's customisations quietly do not come back after a restart and the next save writes defaults over them. `author.lua` still emits lua and is unaffected: the game loads that as a mod file at boot, not through loadstring. |
@@ -2183,8 +2186,8 @@ describe the map that ships?**
 
 ```bash
 perl scripts/roomcheck.pl
-#   18 cells, 990 registered slots, 14540 interior squares, 1330 door squares,
-#   990 slots with a front
+#   20 cells, 1190 registered slots, 16870 interior squares, 1630 door squares,
+#   1190 slots with a front
 #   the registry matches the map
 ```
 
@@ -2238,7 +2241,7 @@ perl scripts/roomcheck.pl --mod ../PhunTaxi --mod ../PhunRooms
 The two halves cannot be separated. Those mods call `registerRoom` into OUR
 registry from their own files, so their map without their lua reports every
 interior square as claimed by nobody -- and their map without OUR lua reports
-all 990 of our slots as sitting on ground that is not there. `Tests/lua/stubs.lua`
+all 1190 of our slots as sitting on ground that is not there. `Tests/lua/stubs.lua`
 grew `stubs.addRoot` for it: its `require` now searches a LIST of mod trees,
 because the game merges every enabled mod's lua into one namespace and so does
 the registry. It also fires `OnInitGlobalModData`, since that is the hook the
@@ -2428,8 +2431,8 @@ cells are actually towns.
   anybody has visited, or stood within the load radius of, keeps the bare
   wall lines and metal south and east walls in first person for the life of
   that save. Deleting the chunk refreshes it and deletes its contents, so the
-  docs call it cosmetic and leave it. `playing.md`, `admin.md`, both
-  `workshop.txt` files and the README say so; a future map fix aimed at
+  docs call it cosmetic and leave it. `playing.md`, `admin.md` and the
+  README say so, and the Workshop text was trimmed and no longer does; a future map fix aimed at
   Viewpoint carries the same caveat.
 - **PhunZones2 is a soft hook, and the interior zone is ours.**
   `shared/PhunInteriors/compat_phunzones.lua` adds the `PhunInteriors` zone to
@@ -2445,10 +2448,9 @@ cells are actually towns.
   object, and the player's entrance for an admin port or holderless room.
   A position inside our own zone is never pushed, or the void would name
   itself. None of it has run in game.
-  Whennyago's own client code iterates that Set, which contradicts the
-  `getCell():getVehicles()` row in the API table above. That row predates
-  this patch and is worth rechecking in game: if iterator() works, loaded
-  vehicles CAN be enumerated from Lua.
+  Whennyago's own client code iterates that Set. That once contradicted the
+  `getCell():getVehicles()` row in the API table above; the row has been
+  corrected, since `iterator()` is confirmed working on a dedicated server.
 
 ## Known gaps
 
@@ -2616,10 +2618,11 @@ cells are actually towns.
 
 1. **The map is cut and `defaults.lua` matches it** — verified, not asserted:
    `perl scripts/roomcheck.pl` compares the two and is the only thing that does.
-   Both it and `scripts/fencecheck.pl` are green as of 2026-09-20, against the
-   export taken after 87,49 and 88,49 were carved out. **Everything in the
-   rest of this item below the next few paragraphs still describes the
-   superseded two-cell, two-room map and needs a pass.** The top of
+   Both it and `scripts/fencecheck.pl` are green as of 2026-11-01, against the
+   twenty cell export: **1190 slots, 16870 interior squares, 1630 door
+   squares.** **Everything in the rest of this item below the next few
+   paragraphs still describes earlier maps and needs a pass.** Room ids in it
+   use the old `3x4_bookstore` scheme and many have moved cell. The top of
    `defaults.lua` is the current description.
 
    **92,46 was added on 2026-10-14.** Rows 1-6 are `Bus_School_3x5`,
@@ -2627,10 +2630,8 @@ cells are actually towns.
    `Trailer_Furniture_3x6` and `Cab_2x3`, registered as Bus_School_Small,
    Trailer_Moving_Small, Van_Florist, Bus_Plain, Trailer_Moving_Med and
    Truck_Sleeper_Cab. The cab moved here from 91,49 row 1, which is Van again,
-   so Van's slots are numbered as they were before the cab took that row. None
-   of the five new rooms is bound to a vehicle yet. It is in
-   `phuninteriors.pzw` and has not been exported yet, so the shipped map is
-   still the eighteen below. 91,46 lost its east fence and NE post to it and
+   so Van's slots are numbered as they were before the cab took that row. It has
+   since been exported and ships, and all six rooms are bound. 91,46 lost its east fence and NE post to it and
    gained a concave `Border_NW` at local 255,255; 92,46 carries `Border_N` at
    y=0 and y=255, `Border_W` at x=255 and posts at 255,0 and 255,255.
    `fencecheck.pl` learned one rule for it: the 255,255 square of a cell with
@@ -2668,7 +2669,7 @@ cells are actually towns.
    the project. The third `NoPowerOrWater` zone is 512 tall in both the
    project and `objects.lua`, and the PhunZones void covers 92,47.
 
-   **Eighteen cells**, an L: five across (87..91) by three down (46..48), plus
+   **Twenty cells now, the two above plus these eighteen**, an L: five across (87..91) by three down (46..48), plus
    89..91 on row 49. Each is a 10 x 6 grid at a pitch of 25 across and 42
    down: **990 registered slots, 14540 interior squares, 1330 door squares**
    as of 2026-09-20. The cell contents below are older than that -- 92,49 now
@@ -3287,31 +3288,35 @@ cells are actually towns.
 2. **Icon and poster are done.** `icon.png` and `poster.png` both ship, and
    `Tests/root/PhunInteriors/common/` carries its own pair for the test id.
    GIMP sources are in `Docs/images/` and are deliberately untracked.
-3. **`workshop.txt` has an empty `id=`.** Fill on first publish.
-4. **The registry is fully populated.** `defaults.lua` registers 94 rooms, 89
+3. **Published.** `workshop.txt` carries id 3812500419 and `Tests/workshop.txt`
+   3809818391.
+4. **The registry is fully populated.** `defaults.lua` registers 94 rooms, 92
    vehicle bindings and one object binding, generated by `scripts/gendefaults.pl`
-   from the three CSVs. There is no `phun.van` binding any more -- every
+   from the three CSVs. They name 311 vehicle scripts and 4 tents. 92 rooms have
+   a vehicle of their own; `Bus` is reached only as overflow, and `Van_Butcher`
+   by nothing at all. There is no `phun.van` binding any more -- every
    binding is `phun.vehicles.*` and the matcher is gone, so the sandbox
    script-override option that named it has been removed too. The mechanism
    itself (`Core.applySandboxScriptOverrides`, keyed on binding id) is live and
    unused; a server wanting it back declares an option per binding it cares
    about.
-5. **The reshaped registry has never run in game.** Rooms, bindings, per-slot
-   blueprint capture and the nullable generator are all
-   covered by `Tests/lua/` -- 969 checks, all green -- which is real verification
+5. **The reshaped registry has run in game, without a full pass.** Rooms,
+   bindings, per-slot blueprint capture and the nullable generator are all
+   covered by `Tests/lua/` -- 1008 checks, all green -- which is real verification
    of the logic and no verification at all that PZ agrees. In particular:
-   - **Capture is now load bearing and has never succeeded on this map.** The
-     `bounds.z + 1` sweep used to count a nil square above the room as a
-     failed read, which refused every capture on both cells — see "Only the
-     room's own level has to read completely". That is fixed but unproven;
-     the 30-second test is to open the admin room list, port into a slot and
-     read its Captured column — or run `PhunInteriors.admin("manifests")`.
+   - **Capture is load bearing and is confirmed working**, on a dedicated
+     server on 2026-11-01: `captured slot for phun.room.Camper_Medium#2: 53
+     objects, 31 distinct sprites`. It failed every attempt until the
+     `bounds.z + 1` sweep stopped counting a nil square above the room as a
+     failed read, see "Only the room's own level has to read completely".
    - Nothing ships a blueprint any more, so a slot whose capture fails falls
      through to a sibling. That path exists and is tested against stubs, but
      it has never been reached in game.
    - Nothing about the assignment ordering has been seen with two vehicle
      bindings and overlapping rooms on a server.
-6. **The admin room list has never run in game.** `client_rooms.lua`,
+6. **The admin room list has run in game**, on a dedicated server on
+   2026-11-01: the window, the Slots tab and the `roomSlots` round trip at 1190
+   slots all work. The rest of this item predates that. `client_rooms.lua`,
    `client_admin.lua`, `Transit.adminEnter` and `Slots.acquireIn` are new. The
    allocation half is covered by `Tests/lua/slots_spec.lua` and the reverse
    index by `registry_spec.lua`; the window is not covered by anything, because
@@ -3319,7 +3324,7 @@ cells are actually towns.
 
    The parts most likely to be wrong are the ones the specs cannot see: whether
    the room state payload survives `sendServerCommand` on a dedicated server at
-   960 slots, and whether `ISAdminPanelUI`'s end-of-create grid layout still
+   1190 slots, and whether `ISAdminPanelUI`'s end-of-create grid layout still
    places our button now that a second mod may also be adding one. Both are
    visible immediately — an empty list, or a button in the wrong place.
 
@@ -3570,12 +3575,13 @@ cells are actually towns.
     owner put there. They used to point at `phun.room.2x3_camping` and share
     the Scamp trailer's twenty slots.
 
-12. **The registry editor has never run in game, and none of it is reachable
-    without one.** `shared/PhunInteriors/{overrides,json}.lua`,
+12. **The registry editor's window has run in game; its save file has not been
+    confirmed.** The tabs, and bindings made with the Vehicle Bench, work. What
+    follows predates that. `shared/PhunInteriors/{overrides,json}.lua`,
     `server/PhunInteriors/store.lua`, the `editRoom` / `editBinding` /
     `roomSlots` commands and the whole of `client/PhunInteriors/ui/` are new.
-    The logic underneath is covered — `overrides_spec.lua` is 87 checks,
-    `store_spec.lua` 49 and `admin_spec.lua` 24, and the load-bearing ones were
+    The logic underneath is covered -- `overrides_spec.lua` is 104 checks,
+    `store_spec.lua` 49 and `admin_spec.lua` 70, and the load-bearing ones were
     confirmed to fail against deliberately broken copies — which is real
     verification of the patch model and none at all that PZ agrees.
 
@@ -3605,7 +3611,7 @@ cells are actually towns.
     - **The Slots tab's two dropdowns**, which nothing can test: they are
       client UI, and the specs cannot load a file that needs `ISComboBox`.
       Two things to watch. `ISComboBox:clear()` empties the options and
-      deliberately does **not** reset `selected`, so narrowing 81 rooms to one
+      deliberately does **not** reset `selected`, so narrowing 94 rooms to one
       can leave it pointing at row 40 of a one-row list —
       `rebuildPickers` sets `selected` on every path for that reason, and the
       symptom if it is wrong is a dropdown that draws blank or the wrong name.
@@ -3739,7 +3745,7 @@ cells are actually towns.
       that route now; see #16.
 
 16. **Holderless entry (`Core.enterRoom`) has never run in game.**
-    `enterroom_spec.lua` is 49 checks: a free slot, sharing when full,
+    `enterroom_spec.lua` is 74 checks: a free slot, sharing when full,
     idempotent re-entry and recovery, release only when the last occupant
     leaves, re-leasing in place after a hand back, reclaiming an empty one, a
     safehouse refusal, and `exit = false`. What it cannot see:
@@ -3915,7 +3921,7 @@ cells are actually towns.
     bare ground before the map was enabled, whose room defs are there and
     whose chunks are woods (`Docs/existing-save.md`).
 
-24. **The vehicle bench has never run in game.** `ui/bench.lua` and
+24. **The vehicle bench has run in game**, binding its first pack. `ui/bench.lua` and
     `server/PhunInteriors/bench.lua`, for binding a vehicle pack one vehicle at
     a time: spawn beside the admin, pick a room, Bind, Next. Built for the PZK
     Vanilla Plus Car Pack (3217685049) and its Community Expansion
@@ -3980,6 +3986,42 @@ cells are actually towns.
     - **The patrol boat's side seat**, `KSPSideLeftForward`, which carries
       climb animations of its own. If `firstFreeSeat` reaches it, it is
       entered with a plain `ISEnterVehicle` like any other.
+
+27. **Reassigning a room to another vehicle is reported working in game**
+    (dedicated server, 2026-11-01). Asked for by a
+    player whose livestock trailer, with their house in it, falls through the
+    map or vanishes once or twice a week; nothing can open a room whose vehicle
+    is gone, so they carried everything to a new trailer by hand each time.
+    `Slots.reassign` re-keys the lease and touches nothing else, reached by the
+    Slots tab's Reassign button and `admin("reassign")`. Admin only.
+    `admin_spec.lua` covers it, and the guards, the position update and the
+    re-keying were each confirmed to fail when broken.
+    - **The first run was reported as doing nothing.**
+      The log showed three clicks, all refused correctly (`already holds this
+      room`, `already holds ...; reset that slot first`, `stand beside`). The
+      answer only reached the status line, small and gone in eight seconds, so
+      it now comes back as a dialog. The last refusal was a real fault:
+      `getUseableVehicle` is nil server side beside an Airflyte and 3 is short
+      on a long trailer. So the client picks with
+      `ISVehicleMenu.getVehicleToInteractWith`, names the vehicle in the confirm
+      and sends its id, and a named vehicle that does not resolve nearby is
+      refused rather than guessed at. That fix is what is reported working.
+    - **The weight half has not been watched**: the mass coming off an old
+      vehicle that is still loaded, and the new one being charged at its first
+      exit. Phase J5 of `Docs/testplan.md`.
+    - **A room whose vehicle was removed through a hook we see.** `removal.lua`
+      has already released it, so it is quarantined rather than leased and this
+      refuses it, though the contents are there until it is next handed out.
+      Vanilla jank does not take that path.
+
+28. **`Author.emit` probably cannot write its file.** Found reading the docs on
+    2026-11-01, not by running it. It asks `getFileWriter` for
+    `PhunInteriors_<id>.lua`, and `.lua` is not one of the five extensions that
+    call allows (see the API table), so it should answer `could not open ...
+    for writing` and write nothing. `author_spec.lua` cannot see this, because
+    its stub writer accepts any name. `Docs/map-authors.md` step 4 still says
+    the file is written. The likely fix is a `.txt` extension, since the doc
+    already says to copy the numbers out rather than ship the file.
 
 ## v2, deliberately not in v1
 

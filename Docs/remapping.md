@@ -123,7 +123,9 @@ not: the mod registers it again on the next boot. Edit, do not delete.
   your van fills before the general van room it shares with forty others.
   **Priority** on the room form breaks ties.
 - **Players keep what they had.** Re-pointing a binding does not move anybody
-  already holding a room. It decides where the next one goes.
+  already holding a room. It decides where the next one goes. To move one
+  vehicle's room to another vehicle, use **Reassign** on the Slots tab; see
+  [Running a server](admin.md#the-room-window).
 - **A room with no power stays dark** whatever reaches it. The Rooms tab's
   Power column says which rooms have a generator.
 - **A tent or other object pays for its lights** from a generator parked

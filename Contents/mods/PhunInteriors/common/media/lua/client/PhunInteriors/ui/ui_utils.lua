@@ -194,6 +194,20 @@ function tools.confirm(text, onYes, owner)
     return modal
 end
 
+--- Say something that must not be missed, with an OK.
+function tools.alert(text)
+    local lines = tools.wrapText(text, math.floor(340 * tools.FONT_SCALE), UIFont.Small)
+    local w = math.floor(380 * tools.FONT_SCALE)
+    local h = math.max(math.floor(130 * tools.FONT_SCALE),
+        #lines * tools.FONT_HGT_SMALL + math.floor(90 * tools.FONT_SCALE))
+    local modal = ISModalDialog:new((getCore():getScreenWidth() - w) / 2, (getCore():getScreenHeight() - h) / 2, w, h,
+        table.concat(lines, "\\n"), false, nil, function()
+        end)
+    modal:initialise()
+    modal:addToUIManager()
+    return modal
+end
+
 --- A pairs loop, because PZ does not expose next(). See Core.tools.isEmpty,
 --- which is the same function on the shared side; this copy exists so a client
 --- UI file does not have to require the shared tools just to test a table.

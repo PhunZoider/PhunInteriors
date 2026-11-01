@@ -54,6 +54,12 @@ Commands[Core.commands.adminResult] = function(arguments)
     if shell and arguments.result[1] then
         shell:notice(tostring(arguments.result[1]))
     end
+    -- A dialog as well. The status line is small and gone in eight seconds, and
+    -- every refusal of a reassign read as the button doing nothing, reported on
+    -- a dedicated server on 2026-11-01.
+    if arguments.action == "reassign" and Core.ui.tools and arguments.result[1] then
+        Core.ui.tools.alert(tostring(arguments.result[1]))
+    end
     local bench = Core.ui.bench and Core.ui.bench.current()
     if bench then
         bench:notice(arguments.result)
