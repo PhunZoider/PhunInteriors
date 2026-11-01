@@ -2355,8 +2355,16 @@ cells are actually towns.
   PhunZones, not from A-Life itself, which the author does not have. Never run
   in game; `alife_spec.lua` covers the test, Phase J4 of `Docs/testplan.md` is
   the in-game check.
-- **BoatCore SP Gold (3813791850) needs no code of its own, only bindings and
-  one exception in the seat test.** Its four cabin boats are ordinary
+- **BoatCore SP Gold (3813791850) needs bindings, one exception in the seat
+  test, and one menu hook.** It replaces `ISVehicleMenu.showRadialMenu` at
+  file load, and for a player seated in a boat it clears the menu and builds
+  its own without calling what it replaced, so our seated slice survived only
+  if our file loaded after theirs. `client_context.lua` also wraps
+  `BoatCore.BoatRadial.append`, the mod's own extension point (its patrol
+  lightbar chains onto it), and `sliceAdded` stops the outer hook adding a
+  second slice in the other order. On foot their dispatcher falls through to
+  the previous `showRadialMenu`, so that path was never affected. Its four
+  cabin boats are ordinary
   `BaseVehicle`s in module `Base`: `BoatSunseekerYacht`,
   `BoatRozalindHouseboat`, `BoatShantyHouseboat` and `BoatKSPPatrol` (two Ps),
   bound to the four `Boat_*` rooms in 92,47. Each room states its only door
@@ -3943,6 +3951,9 @@ cells are actually towns.
     Gold (see Dependencies), and the afloat branch of `Core.seatIsEnterable`.
     `registry_spec.lua` covers the branch, and its main check was confirmed to
     fail with the branch disabled. What it cannot see, in rough order of risk:
+    - **The Enter slice while seated in a boat**, through the
+      `BoatCore.BoatRadial.append` hook. Client UI, so untested. The tells are
+      no slice, or two of them; on foot the ordinary hook covers it.
     - **The cab exit itself.** The client teleports to the seat's outside
       position, which on a boat afloat is likely a water square, then queues
       `ISEnterVehicle`. Nothing refuses a teleport onto water and the action

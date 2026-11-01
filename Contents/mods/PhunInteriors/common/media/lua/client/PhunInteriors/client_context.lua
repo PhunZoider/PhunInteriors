@@ -78,20 +78,53 @@ local function addEnterSlice(playerObj)
     end
 
     menu:addSlice(getText("ContextMenu_PhunInteriors_Enter"), enterTexture(), onEnter, playerObj, vehicle)
+    return true
 end
 
 local building = false
+-- Set when the slice already went in during the build the outer hook is
+-- wrapping, so it does not add a second one afterwards. See the BoatCore
+-- hook below, which is the only thing that sets it.
+local sliceAdded = false
 
 local baseShowRadialMenu = ISVehicleMenu.showRadialMenu
 
 function ISVehicleMenu.showRadialMenu(playerObj, ...)
     building = true
+    sliceAdded = false
     local ok, err = pcall(baseShowRadialMenu, playerObj, ...)
     building = false
     if not ok then
         error(err)
     end
-    addEnterSlice(playerObj)
+    if not sliceAdded then
+        addEnterSlice(playerObj)
+    end
+end
+
+-- BoatCore SP Gold (workshop 3813791850) replaces showRadialMenu at file load
+-- with a dispatcher that, for a player seated in a boat, clears the menu and
+-- builds its own without ever calling the function it replaced. So whether
+-- our hook above saw a seated boat depended on load order: loaded before
+-- BoatCore it is the dispatcher's upstream and never runs for a boat; loaded
+-- after, it wraps the dispatcher and adds the slice once the menu is up.
+--
+-- BoatCore.BoatRadial.append is the mod's own extension point, called during
+-- that build before the menu is displayed, and its patrol boat lightbar
+-- chains onto it the same way. Hooked here, the slice is there in either
+-- order. `sliceAdded` stops the second order getting it twice.
+--
+-- It lives in BoatCore's shared lua, which loads before any client file, so
+-- it is there now if BoatCore is enabled at all. Wrapped once: a later wrap
+-- of BoatCore's own captures ours as its upstream, so both still run.
+if BoatCore and BoatCore.BoatRadial and BoatCore.BoatRadial.append then
+    local baseBoatRadialAppend = BoatCore.BoatRadial.append
+    BoatCore.BoatRadial.append = function(playerObj, ...)
+        baseBoatRadialAppend(playerObj, ...)
+        if addEnterSlice(playerObj) and building then
+            sliceAdded = true
+        end
+    end
 end
 
 local baseShowRadialMenuOutside = ISVehicleMenu.showRadialMenuOutside
