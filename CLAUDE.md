@@ -319,7 +319,8 @@ Tests/lua/*_spec.lua               registry placement/links, allocation order,
                                    the speed anti-cheat would punish,
                                    the zone self-heal, refusing slots the
                                    map has no room for, boarding points,
-                                   the lock check, closing doors, and AVCS
+                                   the lock check, closing doors, AVCS, and
+                                   a safehouse respawn off the floor
 Tests/root/PhunInteriors/common/   overlay carrying the test ids, applied by
                                    deploy.cmd to build PhunInteriorsTest. The
                                    path must mirror the live mod folder or the
@@ -2036,6 +2037,7 @@ B41 tutorial applies.
 | **B42 has no server side "a player left" event.** `OnDisconnect` is a *client* event meaning "you were disconnected"; it takes no player argument and vanilla uses it only in `ConnectToServer.lua` and `ISMPEditAccount.lua`. Dumping every name from `LuaEventManager` finds no `OnPlayerDisconnect` or equivalent. | `server_events.lua` deliberately has no disconnect handler. It had one, hooked to `OnDisconnect`, and it never fired once. Keeping the occupancy is the better behaviour anyway — `playerSetup` finds it on reconnect. |
 | **B42 has no "a vehicle was destroyed" event either**, and **`isRemovedFromWorld()` does not mean removed.** `LuaEventManager` declares no `OnVehicleDestroyed`. From the bytecode, `permanentlyRemove()` is exit every passenger, `breakConstraint`, `removeFromWorld()`, `removeFromSquare()`, `VehiclesDB2.removeVehicle` — and `removeFromWorld()` is also what an ordinary chunk unload calls (it starts with `VehiclesDB2.setVehicleUnloaded`), so the `removedFromWorld` flag is true of every parked vehicle out of range. Vanilla calls `permanentlyRemove()` from exactly three places: `ISRemoveBurntVehicle:complete()` (blowtorch on a wreck), and the admin "remove vehicle" cheat in `ISVehicleMechanics.onCheatRemoveAux` and `VehicleCommands.remove`. Stripping parts never removes a vehicle. | `server_events.lua` had an `OnVehicleDestroyed` handler guarded by an existence test, so it skipped itself and a removed vehicle's room stayed leased — which under reclaim-on-demand means a full pool may take a living player's older room instead of this abandoned one. `removal.lua` now hooks the removal *calls* and releases on the flag **changing** across them, never on its value: `complete()` is wrapped server side, and since `VehicleCommands` is a local table the client warns first (`vehicleRemoving`) and the server watches for five seconds. Anything else calling `permanentlyRemove()` is not seen; its room goes unrenewed and is reclaimed like any other. |
 | **Safehouse claims are a global list, and the overlap test is half open.** `SafeHouse` (`zombie/iso/areas`) declares static `getSafehouseOverlapping(int, int, int, int)`; from the bytecode it walks `safehouseList` and returns the first house where `arg0 < house.x + w`, `arg2 > house.x`, `arg1 < house.y + h` and `arg3 > house.y` — so the arguments are corners `x1, y1, x2, y2` with the far edge **exclusive**, which is how vanilla's zone editor passes them. `getX2()` is `x + w`. It reads no square, so it answers for an unloaded chunk. `SafeHouse.getSafeHouse(square)` also exists but needs a loaded square. | `Slots.safehouseOn` passes `Core.slotBounds`, whose far edges are inclusive, as `x1, y1, x2 + 1, y2 + 1`. Passing them unadjusted misses a claim covering only the footprint's last row or column — which is where the south and east walls stand. A claimed slot is never scrubbed (`Scrub.slot`), reclaimed (`isReclaimable`) or handed to a vehicle that does not hold it (`Slots.acquire`, and `acquireIn`'s own pick). |
+| **Safehouse respawn is a per player tickbox with no prompt, and it swaps width and height.** `SafehouseAllowRespawn` only permits it. `MapSpawnSelect:getSafehouseSpawnRegion` also needs `isClient()`, `safe:isRespawnInSafehouse(username)` -- `playersRespawn`, empty on a new claim, set by **Respawn in Safehouse** in `ISSafehouseUI`, saved and synced -- and owner or member. It then returns the only region, so `hasChoices` is false and the selector skips itself, unless `PlayerRespawnWithSelf` or `PlayerRespawnWithOther` adds a choice. The point is `x + getH() / 2, y + getW() / 2, 0`. A claim's box is NOT the building: `addSafeHouse(square, player)` passes `getX() - 2, getY() - 2, getW() + 4, getH() + 4` of the `BuildingDef`, whose bounds are over `rooms` only. A real save held `x=23078 y=12375 w=7 h=13` for the 3x9 floor at 23080,12377. So the corner of a claim is outside the room and the shell falls inside the claim. `body.pl` prints `iconst` and `isub` as raw `op_05`, `op_64`, so a filtered disassembly hides this arithmetic. | "I get no option" is the designed behaviour, not a fault. And on a floor longer than it is wide the spawn is off it, the two squares cancelling: 4 squares east on a 3x9, 6 on a 3x13. `Transit.settleSafehouseRespawn` corrects that for our rooms, finding the slot from the claim's middle. |
 | **Nothing in the engine keeps a player OFF a claimed safehouse square.** The whole enforcement surface is one method — `SafeHouse.isPlayerAllowedOnSquare(IsoPlayer, IsoGridSquare)` — which reads `ServerOptions.safehouseAllowTrepass` (PZ's own spelling) and otherwise asks `SafeHouse.isSafeHouse(square, username, true)`. Across the entire jar exactly two classes reference it: `SafeHouse` itself, and `BaseVehicle`, from **`isExitBlocked2`** — "can you get out of this seat onto that square". There is no movement gate, no periodic sweep and no ejection anywhere. | So a claim protects a safehouse from being *driven into and stepped out of*, and from nothing else. Teleporting a player onto a claimed square is not undone by the engine, so **porting a tenant into a room somebody else has claimed just works** — they stand in it and the leash contains them there normally. It does not self-correct into an eviction, which was the hope. If a claim should gate ENTRY as well as protect the room, that is ours to build in `Transit.canEnter`, and it needs an answer for a refusal that has to be explained in terms of a vehicle the player is standing next to rather than a building they can see. |
 | `BaseVehicle` declares `getCurrentSpeedKmHour`, `getSpeed2D`, `getDriver`, `getDriverRegardlessOfTow`, `getVehicleTowing`, `getTowingPartner`, `isSeatInstalled`, `isDriver`. `OnSwitchVehicleSeat` is **not** an engine event — vanilla registers it from `ISVehicleDashboard.lua:716`. | Rule 5 gates on speed, not on `getDriver()`, because a towed vehicle moves with nobody at its wheel. The tracker installs in the deferred setup, like the destroy guards, or the seat hook silently does nothing. |
 | **Zombies are authorized to a client, not simulated by the server alone.** `zombie/popman/NetworkZombieManager` declares `getZombieAuth(UdpConnection, ZombieListPacket)`, `getAuthorizedZombieCount(UdpConnection)`, `getUnauthorizedZombieCount()`, `moveZombie(IsoZombie, UdpConnection, IsoPlayer)` and `recheck(IConnection)`, and `IsoZombie` carries `getOwner()`/`setOwner(UdpConnection)`, `getOwnerPlayer()` and `isRemoteZombie()`. Vanilla lua never touches any of it: **removing** zombies from a client is `SendCommandToServer("/removezombies ...")` in `ISSpawnHordeUI:onRemoveZombies`, with the direct `removeFromWorld()` + `removeFromSquare()` pair reserved for single player. | So a zombie near a player is simulated by **that player's client**, and a position written on any other side is overwritten by the owner's next update. `Transit.shoveZombies` is server side anyway, on the same reasoning as the leash, and the case it is written for is the one where the server is the owner: nobody has been near that vehicle, so the zombies were realised into a chunk the arriving player has only just loaded and `recheck` has not handed them over yet. Unproven on a dedicated server, and the tell if it is wrong is a shove that visibly snaps back. |
@@ -3958,10 +3960,37 @@ cells are actually towns.
     occupancy. `occupancy_spec.lua` covers the count and the event. What it
     cannot see: that `OnCreatePlayer` fires on an MP respawn with index 0,
     that the server's `isDead()` reads true for a remote corpse before the
-    respawn, and that the safehouse respawn lands inside the slot footprint
-    `recover` tests rather than in the shell. A new character has empty
-    modData, so `rescueStranded` has no entrance to fall back on; if the
-    lease has gone, the respawn stays stranded as before.
+    respawn. A new character has empty modData, so `rescueStranded` has no
+    entrance to fall back on.
+    **Re-raised 2026-11-01, and that fix had a second half missing.** Vanilla
+    swaps width and height for the spawn point (see the API table), so 15 of
+    the 94 rooms, every 3x9 and 3x13 floor, put the new character past the east
+    wall, in no slot, where neither recover nor a relog could help; 9 more, the
+    2x4 and 3x6 floors, put them on the east wall line, where the leash would
+    send them straight out. Which room the reporter had claimed is not known.
+    `Transit.settleSafehouseRespawn` now moves them to the room's spawn and
+    recovers them there, with a teleport's grace, when they stand within a
+    square of where that arithmetic lands for a claim vanilla would have used.
+    `respawn_spec.lua` covers it, and each guard was confirmed to fail when
+    removed. **First in game run, same day, on a dedicated server: it did
+    nothing and said nothing.** `CreatePlayerPacket` logged `position:23084,12378`
+    for Camper - Large #1, origin +4,+1, so the arithmetic is right, and no
+    settle or recover line followed. The cause took two more runs. It was not
+    an `Integer` index failing `~= 0` (`LuaCaller.pcallvoid` converts event
+    arguments), and it was not the server's position lagging: with the client
+    reporting its position (`Transit.recoverRespawn`), both ends read
+    `23109.5,12378.5`. It was the claim box. `addSafeHouse` claims the building
+    plus two squares a side, so settle's `slotAt` on the claim's corner missed
+    the slot. It asks at the middle now. The spec had the same wrong box in its
+    stub, which is why it passed; the stub now claims what the engine claims, and
+    17 checks fail with the corner put back. **Reported working on 2026-11-01**
+    on Camper - Large on a dedicated server, tested as an admin. The wall line
+    rooms (2x4, 3x6) and a non-admin have not been run. A failed respawn logs
+    every claim the player has.
+    A claim that has outlived its lease still goes to the
+    floor, but with no holder there is no way out: it logs, and an admin has to
+    move them. The vanilla option is a per player tickbox and shows no prompt,
+    so testing it means ticking **Respawn in Safehouse** first.
 
 26. **Boat rooms have never run in game.** Four rooms in 92,47 for BoatCore SP
     Gold (see Dependencies), and the afloat branch of `Core.seatIsEnterable`.

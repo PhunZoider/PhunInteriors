@@ -236,6 +236,12 @@ room is never reclaimed, scrubbed or reset, and it turns away anybody the
 claim does not allow, admins included unless their role can enter any
 safehouse. To free one, remove the claim the vanilla way first.
 
+`SafehouseAllowRespawn` only permits respawning in a safehouse. Each player
+also has to tick **Respawn in Safehouse** in their Safehouse panel, and there
+is no prompt at respawn: with the box ticked they simply wake up there. If the
+claim has lost its lease they still wake in the room, but with no way out, so
+they need moving by hand. The log says when that happens.
+
 ## Other mods
 
 - **PhunServer2**, if installed, adds the `/interiors` chat command. Nothing

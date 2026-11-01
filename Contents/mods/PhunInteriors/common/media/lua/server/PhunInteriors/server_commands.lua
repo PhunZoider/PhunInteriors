@@ -64,9 +64,26 @@ Commands[Core.commands.playerSetup] = function(player, args)
     -- no "Step outside", until a relog sent the first one again. Whatever the
     -- dead character held is ended first: the new one is wherever the respawn
     -- put them, and recover asks that question from scratch.
+    --
+    -- Unless that was off the floor of a claimed room, which vanilla does to any
+    -- long one; see Transit.settleSafehouseRespawn.
+    --
+    -- Asked at the position the client reports, because the server's own copy
+    -- may not have caught up. Taking it on trust costs nothing: it only ever
+    -- decides whether somebody is in a room their own lease or claim covers,
+    -- and a client already says where its own player is.
     local respawned = args and args.respawned
     if respawned then
         Transit.endVisitOnDeath(player)
+        local at = nil
+        if type(args.x) == "number" and type(args.y) == "number" and type(args.z) == "number" then
+            at = {x = args.x, y = args.y, z = args.z}
+        end
+        local placed = Transit.recoverRespawn(player, at)
+        Core.logLn(string.format("%s respawned; client reports %s,%s,%s, server sees %s,%s,%s; %s",
+            tostring(Core.playerKey(player)), tostring(args.x), tostring(args.y), tostring(args.z),
+            tostring(player:getX()), tostring(player:getY()), tostring(player:getZ()),
+            placed and "they are in a room" or "they are not in a room"))
     end
     if not Core.occupants[Core.playerKey(player)] then
         if not Transit.recover(player) then

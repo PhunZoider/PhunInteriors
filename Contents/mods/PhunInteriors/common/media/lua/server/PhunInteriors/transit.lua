@@ -2374,8 +2374,14 @@ end
 --- Rebuild occupancy for a player who logged in already inside a room, eg
 --- after a server restart. Beats the reference approach of minting a fresh
 --- random id and guessing by proximity.
-function Transit.recover(player)
+---
+--- `at` asks about a square other than the one they are on, for a caller about
+--- to move them there.
+function Transit.recover(player, at)
     local x, y, z = player:getX(), player:getY(), player:getZ()
+    if at then
+        x, y, z = at.x, at.y, at.z
+    end
     local store = Slots.store()
 
     for vehicleId, assignment in pairs(store.assignments) do
@@ -2423,6 +2429,117 @@ function Transit.recover(player)
     end
 
     return false
+end
+
+--- Finish a safehouse respawn that vanilla left off the floor of the room.
+--
+-- MapSpawnSelect:getSafehouseSpawnRegion spawns at x + H / 2, y + W / 2, width
+-- and height swapped. On a square building that is the middle. On a room 3
+-- wide and 9 long it is four squares east on a floor three wide: past the wall
+-- and into the shell, in no slot, so recover finds nothing and nothing can
+-- ever let them out. 3x13 lands further still. A 2x4 or 3x6 lands on the east
+-- wall line, which recover does find, and the leash then ejects them from the
+-- safehouse they asked to wake up in.
+--
+-- Only when they are where that arithmetic puts them, and the claim is one
+-- vanilla would have used, so a character who spawned anywhere else is not
+-- pulled in. Within a square, in case the engine nudged the landing. A landing
+-- that is on the floor is left to the ordinary recover.
+--
+-- The same grace as a teleport into a room, or the leash reads the server's
+-- copy of their position, still off the floor, as a breach.
+--
+-- A claim can outlive its lease, and then there is nobody to recover them to
+-- and nowhere to send them. They still go to the floor, among whatever is left
+-- of their things, and the log says an admin is needed.
+--
+-- `at` is where they are, when the caller knows better than the server's copy.
+function Transit.settleSafehouseRespawn(player, at)
+    if not SafeHouse or not SafeHouse.getSafehouseList then
+        return false
+    end
+    local username = player:getUsername()
+    local x, y, z = player:getX(), player:getY(), player:getZ()
+    if at then
+        x, y, z = at.x, at.y, at.z
+    end
+    local claims = SafeHouse.getSafehouseList()
+
+    for i = 0, claims:size() - 1 do
+        local claim = claims:get(i)
+        if claim:isRespawnInSafehouse(username)
+            and (claim:getPlayers():contains(username) or claim:getOwner() == username) then
+            local landedX = math.floor(claim:getX() + claim:getH() / 2)
+            local landedY = math.floor(claim:getY() + claim:getW() / 2)
+            if math.abs(math.floor(x) - landedX) <= 1 and math.abs(math.floor(y) - landedY) <= 1 then
+                -- The middle, not the corner: addSafeHouse claims the building
+                -- plus two squares on every side, so the corner is outside the
+                -- slot. The two squares cancel out of the landing above.
+                local roomId, index = Core.slotAt(claim:getX() + claim:getW() / 2,
+                    claim:getY() + claim:getH() / 2, z)
+                local room = roomId and Core.rooms[roomId]
+                local spawn = room and Core.slotSpawn(room, index)
+                if spawn and not Core.inBounds(Core.slotFloor(room, index), x, y, z) then
+                    local inside = Transit.recover(player, spawn)
+                    local occupancy = Core.occupants[Core.playerKey(player)]
+                    if occupancy then
+                        occupancy.graceUntil = getTimestampMs() + 6000
+                        occupancy.landed = nil
+                    end
+                    if inside then
+                        Core.logLn(string.format("moved %s from %s,%s onto the floor of %s#%s after a safehouse respawn",
+                            tostring(Core.playerKey(player)), tostring(x), tostring(y), roomId, tostring(index)))
+                    else
+                        Core.logLn(string.format("%s respawned in %s#%s, a claimed room with no lease on it; they " ..
+                            "have no way out until an admin moves them or a holder is given the slot",
+                            tostring(Core.playerKey(player)), roomId, tostring(index)))
+                    end
+                    Core.respond(player, Core.commands.teleport, {
+                        x = spawn.x,
+                        y = spawn.y,
+                        z = spawn.z,
+                        inside = inside and true or false,
+                        noExit = occupancy and occupancy.noExit or nil
+                    })
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+--- Find a respawned character's room, from where the client says they are.
+--
+-- A landing on the floor needs no move, but it does need the grace: without it
+-- the leash reads the server's copy of their position, which may not have
+-- caught up, and ejects them from the room they just woke up in.
+function Transit.recoverRespawn(player, at)
+    if Transit.settleSafehouseRespawn(player, at) then
+        return true
+    end
+    if not Transit.recover(player, at) then
+        -- What settling had to go on, because this has failed silently before
+        -- and every reason for it looks the same from outside.
+        if SafeHouse and SafeHouse.getSafehouseList then
+            local username = player:getUsername()
+            local claims = SafeHouse.getSafehouseList()
+            for i = 0, claims:size() - 1 do
+                local claim = claims:get(i)
+                if claim:getPlayers():contains(username) or claim:getOwner() == username then
+                    Core.logLn(string.format("%s has a claim at %s,%s %sx%s, respawn ticked: %s",
+                        tostring(username), tostring(claim:getX()), tostring(claim:getY()), tostring(claim:getW()),
+                        tostring(claim:getH()), tostring(claim:isRespawnInSafehouse(username))))
+                end
+            end
+        end
+        return false
+    end
+    local occupancy = Core.occupants[Core.playerKey(player)]
+    if occupancy then
+        occupancy.graceUntil = getTimestampMs() + 6000
+    end
+    return true
 end
 
 return Transit

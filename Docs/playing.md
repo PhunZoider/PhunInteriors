@@ -150,7 +150,9 @@ Whatever was in it is cleared out. The next time you go in through that
 vehicle you get a fresh, empty room and a message saying what happened.
 
 Going inside resets the clock. So does claiming the room as a **safehouse**,
-which keeps it for as long as the claim stands.
+which keeps it for as long as the claim stands. If the server allows safehouse
+respawn, tick **Respawn in Safehouse** in your Safehouse panel and your next
+character wakes up in the room. Nothing asks you when you respawn.
 
 A room somebody else has claimed as a safehouse refuses entry to anybody the
 claim does not allow.

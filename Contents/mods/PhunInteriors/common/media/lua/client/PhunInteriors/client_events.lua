@@ -43,10 +43,30 @@ end
 
 Events.OnTick.Add(setup)
 
+-- A tick after the event, for the connection to be the new character's, and
+-- carrying where they are. The server's copy of a new character's position
+-- cannot be relied on this early: a respawn into a room found nothing, silently,
+-- with the spawn point sitting in the server's own log (2026-11-01).
+local function reportRespawn()
+    Events.OnTick.Remove(reportRespawn)
+    local player = getPlayer()
+    if not player then
+        return
+    end
+    Core.logLn(string.format("respawned at %s,%s,%s; telling the server", tostring(player:getX()),
+        tostring(player:getY()), tostring(player:getZ())))
+    Core.dispatch(Core.commands.playerSetup, {
+        respawned = true,
+        x = player:getX(),
+        y = player:getY(),
+        z = player:getZ()
+    })
+end
+
 -- Only after setup, and only for a character it did not run for, so the first
 -- creation at load never sends playerSetup twice.
 Events.OnCreatePlayer.Add(function(playerIndex, player)
-    if not setupFor or playerIndex ~= 0 or not player or player == setupFor then
+    if not setupFor or not player or player:getPlayerNum() ~= 0 or player == setupFor then
         return
     end
     setupFor = player
@@ -54,7 +74,8 @@ Events.OnCreatePlayer.Add(function(playerIndex, player)
     -- the new one is in one.
     Client.inside = false
     Client.noExit = false
-    Core.dispatch(Core.commands.playerSetup, {respawned = true})
+    Events.OnTick.Remove(reportRespawn)
+    Events.OnTick.Add(reportRespawn)
 end)
 
 Events.OnServerCommand.Add(function(module, command, arguments)

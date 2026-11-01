@@ -937,8 +937,10 @@ Each of these has a Known gap in CLAUDE.md saying what to watch for.
 
 - **Doors (#21).** Leave a door open, walk out, come back: it is closed, and
   the log says so. A garage door closes all three squares.
-- **Respawning (#25).** Die in a claimed room with safehouse respawn on. You
-  respawn contained, and can leave.
+- **Respawning (#25).** Claim a room, tick Respawn in Safehouse, die and make a
+  new character; nothing asks where to spawn. You wake on the floor, contained,
+  and can leave. Do it in a 2x3 (Van), a 3x6 (Truck - Furniture) and a 3x9 (Bus
+  or Camper - Large). The last two log `after a safehouse respawn`.
 - **AVCS (Dependencies).** A claimed vehicle's room is refused unless its trunk
   would open for you. Leaving is never refused.
 - **Boats (#26).** Needs BoatCore SP Gold. Enter from a seat and from a dock,
