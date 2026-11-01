@@ -19,6 +19,10 @@ room editor ([remapping.md](remapping.md)), and a vehicle mod can bind its own
 | Room | Floor | Vehicles | Overflow |
 |---|---|---|---|
 | Ambulance Bay | 3x3 | `90fordF350ambulance`, `fr_fo_econoline_86_ambulance`, `fr_fo_f350_ambulance_80`, `pzkF350BoxAmbulance`, `pzkF350BoxCUCV`, `pzkVanBoxAmbulance` | Van - Ambulance |
+| Boat - Houseboat | 3x5 | `BoatRozalindHouseboat` |  |
+| Boat - Patrol | 2x3 | `BoatKSPPatrol` |  |
+| Boat - Shanty | 3x4 | `BoatShantyHouseboat` |  |
+| Boat - Yacht | 3x9 | `BoatSunseekerYacht` |  |
 | Bus | 3x9 | *none yet* |  |
 | Bus - Military | 3x9 | `87fordB700military`, `pzkFranklinTruckBusArmy` | Bus |
 | Bus - Plain | 3x9 | `fr_gm_newlook_70_35foot`, `pzkFranklinTruckBusAirport`, `pzkGmNewLookBus`, `pzkTransitBus` | Bus |

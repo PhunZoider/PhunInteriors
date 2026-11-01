@@ -8,7 +8,7 @@ local Core = PhunInteriors
 -- Docs/pi-mappings.csv and Docs/pi-vehicles.csv. Edit those and regenerate;
 -- an edit made here is lost on the next run.
 --
--- 89 rooms, 114 rows of ten stamps, 1140 slots.
+-- 93 rooms, 118 rows of ten stamps, 1180 slots.
 --
 -- A ROOM is a contract: one shape, and every place on the map it is stamped.
 -- Two rooms whose CONTRACT differs are two registrations. What is on the
@@ -70,6 +70,102 @@ local function registerRooms()
             [7] = {22718, 12419, 0},
             [8] = {22743, 12419, 0},
             [9] = {22768, 12419, 0}
+        }
+    })
+
+    -- Boat - Houseboat -- floor 3x5, 10 slots, room def 'fishing'.
+    -- Stamped at 92,47 row 4.
+    Core.registerRoom("phun.room.Boat_Houseboat", {
+        label = "Boat - Houseboat",
+        source = SOURCE,
+        size = {w = 4, h = 6},
+        spawn = {x = 1, y = 1},
+        front = "north",
+        cab = true,
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23567, 12163, 0},
+            [1] = {23592, 12163, 0},
+            [2] = {23617, 12163, 0},
+            [3] = {23642, 12163, 0},
+            [4] = {23667, 12163, 0},
+            [5] = {23692, 12163, 0},
+            [6] = {23717, 12163, 0},
+            [7] = {23742, 12163, 0},
+            [8] = {23767, 12163, 0},
+            [9] = {23792, 12163, 0}
+        }
+    })
+
+    -- Boat - Patrol -- floor 2x3, 10 slots, room def 'camping'.
+    -- Stamped at 92,47 row 6.
+    Core.registerRoom("phun.room.Boat_Patrol", {
+        label = "Boat - Patrol",
+        source = SOURCE,
+        size = {w = 3, h = 4},
+        spawn = {x = 1, y = 2},
+        front = "south",
+        cab = true,
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23567, 12247, 0},
+            [1] = {23592, 12247, 0},
+            [2] = {23617, 12247, 0},
+            [3] = {23642, 12247, 0},
+            [4] = {23667, 12247, 0},
+            [5] = {23692, 12247, 0},
+            [6] = {23717, 12247, 0},
+            [7] = {23742, 12247, 0},
+            [8] = {23767, 12247, 0},
+            [9] = {23792, 12247, 0}
+        }
+    })
+
+    -- Boat - Shanty -- floor 3x4, 10 slots, room def 'barn'.
+    -- Stamped at 92,47 row 5.
+    Core.registerRoom("phun.room.Boat_Shanty", {
+        label = "Boat - Shanty",
+        source = SOURCE,
+        size = {w = 4, h = 5},
+        spawn = {x = 1, y = 1},
+        front = "north",
+        cab = true,
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23567, 12205, 0},
+            [1] = {23592, 12205, 0},
+            [2] = {23617, 12205, 0},
+            [3] = {23642, 12205, 0},
+            [4] = {23667, 12205, 0},
+            [5] = {23692, 12205, 0},
+            [6] = {23717, 12205, 0},
+            [7] = {23742, 12205, 0},
+            [8] = {23767, 12205, 0},
+            [9] = {23792, 12205, 0}
+        }
+    })
+
+    -- Boat - Yacht -- floor 3x9, 10 slots, room def 'kitchen'.
+    -- Stamped at 92,47 row 3.
+    Core.registerRoom("phun.room.Boat_Yacht", {
+        label = "Boat - Yacht",
+        source = SOURCE,
+        size = {w = 4, h = 10},
+        spawn = {x = 1, y = 5},
+        front = "south",
+        cab = true,
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23567, 12121, 0},
+            [1] = {23592, 12121, 0},
+            [2] = {23617, 12121, 0},
+            [3] = {23642, 12121, 0},
+            [4] = {23667, 12121, 0},
+            [5] = {23692, 12121, 0},
+            [6] = {23717, 12121, 0},
+            [7] = {23742, 12121, 0},
+            [8] = {23767, 12121, 0},
+            [9] = {23792, 12121, 0}
         }
     })
 
@@ -2395,6 +2491,10 @@ local function registerVehicles()
         ["Base.63Type2VanApocalypse"] = "SeatRearRight",
         ["Base.63Type2VanHippie"] = "SeatRearRight",
         ["Base.63Type2VanMilitary"] = "SeatRearRight",
+        ["Base.BoatKSPPatrol"] = "door",
+        ["Base.BoatRozalindHouseboat"] = "door",
+        ["Base.BoatShantyHouseboat"] = "door",
+        ["Base.BoatSunseekerYacht"] = "door",
         ["Base.FleetwoodBounder86"] = "door",
         ["Base.RollingRefuge"] = "door",
         ["Base.SemiTruck"] = "door",
@@ -2418,6 +2518,38 @@ local function registerVehicles()
         source = SOURCE,
         rooms = {"phun.room.Ambulance_Bay"},
         scripts = {"Base.90fordF350ambulance", "Base.fr_fo_econoline_86_ambulance", "Base.fr_fo_f350_ambulance_80", "Base.pzkF350BoxAmbulance", "Base.pzkF350BoxCUCV", "Base.pzkVanBoxAmbulance"}
+    })
+
+    -- Boat - Houseboat: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Boat_Houseboat",
+        source = SOURCE,
+        rooms = {"phun.room.Boat_Houseboat"},
+        scripts = {"Base.BoatRozalindHouseboat"}
+    })
+
+    -- Boat - Patrol: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Boat_Patrol",
+        source = SOURCE,
+        rooms = {"phun.room.Boat_Patrol"},
+        scripts = {"Base.BoatKSPPatrol"}
+    })
+
+    -- Boat - Shanty: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Boat_Shanty",
+        source = SOURCE,
+        rooms = {"phun.room.Boat_Shanty"},
+        scripts = {"Base.BoatShantyHouseboat"}
+    })
+
+    -- Boat - Yacht: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.Boat_Yacht",
+        source = SOURCE,
+        rooms = {"phun.room.Boat_Yacht"},
+        scripts = {"Base.BoatSunseekerYacht"}
     })
 
     -- Bus: 0 bound directly, 15 more overflowing in.

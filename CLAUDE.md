@@ -10,7 +10,7 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 **The registry was reshaped and has not run in game since.** Rooms, bindings
 and blueprints all changed shape -- see "A room is a contract" in Architecture.
-`Tests/run.sh` is green across 906 checks, which is real verification of the
+`Tests/run.sh` is green across 969 checks, which is real verification of the
 logic and no verification at all that PZ agrees. Everything below describes
 what was proven *before* that change; the mechanics are the same, but the
 registry underneath them is not.
@@ -294,7 +294,7 @@ Contents/mods/PhunInteriors/common/
   media/lua/shared/Translate/EN/     ContextMenu.json, IG_UI.json, Sandbox.json,
                                     ItemName.json, Recipes.json
   media/scripts/PhunInteriors.txt    the reservoir kit item and its recipe
-  media/maps/phuninteriors/          the map: 19 cells of lotpack, lotheader
+  media/maps/phuninteriors/          the map: 20 cells of lotpack, lotheader
                                     and chunkdata, plus map.info, objects.lua
                                     (the NoPowerOrWater zones) and roomtones.lua.
                                     16MB, tracked, binary -- see .gitattributes
@@ -2043,6 +2043,7 @@ B41 tutorial applies.
 | **One teleport call is not enough across the map.** The player moves, but the destination chunk is not loaded, and the engine restores anyone on a square that does not exist. It reads as "the teleport silently did nothing" — the position log shows the move landing and then being undone. | `Client.teleport` re-asserts the position every tick until `getGridSquare` at the destination is non-nil (`HOLD_TICKS`). Applies leaving a room too: the vehicle's chunk unloads while the player is inside. The leash `graceUntil` **must** outlast that window. |
 | `ISEnterVehicle:new(character, vehicle, seat)` is the only sanctioned way into a seat, and its `start()` silently returns without entering if the character is more than 2 tiles from `getPassengerPosition(seat, "outside")`. `isValid` then fails and the queue drops it, so a failed re-seat degrades to standing there rather than hanging — **this happens by default**, because the only position the server can send is the vehicle centre, which is further than 2 tiles on anything van sized. Teleport to the outside position first (`getWorldPos(pos:getOffset(), Vector3f)`, as vanilla does). `getBestSeat`, `isSeatOccupied`, `getMaxPassengers`, `getCharacter` all exist on `BaseVehicle`. | Re-seating on exit is a client action in `Client.teleport`'s second phase, run only once the destination chunk has streamed in. |
 | **An empty `position outside { }` block DELETES the position, and a seat without one crashes `ISEnterVehicle`.** From the bytecode, `VehicleScript.LoadPosition` opens with `if (block.isEmpty()) { positions.remove(existing); return null; }` -- so an empty block is how a script cancels a position it inherited from a template, and `getPassengerPosition(seat, "outside")` then answers null. `ISEnterVehicle:start` does `outside:getOffset()` at line 43 with **no nil check**, and so does `ISVehicleMenu`'s own `distanceToPassengerPosition`. The sanctioned test is `vehicle:isEnterBlocked(chr, seat)`, an alias for `isExitBlocked(chr, seat)`, which returns true when either the inside or the outside position is null and otherwise runs `PolygonalMap2.lineClearCollide` between the two. `PolygonalMap2.instance` is built in a static initialiser, so it is never nil, and the only client-only branch in there is gated on `GameClient.client`. | A fitted, empty seat is **not** necessarily a seat anybody can be put into. Vanilla's own `VanSeats` rear seats have no door, and `Base.RollingRefuge` empties five of its six -- including **seat 0, the driver's** -- so a cab exit that took "the first free seat counting from the driver's" threw on the first RV that reached it. `Core.seatIsEnterable` is the one shared test, called by `firstFreeSeat` and `resolveSeat` client side and by `freeSeat` server side, where it also gates the moving-vehicle rule. Vanilla's answer for getting into a doorless seat is to board by one with a door and queue `ISSwitchVehicleSeat:new(chr, seatTo, seatFrom)` -- with `seatFrom` passed explicitly, because at queue time the character is not in the vehicle and the constructor's own default reads `getVehicle()`. |
+| **`isEnterBlocked` refuses every seat of a boat afloat.** `isExitBlocked` ends in `PolygonalMap2.lineClearCollide` between the inside and outside positions, which reaches `LineClearCollide.isNotClearOld`: any pathfind `Square` the line crosses that `isReallySolid` is "not clear", and `isReallySolid` is the solid bit OR the `solidtrans` bit (bar a window or hoppable beside it). Every vanilla water tile (`blends_natural_02_0`, `_5`, `_6`, `_7`) is `solidfloor` plus `solidtrans` plus `water`. BoatCore boards with a bare `ISEnterVehicle` and never asks. | `Core.seatIsEnterable` drops the line test when the vehicle's own square `has(IsoFlagType.water)`, the test vanilla's fishing code makes, and keeps only the null position check that prevents the crash. Without it a cab exit from a boat room could never find a seat and would put its tenant back inside every time. |
 | `vehicle:getSeat(player)` returns -1 once the character is out of the seat, and our entry action refuses to run until exactly that. | The seat **must** be captured client side in `Client.beginEnter`, before `ISExitVehicle` is queued, and sent with the enter request. Reading it server side in `Transit.enter` always yielded -1. |
 | From the server, an unloaded vehicle and a destroyed one are indistinguishable: `getVehicleById` returns nil for both. The vehicle's chunk is always unloaded while its owner is in a room, **and it reloads with a different `getId()`**, so the captured handle never resolves again. Confirmed from the logs. | `Transit.leave` must **not** warn `VehicleGone`; it fired on every normal exit. The client raises it after arrival, where the chunk is loaded and the question is answerable. `getVehicleById` is in `LuaManager$GlobalObject`, so it works client side too. |
 | **`square:getVehicleContainer()` is stricter than it reads.** From the bytecode it walks the vehicles of nearby chunks and returns the first whose `isIntersectingSquare(x, y, z)` is true, and that refuses outright unless `fastfloor(vehicle:getZ())` equals the square's level **and** `getController()` is non-nil, before it tests the outline. | An unhitched KI5 `Trailer54FlyingCloud22`, resting on its jack, answered no square at all: every exit from Camper - Large ended in `VehicleGone` while the caravan stood where it was left, and hitched it worked (reported on a dedicated server, 2026-10-10). `Core.nearestVehicle` and `Core.vehicleNear` now fall back to `Core.loadedVehicleNear`, nearest middle by distance over `getCell():getVehicles():iterator()`, which logs the z and controller it saw so the actual cause gets recorded. Entry had the same fault (reported 2026-10-11: after towing, "there is no vehicle here" until the player sat in the caravan): `resolveVehicle` in `server_commands.lua` now resolves the client's `getId()` with `getVehicleById` first, distance checked, before the square and the distance fallback. `Client.groundBeside` also requires each step to clear half the script's extents, since a blind square test calls the first step clear. Neither has run in game. |
@@ -2354,6 +2355,19 @@ cells are actually towns.
   PhunZones, not from A-Life itself, which the author does not have. Never run
   in game; `alife_spec.lua` covers the test, Phase J4 of `Docs/testplan.md` is
   the in-game check.
+- **BoatCore SP Gold (3813791850) needs no code of its own, only bindings and
+  one exception in the seat test.** Its four cabin boats are ordinary
+  `BaseVehicle`s in module `Base`: `BoatSunseekerYacht`,
+  `BoatRozalindHouseboat`, `BoatShantyHouseboat` and `BoatKSPPatrol` (two Ps),
+  bound to the four `Boat_*` rooms in 92,47. Each room states its only door
+  edge as `front` with `cab = true`, because the ground beside a boat is
+  usually water. Boarding is `door`: BoatCore itself boards from any seat's
+  outside position within 3, so our boarding point agrees with how the mod
+  gets anybody aboard. It never touches mass, so `Weight.apply` is
+  uncontested. The one change is in `Core.seatIsEnterable`; see the
+  `isEnterBlocked` row in the API table. Its mod.info says new single player
+  saves only and lists its MP build as incompatible; whether the MP build uses
+  the same script names is unchecked. Never run in game; Known gaps #26.
 - **Project Viewpoint (3809306528) needs nothing of its own, only two habits
   in our menus.** It is a ZombieBuddy Java renderer with a first person [F]
   menu built in `Viewpoint_Interact.lua` by harvesting vanilla's menus. For a
@@ -2449,12 +2463,12 @@ cells are actually towns.
      { name = "Waterless", type = "NoPowerOrWater",
        x = 22784, y = 11776, z = 0, width = 768, height = 1024 },
      { name = "Waterless", type = "NoPowerOrWater",
-       x = 23552, y = 11776, z = 0, width = 256, height = 256 },
+       x = 23552, y = 11776, z = 0, width = 256, height = 512 },
    }
    ```
 
    That is the L the block actually is: cells 87..88 x 46..48, then cells
-   89..91 x 46..49, then 92,46 on its own. All three are drawn as objects at 0,0 in the north-west cell of
+   89..91 x 46..49, then 92,46 and 92,47. All three are drawn as objects at 0,0 in the north-west cell of
    `phuninteriors.pzw` in cell-local coordinates; the exporter offsets them by
    the world origin and does not clip either to its cell, so a rectangle in
    the editor covers as many cells as it likes. Read them out of the export
@@ -2474,10 +2488,11 @@ cells are actually towns.
    `Zone.contains` is half open — `x >= zone.x` and `x < zone.x + width` — so
    a width is the cell count times 256 **exactly**, not one more, and the two
    rectangles tile at x 22784 with no gap and no overlap, as the third does
-   at 23552. That third one exists only in the editor project until the next
-   export: the shipped `objects.lua` must not get it before the cell does,
-   because `registerZone` also refuses a zone reaching more than 100 squares
-   past the last cell the world loaded, and 23808 is 156 past 91,46. A first pass at this
+   at 23552. Its x had to wait for 92,46 to ship, because `registerZone` also
+   refuses a zone reaching more than 100 squares past the last cell the world
+   loaded, and 23808 is 156 past 91,46. Growing it to 512 tall for 92,47 did
+   not have to wait: y 12288 is well inside the rows 91,49 already ships, so
+   the shipped `objects.lua` carries it ahead of that cell. A first pass at this
    file had `x = 22527, width = 513`, which covers 88,46 and one column of
    87,46, silently leaving the whole `phun.van.plain` set on the mains. Check
    the arithmetic against the cell bounds, not against a corner read off a map
@@ -2615,6 +2630,25 @@ cells are actually towns.
    the fence has to jog round that square and wants a post in 92,47, which
    does not ship. The PhunZones void (`compat_phunzones.lua`) already
    includes it.
+
+   **92,47 was added on 2026-11-01**, and exported the same day. Rows 1-2 are
+   bare; rows 3-6 are `Caravan_2_3x9`, `Caravan_2_3x5`, `Caravan_2_3x4` and
+   `Caravan_2_2x3`, registered as Boat_Yacht, Boat_Houseboat, Boat_Shanty and
+   Boat_Patrol for BoatCore SP Gold (see Dependencies). The doors, read out of
+   the lotpack: the yacht and the patrol boat at the south wall line (2,9 and a
+   double door at 0,3 and 1,3), the two houseboats at 1,0 in the north wall.
+   Each room states its door edge as `front` with `cab = true`, so the only
+   way out lands in a seat. The yacht also has two `windowW` pairs in its west
+   wall, and climbing out of one lands beside the boat. In `phuninteriors.pzw` 91,46 lost its
+   concave post at 255,255 and 92,46 lost its south fence and its 255,255
+   post, since both squares are now inside; 91,47 lost its east fence to it
+   and took the concave post at 255,255 instead; 92,47 carries `Border_W` at
+   x=255, `Border_N` at y=255 and a post at 255,255. The east fence is now
+   one run from 92,46 down through 92,47. `fencecheck.pl` needed no change:
+   its south-east rule covers 91,47 exactly as it covered 91,46, and against
+   the twenty-cell shape it derives eight turns, which are the eight posts in
+   the project. The third `NoPowerOrWater` zone is 512 tall in both the
+   project and `objects.lua`, and the PhunZones void covers 92,47.
 
    **Eighteen cells**, an L: five across (87..91) by three down (46..48), plus
    89..91 on row 49. Each is a 10 x 6 grid at a pitch of 25 across and 42
@@ -3236,7 +3270,7 @@ cells are actually towns.
    `Tests/root/PhunInteriors/common/` carries its own pair for the test id.
    GIMP sources are in `Docs/images/` and are deliberately untracked.
 3. **`workshop.txt` has an empty `id=`.** Fill on first publish.
-4. **The registry is fully populated.** `defaults.lua` registers 89 rooms, 84
+4. **The registry is fully populated.** `defaults.lua` registers 93 rooms, 88
    vehicle bindings and one object binding, generated by `scripts/gendefaults.pl`
    from the three CSVs. There is no `phun.van` binding any more -- every
    binding is `phun.vehicles.*` and the matcher is gone, so the sandbox
@@ -3246,7 +3280,7 @@ cells are actually towns.
    about.
 5. **The reshaped registry has never run in game.** Rooms, bindings, per-slot
    blueprint capture and the nullable generator are all
-   covered by `Tests/lua/` -- 906 checks, all green -- which is real verification
+   covered by `Tests/lua/` -- 969 checks, all green -- which is real verification
    of the logic and no verification at all that PZ agrees. In particular:
    - **Capture is now load bearing and has never succeeded on this map.** The
      `bounds.z + 1` sweep used to count a nil square above the room as a
@@ -3904,6 +3938,27 @@ cells are actually towns.
     `recover` tests rather than in the shell. A new character has empty
     modData, so `rescueStranded` has no entrance to fall back on; if the
     lease has gone, the respawn stays stranded as before.
+
+26. **Boat rooms have never run in game.** Four rooms in 92,47 for BoatCore SP
+    Gold (see Dependencies), and the afloat branch of `Core.seatIsEnterable`.
+    `registry_spec.lua` covers the branch, and its main check was confirmed to
+    fail with the branch disabled. What it cannot see, in rough order of risk:
+    - **The cab exit itself.** The client teleports to the seat's outside
+      position, which on a boat afloat is likely a water square, then queues
+      `ISEnterVehicle`. Nothing refuses a teleport onto water and the action
+      starts at once, but a tenant left standing in the water is the failure
+      to look for: `rejoin: seat ... taking ...` in the log and no seat.
+    - **`isStopped()` on a boat afloat.** If BoatCore's water controller keeps
+      it from ever reading stopped, boarding from a dock is refused as moving.
+      Boarding from a seat is unaffected, since a seat and the interior are
+      the same vehicle, and so is the cab exit.
+    - **A boat half on land.** The afloat test reads only the vehicle's own
+      square, so a half beached boat gets whichever answer its middle gives.
+    - **The yacht's windows.** Not a cab exit, so a tenant climbing out lands
+      beside the boat, which `Client.groundBeside` may put on water.
+    - **The patrol boat's side seat**, `KSPSideLeftForward`, which carries
+      climb animations of its own. If `firstFreeSeat` reaches it, it is
+      entered with a plain `ISEnterVehicle` like any other.
 
 ## v2, deliberately not in v1
 

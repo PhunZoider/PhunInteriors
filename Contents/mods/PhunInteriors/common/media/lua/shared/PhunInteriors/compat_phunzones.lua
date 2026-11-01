@@ -52,15 +52,15 @@ if phunZonesActive() then
             zeds = "remove",
             -- Shown as the zone the holder is in. See the header.
             isVoid = true,
-            -- Cells 87,46 to 92,46, then 87,47 to 91,48, then 89,49 to
+            -- Cells 87,46 to 92,47, then 87,48 to 91,48, then 89,49 to
             -- 91,49: the L that is left after 87,49 went to PhunTaxi and
-            -- 88,49 to PhunRooms, plus 92,46 on its north-east corner.
+            -- 88,49 to PhunRooms, plus 92,46 and 92,47 down its east side.
             -- PhunZones' rects are inclusive at both ends, unlike the half
             -- open NoPowerOrWater zones in objects.lua, so each ends on
             -- x255/y255.
             points = {
-                {22272, 11776, 23807, 12031},
-                {22272, 12032, 23551, 12543},
+                {22272, 11776, 23807, 12287},
+                {22272, 12288, 23551, 12543},
                 {22784, 12544, 23551, 12799}
             }
         }

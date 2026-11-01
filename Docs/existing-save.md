@@ -58,7 +58,7 @@ from the map the next time it loads.
    $save = "$env:USERPROFILE\Zomboid\Saves\Sandbox\YOUR_SAVE_NAME"
    $cells = @(); foreach ($x in 87..91) { foreach ($y in 46..48) { $cells += "$($x)_$y" } }
    foreach ($x in 89..91) { $cells += "$($x)_49" }
-   $cells += "92_46"
+   $cells += "92_46", "92_47"
    foreach ($c in $cells) {
      "chunkdata\chunkdata_$c.bin","metagrid\metacell_$c.bin","apop\apop_$c.bin","zpop\zpop_$c.bin" |
        ForEach-Object { Remove-Item (Join-Path $save $_) -ErrorAction SilentlyContinue }
@@ -109,7 +109,7 @@ $remote = "/Zomboid/Saves/Multiplayer/servertest"
 $out = @("option batch continue", "option confirm off", "open $server")
 $cells = @(); foreach ($x in 87..91) { foreach ($y in 46..48) { $cells += "$($x)_$y" } }
 foreach ($x in 89..91) { $cells += "$($x)_49" }
-$cells += "92_46"
+$cells += "92_46", "92_47"
 foreach ($c in $cells) {
   foreach ($f in "chunkdata/chunkdata_$c.bin","metagrid/metacell_$c.bin","apop/apop_$c.bin","zpop/zpop_$c.bin") {
     $out += "rm `"$remote/$f`""

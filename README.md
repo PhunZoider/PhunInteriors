@@ -81,6 +81,9 @@ None are required. Install any of these and its vehicles get rooms:
 - [Rolling Refuge](https://steamcommunity.com/sharedfiles/filedetails/?id=3788543896)
 - [Whennyago Initiative](https://steamcommunity.com/sharedfiles/filedetails/?id=3790153201)
 - 1986 Fleetwood Bounder (mod id `FleetwoodBounder86`)
+- [BoatCore SP Gold](https://steamcommunity.com/sharedfiles/filedetails/?id=3813791850):
+  the yacht, both houseboats and the patrol boat. Every way out of a boat
+  room puts you at the helm, so nobody steps out into the water.
 
 [Supported vehicles](Docs/vehicles.md) says which vehicle gets which room.
 [Another Vehicle Claim System](https://steamcommunity.com/sharedfiles/filedetails/?id=2957935793)
@@ -98,9 +101,10 @@ Build 42. Nothing else: there are no required mods. PhunServer2 adds an
 trip in or out of a room is a teleport, and the default setting kicks players
 for it. See [Running a server](Docs/admin.md#the-speed-anti-cheat).
 
-The mod ships its own map: a separate block of 19 cells, away from anywhere a
-player walks to, holding 1140 room slots. It uses cells 87,46 to 91,48,
-89,49 to 91,49 and 92,46, and another map mod using any of them will conflict.
+The mod ships its own map: a separate block of 20 cells, away from anywhere a
+player walks to, holding 1180 room slots. It uses cells 87,46 to 91,48,
+89,49 to 91,49 and 92,46 to 92,47, and another map mod using any of them
+will conflict.
 
 ## Status
 

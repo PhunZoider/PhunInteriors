@@ -42,6 +42,7 @@ description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=34094
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3788543896]Rolling Refuge[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3790153201]Whennyago Initiative[/url]
 description=[*]1986 Fleetwood Bounder (FleetwoodBounder86)
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3813791850]BoatCore SP Gold[/url]: you always leave a boat room at the helm, never into the water
 description=[/list]
 description=Missing one? An admin can give it a room in game. [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicles.md]Which vehicle gets which room[/url]
 description=
@@ -61,7 +62,7 @@ description=
 description=[h2]For mod authors[/h2]
 description=Rooms and bindings are registered, not hard coded, and name ordinary game scripts, so no mod depends on another.
 description=[list]
-description=[*][b]Vehicle mods:[/b] one of our 89 rooms in about ten lines. [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicle-mods.md]Giving your vehicles a room[/url]
+description=[*][b]Vehicle mods:[/b] one of our 93 rooms in about ten lines. [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/vehicle-mods.md]Giving your vehicles a room[/url]
 description=[*][b]Map mods:[/b] draw and register rooms on your own cells. [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/map-authors.md]Adding rooms from your map[/url]
 description=[*][b]Everything else:[/b] hub rooms, and putting a player in a room directly. [url=https://github.com/PhunZoider/PhunInteriors/blob/main/Docs/modding.md]Adding rooms and vehicles[/url]
 description=[/list]

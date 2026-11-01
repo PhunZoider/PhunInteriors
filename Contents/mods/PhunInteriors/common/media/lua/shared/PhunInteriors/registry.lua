@@ -1026,12 +1026,30 @@ end
 -- is therefore never nil, and the only client-only branch in there is gated on
 -- GameClient.client, so this is safe to ask on a dedicated server -- which is
 -- what lets it be one implementation rather than two that can disagree.
+--
+-- Except on water, where the line test can never pass. Every water tile is
+-- `solidtrans`, LineClearCollide.isNotClearOld refuses any square the line
+-- crosses whose pathfind Square isReallySolid, and solidtrans counts -- so a
+-- boat afloat has every seat "blocked", and a cab exit from a boat room would
+-- bounce its tenant back inside forever. BoatCore boards with ISEnterVehicle
+-- and never asks isEnterBlocked for the same reason. Afloat, only the half
+-- that prevents the crash is kept: both positions have to exist.
+local function isAfloat(vehicle)
+    local square = vehicle:getSquare()
+    local props = square and square:getProperties()
+    return props ~= nil and props:has(IsoFlagType.water)
+end
+
 function Core.seatIsEnterable(vehicle, seat, character)
     if not vehicle or not seat or seat < 0 then
         return false
     end
     if not vehicle:isSeatInstalled(seat) or vehicle:isSeatOccupied(seat) then
         return false
+    end
+    if isAfloat(vehicle) then
+        return vehicle:getPassengerPosition(seat, "inside") ~= nil
+            and vehicle:getPassengerPosition(seat, "outside") ~= nil
     end
     return not vehicle:isEnterBlocked(character, seat)
 end

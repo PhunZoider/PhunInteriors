@@ -291,13 +291,24 @@ check("nil is not moving", Core.vehicleIsMoving(nil), false)
 -- the Rolling Refuge RV, which empties five of its six. Handing such a seat to
 -- ISEnterVehicle is a hard error at ISEnterVehicle.lua:43, not a quiet no-op,
 -- which is why every picker on both sides goes through this.
-local function seatedVehicle(seats)
+local function seatedVehicle(seats, afloat)
     return {
         isSeatInstalled = function(_, seat) return seats[seat] ~= nil end,
         isSeatOccupied = function(_, seat) return seats[seat] == "taken" end,
-        isEnterBlocked = function(_, _, seat) return seats[seat] == "nodoor" end
+        isEnterBlocked = function(_, _, seat) return seats[seat] ~= "free" end,
+        getPassengerPosition = function(_, seat, which)
+            if seats[seat] == "nodoor" and which == "outside" then return nil end
+            return {}
+        end,
+        getSquare = function()
+            return {getProperties = function()
+                return {has = function(_, flag) return afloat and flag == IsoFlagType.water end}
+            end}
+        end
     }
 end
+-- Every seat check asks whether the vehicle is afloat first; see 11c.
+IsoFlagType = IsoFlagType or {water = "water"}
 -- Seat 0 is the driver, fitted and empty and unreachable from the ground.
 local rv = seatedVehicle({[0] = "nodoor", [1] = "free", [2] = "nodoor", [3] = "taken"})
 
@@ -308,6 +319,20 @@ check("a seat that was never fitted is not", Core.seatIsEnterable(rv, 9, nil), f
 check("getBestSeat's -1 is not", Core.seatIsEnterable(rv, -1, nil), false)
 check("nil seat is not", Core.seatIsEnterable(rv, nil, nil), false)
 check("nil vehicle is not", Core.seatIsEnterable(nil, 0, nil), false)
+
+-- 11c. a boat afloat.
+--
+-- Water is solidtrans, which the pathfinder counts as solid, so isEnterBlocked
+-- answers true for every seat of a floating boat. "water" below stands for
+-- that: isEnterBlocked refuses it, and only the afloat branch can take it. A
+-- cab exit from a boat room bounced back inside forever without this.
+local boat = seatedVehicle({[0] = "water", [1] = "nodoor", [2] = "taken"}, true)
+local beached = seatedVehicle({[0] = "water"}, false)
+check("afloat, a seat the line test refuses is enterable", Core.seatIsEnterable(boat, 0, nil), true)
+check("afloat, a seat with no outside position still is not", Core.seatIsEnterable(boat, 1, nil), false)
+check("afloat, an occupied seat still is not", Core.seatIsEnterable(boat, 2, nil), false)
+check("afloat, an unfitted seat still is not", Core.seatIsEnterable(boat, 5, nil), false)
+check("on land, the line test still decides", Core.seatIsEnterable(beached, 0, nil), false)
 
 -- 12. registration opens exactly once, however many times it is asked to.
 -- In SP both server_events and client_events run the boot sequence.

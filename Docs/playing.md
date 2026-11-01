@@ -64,6 +64,11 @@ so and put back inside.
 If the vehicle has nothing on the side you asked for, you land by its nearest
 door instead.
 
+**Boats always put you at the helm.** Each boat room's door leads to a seat,
+starting from the helm, so leaving never drops you in the water. The yacht
+also has windows, and climbing out of one lands you beside the boat,
+which may well be water.
+
 **You come out where the vehicle is now**, not where it was when you went in.
 If a friend drove off with you in the back, you come out wherever they parked.
 
