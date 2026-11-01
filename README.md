@@ -84,6 +84,7 @@ None are required. Install any of these and its vehicles get rooms:
 - [BoatCore SP Gold](https://steamcommunity.com/sharedfiles/filedetails/?id=3813791850):
   the yacht, both houseboats and the patrol boat. Every way out of a boat
   room puts you at the helm, so nobody steps out into the water.
+- [Nomad Armored RV](https://steamcommunity.com/sharedfiles/filedetails/?id=3825887223)
 
 [Supported vehicles](Docs/vehicles.md) says which vehicle gets which room.
 [Another Vehicle Claim System](https://steamcommunity.com/sharedfiles/filedetails/?id=2957935793)
@@ -102,7 +103,7 @@ trip in or out of a room is a teleport, and the default setting kicks players
 for it. See [Running a server](Docs/admin.md#the-speed-anti-cheat).
 
 The mod ships its own map: a separate block of 20 cells, away from anywhere a
-player walks to, holding 1180 room slots. It uses cells 87,46 to 91,48,
+player walks to, holding 1190 room slots. It uses cells 87,46 to 91,48,
 89,49 to 91,49 and 92,46 to 92,47, and another map mod using any of them
 will conflict.
 

@@ -41,6 +41,7 @@ room editor ([remapping.md](remapping.md)), and a vehicle mod can bind its own
 | Military Box | 4x4 | `86chevyM1010`, `86chevyM1031` |  |
 | RV - Class A | 3x9 | `FleetwoodBounder86`, `pzkBounder86` |  |
 | RV - Large | 3x9 | `fr_fl_bounder_86`, `pzkChieftain73`, `RollingRefuge` |  |
+| RV - Nomad | 4x5 | `NomadRV` |  |
 | RV - Small | 3x5 | `fr_fo_econoline_rv_86`, `pzkFranklinTruckRV`, `WhennyagoInitiative` |  |
 | RV - Spare 2 | 3x9 | `pzkChevalierP6SFema` |  |
 | Semi Trailer - Factory | 3x13 | `pzkTrailerRegularPop`, `pzkTrailerRegularValutech`, `SemiTrailerVanCattle` | Semi Trailer - Water |

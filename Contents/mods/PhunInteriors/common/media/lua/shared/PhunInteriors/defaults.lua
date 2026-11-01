@@ -8,7 +8,7 @@ local Core = PhunInteriors
 -- Docs/pi-mappings.csv and Docs/pi-vehicles.csv. Edit those and regenerate;
 -- an edit made here is lost on the next run.
 --
--- 93 rooms, 118 rows of ten stamps, 1180 slots.
+-- 94 rooms, 119 rows of ten stamps, 1190 slots.
 --
 -- A ROOM is a contract: one shape, and every place on the map it is stamped.
 -- Two rooms whose CONTRACT differs are two registrations. What is on the
@@ -657,6 +657,30 @@ local function registerRooms()
             [17] = {23230, 12335, 0},
             [18] = {23255, 12335, 0},
             [19] = {23280, 12335, 0}
+        }
+    })
+
+    -- RV - Nomad -- floor 4x5, 10 slots, room def 'armysurplus'.
+    -- Stamped at 92,47 row 2.
+    Core.registerRoom("phun.room.RV_Nomad", {
+        label = "RV - Nomad",
+        source = SOURCE,
+        size = {w = 5, h = 6},
+        spawn = {x = 1, y = 1},
+        front = "south",
+        cab = true,
+        generator = {x = 1, y = 17, z = 0},
+        locations = {
+            [0] = {23567, 12079, 0},
+            [1] = {23592, 12079, 0},
+            [2] = {23617, 12079, 0},
+            [3] = {23642, 12079, 0},
+            [4] = {23667, 12079, 0},
+            [5] = {23692, 12079, 0},
+            [6] = {23717, 12079, 0},
+            [7] = {23742, 12079, 0},
+            [8] = {23767, 12079, 0},
+            [9] = {23792, 12079, 0}
         }
     })
 
@@ -2694,6 +2718,14 @@ local function registerVehicles()
         source = SOURCE,
         rooms = {"phun.room.RV_Large"},
         scripts = {"Base.RollingRefuge", "Base.fr_fl_bounder_86", "Base.pzkChieftain73"}
+    })
+
+    -- RV - Nomad: 1 bound directly.
+    Core.registerVehicles({
+        id = "phun.vehicles.RV_Nomad",
+        source = SOURCE,
+        rooms = {"phun.room.RV_Nomad"},
+        scripts = {"Base.NomadRV"}
     })
 
     -- RV - Small: 3 bound directly.
