@@ -1,7 +1,7 @@
 # PhunInteriors
 
-Instanced vehicle interiors for Project Zomboid **Build 42**, in single player
-and multiplayer.
+Instanced vehicle interiors for Project Zomboid **Build 42**, in single player,
+split screen and multiplayer.
 
 Right click a van, go inside, and you are standing in a room that belongs to
 that van: a mechanic's workshop, a mail sorting room, a caravan, a classroom
@@ -114,6 +114,9 @@ will conflict.
 Proven in game in single player and on a dedicated server: entering and
 leaving, containment, seat and door restore, blueprint capture and scrub, the
 lease lifecycle, weight, towing, the wall and fire guards, and fire dousing.
+
+Split screen is proven in single player and on a dedicated server: each player
+on one machine goes in and out of rooms on their own.
 
 Seen working in game, without a full test pass yet: the current exit rules
 (which side you land on, and the cab seat), the exit zombie clearing, the room

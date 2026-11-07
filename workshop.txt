@@ -1,7 +1,7 @@
 version=1
 id=3812500419
 title=PhunInteriors: Interiors for RVs, Campers, Tents and more
-description=Step into the back of your van, RV, camper, box truck or tent and find a real furnished room inside. 94 themed interiors across 311 vehicles, for Build 42 single player and multiplayer.
+description=Step into the back of your van, RV, camper, box truck or tent and find a real furnished room inside. 94 themed interiors across 311 vehicles, for Build 42 single player, split screen and multiplayer.
 description=
 description=A ground-up Build 42 RV interior mod: walk out the back to the tailgate, out the front into the driver's seat.
 description=

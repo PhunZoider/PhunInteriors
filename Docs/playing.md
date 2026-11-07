@@ -188,6 +188,12 @@ and east walls can show the outside of a truck body, and there may be gaps in
 the ground along them. Rooms nobody has been near yet get the new version. It
 is cosmetic, and the normal view is unaffected.
 
+## Split screen
+
+Every player on a split screen goes in and out of rooms on their own. One
+player going inside, stepping outside or being put back in a seat moves only
+that player, and two players can be in two different rooms at once.
+
 ## Logging out inside
 
 Log out in a room and you log back in in it. If your room was taken while you
