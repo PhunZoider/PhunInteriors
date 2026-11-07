@@ -7,18 +7,17 @@ local Core = PhunInteriors
 local Client = Core.client
 local Commands = {}
 
-Commands[Core.commands.teleport] = function(arguments)
-    Client.teleport(arguments)
+Commands[Core.commands.teleport] = function(arguments, player)
+    Client.teleport(arguments, player)
 end
 
--- Client.inside is otherwise only ever set by a teleport, and a player who
+-- Being inside is otherwise only ever set by a teleport, and a player who
 -- reconnects inside a room never receives one: the server rebuilds their
 -- occupancy from the lease, but the client came up believing it is outside.
 -- Walking out still worked, so this only ever cost the context menu option,
 -- which is the affordance people actually look for.
-Commands[Core.commands.state] = function(arguments)
-    Client.inside = arguments and arguments.inside and true or false
-    Client.noExit = Client.inside and arguments.noExit and true or false
+Commands[Core.commands.state] = function(arguments, player)
+    Client.setInside(player, arguments and arguments.inside, arguments and arguments.noExit)
 end
 
 -- The server's override document. A client boots only the shipped registry,
@@ -34,8 +33,8 @@ Commands[Core.commands.overrides] = function(arguments)
     end
 end
 
-Commands[Core.commands.notify] = function(arguments)
-    Client.notify(arguments)
+Commands[Core.commands.notify] = function(arguments, player)
+    Client.notify(arguments, player)
 end
 
 Commands[Core.commands.adminResult] = function(arguments)

@@ -35,7 +35,7 @@ end
 function PhunInteriorsReservoirAction:perform()
     Core.dispatch(Core.commands.installReservoir, {
         id = self.item:getID()
-    })
+    }, self.character)
     ISBaseTimedAction.perform(self)
 end
 

@@ -16,7 +16,7 @@ local tools = {}
 Core.tools = tools
 
 -- Wrapper for getOnlinePlayers that normalises SP, coop host and dedicated.
--- In SP there is one player and getOnlinePlayers is not the answer; on a
+-- In SP getOnlinePlayers is not the answer; on a
 -- client we only ever care about the local split-screen players.
 function tools.onlinePlayers(all)
 
@@ -24,9 +24,13 @@ function tools.onlinePlayers(all)
 
     if Core.isLocal then
         onlinePlayers = ArrayList.new()
-        local p = getPlayer()
-        if p then
-            onlinePlayers:add(p)
+        -- Every split screen player, never getPlayer(): that is one of them,
+        -- whichever the engine updated last, and the rest went uncontained.
+        for i = 0, getNumActivePlayers() - 1 do
+            local p = getSpecificPlayer(i)
+            if p then
+                onlinePlayers:add(p)
+            end
         end
     elseif all ~= false and isClient() then
         onlinePlayers = ArrayList.new()

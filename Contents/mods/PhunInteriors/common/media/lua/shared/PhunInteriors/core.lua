@@ -263,30 +263,44 @@ end
 
 -- Client -> server. In single player there is no round trip, so call the
 -- handler directly. This is what keeps SP and MP on one code path.
-function Core.dispatch(command, args)
+--
+-- `player` says who is asking, and anything a character does has to name them.
+-- Split screen puts up to four on one client: getPlayer() is whoever the engine
+-- last updated, and the three argument sendClientCommand sends index -1, which
+-- the server answers with the first player on the connection. It is optional
+-- for the admin tools, which are one person at one window.
+function Core.dispatch(command, args, player)
     if Core.isLocal then
         local handlers = require "PhunInteriors/server_commands"
         local handler = handlers[command]
         if handler then
-            handler(getPlayer(), args or {})
+            handler(player or getPlayer(), args or {})
         end
+    elseif player then
+        sendClientCommand(player, Core.name, command, args or {})
     else
         sendClientCommand(Core.name, command, args or {})
     end
 end
 
 -- Server -> client, same deal in reverse.
+--
+-- sendServerCommand addresses a connection, and a connection can hold several
+-- split screen players, so the packet says nothing about which one it is for.
+-- forPlayer says; Client.recipient reads it.
 function Core.respond(player, command, args)
     if Core.isLocal then
         local handlers = require "PhunInteriors/client_commands"
         local handler = handlers[command]
         if handler then
-            handler(args or {})
+            handler(args or {}, player)
         else
             Core.logLn("no local client handler for '" .. tostring(command) .. "'")
         end
     else
-        sendServerCommand(player, Core.name, command, args or {})
+        args = args or {}
+        args.forPlayer = player:getOnlineID()
+        sendServerCommand(player, Core.name, command, args)
     end
 end
 
@@ -294,7 +308,15 @@ function Core.playerKey(player)
     if not player then
         return nil
     end
-    return player:getUsername() or tostring(player:getOnlineID())
+    local key = player:getUsername() or tostring(player:getOnlineID())
+    -- With no server to log in to, a username is only a character's name, or
+    -- "Bob" where the engine never set one, so two split screen players can
+    -- hold the same one. In multiplayer each logs in under their own and this
+    -- key has to survive a reconnect, so it stays the bare username there.
+    if Core.isLocal and player.getPlayerNum and player:getPlayerNum() > 0 then
+        key = key .. "#" .. tostring(player:getPlayerNum())
+    end
+    return key
 end
 
 --- The lease key for an admin standing in a room without a vehicle.

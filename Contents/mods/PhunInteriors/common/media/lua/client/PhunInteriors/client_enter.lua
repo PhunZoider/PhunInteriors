@@ -70,7 +70,7 @@ function PhunInteriorsEnterAction:perform()
     if not standSeat or standSeat < 0 then
         standSeat = Client.nearestDoor(self.vehicle, self.character)
     end
-    Client.requestEnter(self.vehicle, self.seat, standSeat)
+    Client.requestEnter(self.vehicle, self.seat, standSeat, self.character)
     ISBaseTimedAction.perform(self)
 end
 
@@ -92,10 +92,6 @@ function PhunInteriorsEnterAction:new(character, vehicle, seat)
         o.maxTime = 1
     end
     return o
-end
-
-local function boardingUnreachable()
-    Client.notify({text = "IGUI_PhunInteriors_BoardingUnreachable", warning = true})
 end
 
 --- Walk to where this vehicle is boarded, if we are not there already.
@@ -123,13 +119,14 @@ local function queueWalkToBoarding(player, vehicle)
         end
         walk = ISPathFindAction:pathToVehicleSeat(player, vehicle, seat)
     end
-    walk:setOnFail(boardingUnreachable)
+    walk:setOnFail(function()
+        Client.notify({text = "IGUI_PhunInteriors_BoardingUnreachable", warning = true}, player)
+    end)
     ISTimedActionQueue.add(walk)
 end
 
 --- Queue the walk-to plus the entry action.
-function Client.beginEnter(vehicle)
-    local player = getPlayer()
+function Client.beginEnter(vehicle, player)
     if not player or not vehicle then
         return
     end
@@ -142,7 +139,7 @@ function Client.beginEnter(vehicle)
         allowed, why = Core.vehicleLockAllows(vehicle, player)
     end
     if not allowed then
-        Client.notify({text = why, warning = true})
+        Client.notify({text = why, warning = true}, player)
         return
     end
 

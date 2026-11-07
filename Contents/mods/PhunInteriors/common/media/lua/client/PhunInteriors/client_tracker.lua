@@ -39,12 +39,13 @@ local CHECK_TICKS = 100
 -- tile chunk load radius, so a position this stale still finds the vehicle.
 local RESEND_TILES = 70
 
-local watching = nil
+-- By player number: two split screen players can each be driving something.
+local watching = {}
 
-local function stopWatching()
-    if watching then
-        Events.OnPlayerUpdate.Remove(watching)
-        watching = nil
+local function stopWatching(playerNum)
+    if watching[playerNum] then
+        Events.OnPlayerUpdate.Remove(watching[playerNum])
+        watching[playerNum] = nil
     end
 end
 
@@ -53,7 +54,7 @@ end
 -- The client cannot tell whether a vehicle actually holds a lease -- that
 -- lives in server side modData -- so it filters on the vehicle *class*, which
 -- the registry knows on both sides, and the server filters on the lease.
-local function pushPosition(vehicle)
+local function pushPosition(vehicle, player)
     -- Liveness first: this is also called for getVehicleTowing(), which can
     -- hand back a vehicle whose chunk has gone even when the tower's has not,
     -- and getScript() on a torn down vehicle is the same null dereference as
@@ -63,7 +64,7 @@ local function pushPosition(vehicle)
     end
     Core.dispatch(Core.commands.updatePosition, {
         id = vehicle:getId()
-    })
+    }, player)
 end
 
 --- Start watching, if this player just took the wheel of something we care
@@ -85,12 +86,13 @@ local function watch(player)
     end
 
     -- Never stack two watchers; changing seats calls this again.
-    stopWatching()
+    local playerNum = player:getPlayerNum()
+    stopWatching(playerNum)
 
     local delay = 0
     local lastSent = nil
 
-    watching = function(updated)
+    local watcher = function(updated)
         -- OnPlayerUpdate fires for every local player, so in split screen this
         -- would otherwise run the driver's check on the passenger's ticks too.
         if updated and updated ~= player then
@@ -116,7 +118,7 @@ local function watch(player)
         -- position server side at the moment of entry, which is the position
         -- the exit actually uses.
         if not Core.vehicleIsLive(vehicle) then
-            stopWatching()
+            stopWatching(playerNum)
             return
         end
 
@@ -131,19 +133,20 @@ local function watch(player)
         -- sends while moving only stop it drifting so far that a player
         -- exiting mid journey lands out of range of it.
         if (moving and far) or (not moving and lastSent) then
-            pushPosition(vehicle)
-            pushPosition(vehicle:getVehicleTowing())
+            pushPosition(vehicle, player)
+            pushPosition(vehicle:getVehicleTowing(), player)
             lastSent = moving and vehicle:getSquare() or nil
         end
 
         -- Out of the driver's seat and the final position is in. Nothing left
         -- to watch until they drive again.
         if not vehicle:isDriver(player) and not lastSent then
-            stopWatching()
+            stopWatching(playerNum)
         end
     end
 
-    Events.OnPlayerUpdate.Add(watching)
+    watching[playerNum] = watcher
+    Events.OnPlayerUpdate.Add(watcher)
 end
 
 --- Deferred, like the destroy guards.
@@ -185,7 +188,7 @@ function Client.installRemovalNotice()
         if button and button.internal ~= "NO" and Core.vehicleIsLive(vehicle) and Core.vehicleHasRooms(vehicle) then
             Core.dispatch(Core.commands.vehicleRemoving, {
                 id = vehicle:getId()
-            })
+            }, playerObj)
         end
         return baseRemove(dummy, button, playerObj, vehicle)
     end

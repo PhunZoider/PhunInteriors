@@ -10,7 +10,7 @@ PhunZones, PhunServer2...). GitHub org: `PhunZoider`.
 
 **The registry was reshaped, and has since run in game without a full test
 pass.** Rooms, bindings and blueprints all changed shape -- see "A room is a
-contract" in Architecture. `Tests/run.sh` is green across 1008 checks, which is
+contract" in Architecture. `Tests/run.sh` is green across 1079 checks, which is
 real verification of the logic and no verification at all that PZ agrees. A
 dedicated server log of 2026-11-01 has it booting 94 rooms, 1190 slots and 93
 bindings, entering through vehicles and capturing a slot, with the room window
@@ -320,7 +320,8 @@ Tests/lua/*_spec.lua               registry placement/links, allocation order,
                                    the zone self-heal, refusing slots the
                                    map has no room for, boarding points,
                                    the lock check, closing doors, AVCS, and
-                                   a safehouse respawn off the floor
+                                   a safehouse respawn off the floor,
+                                   and two players on one client
 Tests/root/PhunInteriors/common/   overlay carrying the test ids, applied by
                                    deploy.cmd to build PhunInteriorsTest. The
                                    path must mirror the live mod folder or the
@@ -378,6 +379,18 @@ House style, taken from PhunCure and PhunLewt 2.1:
 check `Core.isLocal` and either round-trip through `sendClientCommand` or call
 the handler directly. Never write a separate SP implementation — the reference
 mod did and the two halves drifted apart.
+
+**A client is not a player.** Split screen puts up to four characters on one
+client, so anything a character does has to name that character: `Core.dispatch`
+takes the player as its third argument, `Core.respond` addresses a reply with
+`forPlayer` because the packet itself says only which connection it is for, and
+what the client remembers about being in a room or in transit is kept per player
+number. `getPlayer()` is not an answer to "who"; see the API table for why. It
+survives only in the admin tools, which are one person at one window, and
+`Client.notify`'s fallback, where the wrong screen is the worst outcome. In
+multiplayer each split screen player logs in under their own username, so
+`Core.playerKey` stays the bare name that survives a reconnect; in single player
+a username is only a name, so players after the first take a `#n` suffix.
 
 **Containment is the leash, not the walls.** `server/leash.lua` runs one
 bounding-box test per occupant every 250ms. That single test covers roof
@@ -2058,6 +2071,7 @@ B41 tutorial applies.
 | **`getFileWriter` writes only five extensions, and refuses the rest silently.** `LuaManager.ALLOWED_FILE_EXTENSIONS` is `ini`, `cfg`, `txt`, `log` and `json`, tested before anything else in `getFileWriter`; any other extension gets `nil` back, with no error and no log line. Reading is not gated the same way: `getFileReader` opened a `.csv` fine. | The vehicle bench wrote its record to `PhunInteriors_bench_out.csv` for a whole pack and not one write landed, while the `.txt` beside it did. Name a file a Lua writer produces with one of those five, and treat a nil writer as an error worth saying out loud. |
 | **`getFileWriter` truncates on open.** `getFileWriter(name, createIfNotExists, append)` with `append` false empties the file the moment it is opened, before anything is written. | Encode, serialise or otherwise build the whole payload **before** calling it. Opening the file and then discovering there is nothing to write replaces a good file with an empty one — which is exactly what a failed `json.encode` would do, and the most likely cause of one is a non-string table key, which Lua allows and JSON does not. `Store.save` and PhunMart's `saveTable` both order it that way deliberately, and it is the reverse of how the code reads most naturally. |
 | `ISVehicleMenu.showRadialMenu` delegates to `showRadialMenuOutside` when the player is not seated, but **inside the call**, so wrapping `showRadialMenu` alone covers both seated and standing. `showRadialMenuOutside` has exactly one caller, that delegation. `ISRadialMenu:addSlice` forwards to the java object, so a slice added after the base displayed the menu still appears, and the menu is a fixed size circle so the base's centring stays correct. `menu:isReallyVisible()` reads **false** immediately after `addToUIManager` in the same call stack; vanilla only ever tests it at the start of the *next* call. | Hook `showRadialMenu`, no visibility gate. `showRadialMenuOutside` is wrapped too, but only adds the slice when the outer hook is NOT on the stack (`building` in `client_context.lua`): unguarded it duplicates the slice, which was tried and broke the menu. The second hook exists because Project Viewpoint calls `showRadialMenuOutside` directly with a stand-in radial menu. Gating on `isReallyVisible()` silently removes the slice. Pick the vehicle with `ISVehicleMenu.getVehicleToInteractWith` (seat, then useable, then near), read off the table at call time. |
+| **`getPlayer()` is whoever the engine touched last, not the local player.** It returns `IsoPlayer.instance`, and `IsoPlayer.updateInternal2` assigns `this` to it, `IsoCell.updateInternal` and `IngameState.updateInternal` loop `setInstance` over `players[]`, and `GameWindow.logic` sets `players[0]` before `UIManager.update`. So with two players it reads player 0 in UI code, the player being updated during their own update, and the last one updated at `OnTick`. **`sendClientCommand(module, command, args)` sends player index -1**, which `GameServer.receiveClientCommand` resolves with `getAnyPlayerFromConnection`, the first on the connection; the four argument form sends `playerIndex`. `sendServerCommand` addresses a **connection**, and `OnServerCommand` gets no player at all. In multiplayer `CoopUserName.lua` gives each split screen player their own login; in single player `username` starts as `"Bob"` and `updateUsername` makes it forename plus surname. | With one player all of this is invisible, which is how it shipped. Name the player on the way up, address it on the way down, and keep client state per `getPlayerNum()`. Read it as `getSpecificPlayer(i)` for `0..getNumActivePlayers()-1`. Reported 2026-11-02; see Known gaps #29. |
 | `IsoPlayer` has both `isGhostMode()` and `isNoClip()`. The admin cheat panel (`ISAdminPowerUI.lua`) toggles **`isNoClip`**, gated by `Capability.ToggleNoclipHimself`; `GameServer` references `setNoClip` and `AntiCheatNoClip`, so the flag is server-visible for a remote player. `isGhostMode` is only used by debug menus and the trailer scenarios. | `Leash.isExempt` uses `isNoClip()` as the "an admin is deliberately debugging" signal. There is no admin-mode flag as such. |
 | **A B42 map cell is 256 squares, not B41's 300.** From the jar: `IsoCell.CELL_SIZE_IN_SQUARES = 256`, `CELL_SIZE_IN_CHUNKS = 32`, `IsoChunkMap.CHUNK_SIZE_IN_SQUARES = 8`. B41 chunks were 10 squares — still there as `OLD_CHUNKS_PER_WIDTH` — so 30x10 = 300 became 32x8 = 256. | Cell = `floor(coord / 256)`. `22560, 12060` is cell `88, 47`, so the map must ship `88_47`. Assuming B41's 300 makes correct coordinates look out of range. |
 | **Zombie density is only ever set for a cell some map covers, and zero is not the default — "never set" is.** `MapCollisionData.init` is the sole feed to the native population manager: per cell it calls `n_initMetaChunk(cellX, cellY, cx, cy, max(LotHeader.getZombieIntensityForChunk(info, cx, cy), 0))` for all 32x32 chunks, but only when `metaGrid.getCellData(x, y)` is non-null — and that resolves to `getCell`, a bare array index into a grid only `getCellOrCreate` fills. `getZombieIntensityForChunk` itself resolves through `IsoLot.MapFiles` by priority (converting to B41 300-cell coordinates to test `bgHasCell300`), so the winning intensity is the highest-priority map covering that cell, not necessarily the header passed in. | A map's own cells can be painted to zero and still have zombies walk in **from the void cells around it**, which were never initialised at all. Proven in a save: 70 zombies across four cells with no lotheader, zero in ours. Ship a ring of empty cells rather than trusting the density layer alone. Two bypasses make the whole layer moot: `Distribution = 2` (Uniform) substitutes a hardcoded `UniformZombiesPerChunk = 0.2` everywhere, and `MinZombiesPerChunk` (Lua `setMinMaxZombiesPerChunk`, default 0) floors every chunk. |
@@ -3304,7 +3318,7 @@ cells are actually towns.
    about.
 5. **The reshaped registry has run in game, without a full pass.** Rooms,
    bindings, per-slot blueprint capture and the nullable generator are all
-   covered by `Tests/lua/` -- 1008 checks, all green -- which is real verification
+   covered by `Tests/lua/` -- 1079 checks, all green -- which is real verification
    of the logic and no verification at all that PZ agrees. In particular:
    - **Capture is load bearing and is confirmed working**, on a dedicated
      server on 2026-11-01: `captured slot for phun.room.Camper_Medium#2: 53
@@ -4051,6 +4065,30 @@ cells are actually towns.
     its stub writer accepts any name. `Docs/map-authors.md` step 4 still says
     the file is written. The likely fix is a `.txt` extension, since the doc
     already says to copy the numbers out rather than ship the file.
+
+29. **Split screen has never run in game since it was fixed.** Reported on
+    2026-11-02, with no errors: player 1 walked out of a door and stayed in the
+    room, Step Outside took both players out, entering dragged the other player
+    to the same spot, and with player 1 seated in one RV, player 2 entering
+    another ended up at player 1's. All one fault: the mod assumed one player per
+    client (see "A client is not a player"). In single player the leash ran from
+    `OnTick`, where `getPlayer()` is the last player updated, so player 1 was
+    never contained; and a transit's hold re-asserted its position on that same
+    `getPlayer()`, so every teleport dragged player 2 along. The first three
+    follow directly from the bytecode. The RV one is the best fit rather than a
+    traced path: a request treated as player 1's resolves through
+    `player:getVehicle()` to player 1's RV. Which of single player or multiplayer
+    the reporter was in is not known; both are changed, and multiplayer had its
+    own version, since every command arrived as the first player's.
+    `splitscreen_spec.lua` covers the logic, with `getPlayer()` deliberately
+    answering the wrong player, and each fix was confirmed to fail when removed.
+    What it cannot see: whether `getOnlineID()` agrees across the wire for a
+    second player, which is what `forPlayer` matches on and whose failure is a
+    `matches nobody on this client` log line and a command dropped; whether a
+    joining player's id does sit at -1 until the server answers, which is what
+    holds back their `playerSetup`; and P2's menus with a joypad. PhunTaxi's own
+    `Core.dispatch` is the same three argument shape and has not been changed.
+    Phase J7 of `Docs/testplan.md` is the in-game check.
 
 ## v2, deliberately not in v1
 

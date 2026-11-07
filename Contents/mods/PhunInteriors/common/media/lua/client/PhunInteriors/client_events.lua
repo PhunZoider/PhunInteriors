@@ -18,15 +18,17 @@ local Core = PhunInteriors
 local Client = Core.client
 local Commands = require "PhunInteriors/client_commands"
 
--- The character setup ran for. A respawn creates a new one and the client's lua
--- does not reload, so without this the server never hears that the new
--- character exists and a safehouse respawn into a room is uncontained, with no
--- way out, until a relog.
-local setupFor = nil
+-- The character setup ran for, by player number. A respawn creates a new one and
+-- the client's lua does not reload, so without this the server never hears that
+-- the new character exists and a safehouse respawn into a room is uncontained,
+-- with no way out, until a relog. A second split screen player joining is the
+-- same event with nobody before them.
+local setupFor = {}
+local setupDone = false
 
 local function setup()
     Events.OnTick.Remove(setup)
-    setupFor = getPlayer()
+    setupDone = true
     Core.refreshSettings()
     -- Deferred so the vanilla classes we wrap are certain to be loaded.
     Client.installGuards()
@@ -38,48 +40,84 @@ local function setup()
     -- openRegistration is what stops every set registering twice.
     Core.openRegistration()
     triggerEvent(Core.events.OnReady, Core)
-    Core.dispatch(Core.commands.playerSetup, {})
+    for i = 0, getNumActivePlayers() - 1 do
+        local player = getSpecificPlayer(i)
+        if player then
+            setupFor[i] = player
+            Core.dispatch(Core.commands.playerSetup, {}, player)
+        end
+    end
 end
 
 Events.OnTick.Add(setup)
+
+-- New characters the server has not heard about, by player number, each with
+-- whether they replaced somebody.
+local toReport = {}
 
 -- A tick after the event, for the connection to be the new character's, and
 -- carrying where they are. The server's copy of a new character's position
 -- cannot be relied on this early: a respawn into a room found nothing, silently,
 -- with the spawn point sitting in the server's own log (2026-11-01).
-local function reportRespawn()
-    Events.OnTick.Remove(reportRespawn)
-    local player = getPlayer()
-    if not player then
-        return
+--
+-- And not before the server knows them. A split screen player joining is -1
+-- until the server answers their connect, and it drops a command from an index
+-- it holds nobody at, so one sent now would never have arrived.
+local function reportNewPlayers()
+    local waiting = false
+    for playerNum = 0, 3 do
+        local report = toReport[playerNum]
+        local player = report and getSpecificPlayer(playerNum)
+        if report and player ~= report.player then
+            toReport[playerNum] = nil
+        elseif report and not Core.isLocal and player:getOnlineID() < 0 then
+            waiting = true
+        elseif report then
+            toReport[playerNum] = nil
+            if report.respawned then
+                Core.logLn(string.format("respawned at %s,%s,%s; telling the server", tostring(player:getX()),
+                    tostring(player:getY()), tostring(player:getZ())))
+                Core.dispatch(Core.commands.playerSetup, {
+                    respawned = true,
+                    x = player:getX(),
+                    y = player:getY(),
+                    z = player:getZ()
+                }, player)
+            else
+                Core.dispatch(Core.commands.playerSetup, {}, player)
+            end
+        end
     end
-    Core.logLn(string.format("respawned at %s,%s,%s; telling the server", tostring(player:getX()),
-        tostring(player:getY()), tostring(player:getZ())))
-    Core.dispatch(Core.commands.playerSetup, {
-        respawned = true,
-        x = player:getX(),
-        y = player:getY(),
-        z = player:getZ()
-    })
+    if not waiting then
+        Events.OnTick.Remove(reportNewPlayers)
+    end
 end
 
 -- Only after setup, and only for a character it did not run for, so the first
 -- creation at load never sends playerSetup twice.
 Events.OnCreatePlayer.Add(function(playerIndex, player)
-    if not setupFor or not player or player:getPlayerNum() ~= 0 or player == setupFor then
+    if not setupDone or not player then
         return
     end
-    setupFor = player
+    local playerNum = player:getPlayerNum()
+    if player == setupFor[playerNum] then
+        return
+    end
+    toReport[playerNum] = {
+        player = player,
+        respawned = setupFor[playerNum] ~= nil
+    }
+    setupFor[playerNum] = player
     -- Forget the dead character's room. The server's state reply says whether
     -- the new one is in one.
-    Client.inside = false
-    Client.noExit = false
-    Events.OnTick.Remove(reportRespawn)
-    Events.OnTick.Add(reportRespawn)
+    Client.setInside(player, false)
+    Events.OnTick.Remove(reportNewPlayers)
+    Events.OnTick.Add(reportNewPlayers)
 end)
 
 Events.OnServerCommand.Add(function(module, command, arguments)
     if module == Core.name and Commands[command] then
-        Commands[command](arguments or {})
+        arguments = arguments or {}
+        Commands[command](arguments, Client.recipient(arguments))
     end
 end)

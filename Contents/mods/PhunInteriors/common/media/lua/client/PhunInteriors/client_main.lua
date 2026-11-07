@@ -2,6 +2,7 @@ if isServer() then
     return
 end
 require "PhunInteriors/registry"
+require "PhunInteriors/tools"
 local Core = PhunInteriors
 
 -- ---------------------------------------------------------------------------
@@ -12,12 +13,54 @@ local Core = PhunInteriors
 Core.client = Core.client or {}
 local Client = Core.client
 
---- True while this client believes it is inside one of our rooms. Used only
---- for menu state; the server is the authority.
-Client.inside = false
---- True while that room has no "Step outside": one entered through
+-- Which of this client's players believes it is inside one of our rooms, by
+-- player number, since split screen puts up to four on one client. Used only
+-- for menu state; the server is the authority.
+--
+-- getPlayer() must not decide anything here. It answers IsoPlayer.instance,
+-- which the engine moves around within a frame: the player being updated during
+-- that player's update and so during their timed actions, player 0 during UI
+-- update, and whoever was updated last by OnTick. See CLAUDE.md.
+local inRoom = {}
+
+function Client.isInside(player)
+    local state = player and inRoom[player:getPlayerNum()]
+    return state ~= nil
+end
+
+--- True while this player's room has no "Step outside": one entered through
 --- Core.enterRoom with `exit = false`. Menu state only, like the above.
-Client.noExit = false
+function Client.hasNoExit(player)
+    local state = player and inRoom[player:getPlayerNum()]
+    return state ~= nil and state.noExit
+end
+
+function Client.setInside(player, inside, noExit)
+    if player then
+        inRoom[player:getPlayerNum()] = inside and {noExit = noExit and true or false} or nil
+    end
+end
+
+--- Which of this client's players a server command is for.
+--
+-- With one player on the client there is only one answer, whatever the id says,
+-- which also covers a new character's id not having settled yet. With several,
+-- nil rather than a guess: acting on the wrong one teleports a bystander.
+function Client.recipient(arguments)
+    local count = getNumActivePlayers()
+    if count <= 1 then
+        return getSpecificPlayer(0)
+    end
+    local id = tonumber(arguments and arguments.forPlayer)
+    for i = 0, count - 1 do
+        local player = getSpecificPlayer(i)
+        if player and tonumber(player:getOnlineID()) == id then
+            return player
+        end
+    end
+    Core.logLn("a command for player id " .. tostring(id) .. " matches nobody on this client")
+    return nil
+end
 
 -- ---------------------------------------------------------------------------
 -- Teleporting across the map.
@@ -37,12 +80,15 @@ Client.noExit = false
 local HOLD_TICKS = 180
 local SEAT_TICKS = 120
 
-local pending = nil
+-- By player number. Two split screen players can be in transit at once.
+local pendings = {}
 local holdTeleport
 
-local function stopHolding()
-    pending = nil
-    Events.OnTick.Remove(holdTeleport)
+local function stopHolding(playerNum)
+    pendings[playerNum] = nil
+    if Core.tools.isEmpty(pendings) then
+        Events.OnTick.Remove(holdTeleport)
+    end
 end
 
 --- The seat we came from if it can still be taken, otherwise the best one
@@ -132,7 +178,7 @@ end
 -- unloads and reloads -- which it always has by this point.
 local SEARCH_RADIUS = 3
 
-local function findVehicle()
+local function findVehicle(pending)
     return Core.nearestVehicle(pending.x, pending.y, pending.z, SEARCH_RADIUS)
 end
 
@@ -366,8 +412,8 @@ function Client.groundBeside(vehicle, toward)
     return nil
 end
 
-local function rejoinVehicle(player)
-    local vehicle = findVehicle()
+local function rejoinVehicle(player, pending)
+    local vehicle = findVehicle(pending)
 
     if not vehicle then
         pending.seatTicks = pending.seatTicks + 1
@@ -378,8 +424,8 @@ local function rejoinVehicle(player)
             -- server is the only side holding that.
             Core.debugLn("rejoin: no vehicle within " .. SEARCH_RADIUS .. " squares of " .. pending.x .. "," ..
                              pending.y .. " after " .. pending.seatTicks .. " ticks")
-            Core.dispatch(Core.commands.arrived, {})
-            stopHolding()
+            Core.dispatch(Core.commands.arrived, {}, player)
+            stopHolding(player:getPlayerNum())
         end
         return
     end
@@ -469,20 +515,14 @@ local function rejoinVehicle(player)
         -- Only meaningful for a cab exit, and the one thing the server cannot
         -- work out for itself: it did not have a loaded vehicle to ask.
         seated = seat ~= nil
-    })
+    }, player)
 
-    stopHolding()
+    stopHolding(player:getPlayerNum())
 end
 
-function holdTeleport()
-    local player = getPlayer()
-    if not pending or not player then
-        stopHolding()
-        return
-    end
-
+local function holdOne(player, pending)
     if pending.arrived then
-        rejoinVehicle(player)
+        rejoinVehicle(player, pending)
         return
     end
 
@@ -506,15 +546,15 @@ function holdTeleport()
         -- was just left. Reported the moment the square exists rather than
         -- after a second phase, because there is nothing to wait for.
         if pending.report then
-            Core.dispatch(Core.commands.arrived, {})
+            Core.dispatch(Core.commands.arrived, {}, player)
         end
         -- Going in: let the leash stop waiting out its arrival grace. Sent
         -- only now because this is the first moment the engine will not snap
         -- the player back to where they came from.
         if pending.inside then
-            Core.dispatch(Core.commands.landed, {})
+            Core.dispatch(Core.commands.landed, {}, player)
         end
-        stopHolding()
+        stopHolding(player:getPlayerNum())
         return
     end
 
@@ -523,15 +563,29 @@ function holdTeleport()
             "teleport: gave up after %d ticks; %s,%s,%s never loaded (square is %s, player at %s,%s)", pending.ticks,
             tostring(pending.x), tostring(pending.y), tostring(pending.z), square and "there" or "still nil",
             tostring(player:getX()), tostring(player:getY())))
-        stopHolding()
+        stopHolding(player:getPlayerNum())
         return
     end
 
     player:teleportTo(pending.x + 0.5, pending.y + 0.5, pending.z)
 end
 
-function Client.teleport(data)
-    local player = getPlayer()
+function holdTeleport()
+    -- By number rather than pairs, because finishing one clears its entry.
+    for playerNum = 0, 3 do
+        local pending = pendings[playerNum]
+        if pending then
+            local player = getSpecificPlayer(playerNum)
+            if player then
+                holdOne(player, pending)
+            else
+                stopHolding(playerNum)
+            end
+        end
+    end
+end
+
+function Client.teleport(data, player)
     if not player or not data then
         return
     end
@@ -575,8 +629,8 @@ function Client.teleport(data)
 
     -- Hold it there until the chunk exists. A fresh request replaces any
     -- in-flight one rather than stacking a second handler.
-    local wasPending = pending ~= nil
-    pending = {
+    local wasHolding = not Core.tools.isEmpty(pendings)
+    pendings[playerNum] = {
         x = math.floor(data.x),
         y = math.floor(data.y),
         z = math.floor(data.z),
@@ -596,19 +650,18 @@ function Client.teleport(data)
         -- into a room, so the server wants to hear that we landed
         inside = data.inside and true or false
     }
-    if not wasPending then
+    if not wasHolding then
         Events.OnTick.Add(holdTeleport)
     end
 
-    Client.inside = data.inside and true or false
-    Client.noExit = (data.inside and data.noExit) and true or false
+    Client.setInside(player, data.inside, data.noExit)
 end
 
-function Client.notify(data)
+function Client.notify(data, player)
     if not data or not data.text then
         return
     end
-    local player = getPlayer()
+    player = player or getPlayer()
     if not player then
         return
     end
@@ -626,7 +679,7 @@ end
 -- there is no identity here for a client to get wrong or to forge, and none of
 -- the vehicle path's paraphernalia applies: nothing to climb out of, no seat
 -- to remember, and no motion to be refused for.
-function Client.requestEnterObject(square)
+function Client.requestEnterObject(square, player)
     if not square then
         return
     end
@@ -634,11 +687,11 @@ function Client.requestEnterObject(square)
         x = square:getX(),
         y = square:getY(),
         z = square:getZ()
-    })
+    }, player)
 end
 
 --- Ask to go in. The server decides.
-function Client.requestEnter(vehicle, seat, standSeat)
+function Client.requestEnter(vehicle, seat, standSeat, player)
     if not vehicle then
         return
     end
@@ -652,16 +705,16 @@ function Client.requestEnter(vehicle, seat, standSeat)
         seat = seat,
         -- The door they are stood at, so they come back out at the same one.
         standSeat = standSeat
-    })
+    }, player)
 end
 
 --- Ask to come out. Normally you walk out and the leash does this without
 --- being asked, but the context menu is a discoverable affordance and a safety
 --- net -- and it is the only way out of a room whose door has been blocked.
-function Client.requestLeave()
+function Client.requestLeave(player)
     Core.dispatch(Core.commands.leave, {
         reason = "menu"
-    })
+    }, player)
 end
 
 -- ---------------------------------------------------------------------------

@@ -55,7 +55,7 @@ local function enterTexture()
 end
 
 local function onEnter(playerObj, vehicle)
-    Client.beginEnter(vehicle)
+    Client.beginEnter(vehicle, playerObj)
 end
 
 local function addEnterSlice(playerObj)
@@ -149,11 +149,11 @@ local baseFillMenuOutsideVehicle = ISVehicleMenu.FillMenuOutsideVehicle
 
 function ISVehicleMenu.FillMenuOutsideVehicle(player, context, vehicle, test, ...)
     local result = baseFillMenuOutsideVehicle(player, context, vehicle, test, ...)
-    if test or not vehicle or Client.inside or not Core.vehicleHasRooms(vehicle) then
+    if test or not vehicle or not Core.vehicleHasRooms(vehicle) then
         return result
     end
     local playerObj = getSpecificPlayer(player)
-    if playerObj then
+    if playerObj and not Client.isInside(playerObj) then
         local option = context:addOptionOnTop(getText("ContextMenu_PhunInteriors_Enter"), playerObj, onEnter, vehicle)
         if option then
             option.iconTexture = modTexture()
@@ -199,21 +199,21 @@ local function onFillWorldObjectContextMenu(playerNum, context, worldObjects, te
     -- is dropped as somebody else's. So without it a tent could not be
     -- entered and nobody could step outside in first person.
     local clicked = worldObjects and worldObjects[1]
-    if not Client.inside then
+    if not Client.isInside(player) then
         local object = boundObjectIn(worldObjects)
         local square = object and object:getSquare()
         if square then
             context:addOptionOnTop(getText("ContextMenu_PhunInteriors_EnterObject"), player, function()
-                Client.requestEnterObject(square)
+                Client.requestEnterObject(square, player)
             end, object)
         end
         return
     end
     -- Not in a room whose only way out is somebody else's decision, such as
     -- a spawn room's picker. The server refuses it too.
-    if not Client.noExit then
+    if not Client.hasNoExit(player) then
         local leave = context:addOption(getText("ContextMenu_PhunInteriors_Leave"), player, function()
-            Client.requestLeave()
+            Client.requestLeave(player)
         end, clicked)
         if leave then
             leave.iconTexture = modTexture()

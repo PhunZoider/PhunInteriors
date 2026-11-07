@@ -952,6 +952,54 @@ Each of these has a Known gap in CLAUDE.md saying what to watch for.
 
 ---
 
+## Phase J7: split screen
+
+Never run since the fix. Reported broken on 2026-11-02. Run it twice if you can:
+in single player, and as a non-admin on a dedicated server. P1 is the first
+player, P2 the one who joined.
+
+### JS1. The door
+
+1. Both enter a vehicle. P1 walks out through the door. Then P2 does.
+
+**Pass:** each comes out at the vehicle when they cross the line, and the other
+stays exactly where they were.
+
+### JS2. Step Outside
+
+1. Both inside. P1 chooses **Step outside** from the context menu.
+2. P2 still has the option, and P1 now offers Enter on the vehicle.
+
+**Pass:** only P1 leaves. Repeat with P2 choosing it.
+
+### JS3. Entering
+
+1. P2 inside and standing away from the spawn square. P1 enters the same vehicle.
+
+**Pass:** P2 does not move. Repeat with P2 entering while P1 is inside.
+
+### JS4. Two vehicles
+
+1. P1 sits in one RV. P2 enters the interior of a different one.
+
+**Pass:** P2 is in the room of the RV they chose, and P1 is still in their seat.
+Stepping out puts P2 back at their own RV.
+
+### JS5. Both moving at once
+
+1. Each enters a different vehicle as near to the same moment as you can manage.
+
+**Pass:** each lands in their own room. Look in the log for `matches nobody on
+this client`, which means a command was addressed to neither player and dropped.
+
+### JS6. Joining and dying
+
+1. P2 joins while P1 is inside. P1's room and position are undisturbed.
+2. P2 dies and respawns as a new character.
+
+**Pass:** the log has a `playerSetup` outcome for P2, and neither death nor join
+moves P1.
+
 ## Phase K: multiplayer
 
 Everything above is single player unless noted. **Re-run on a real dedicated

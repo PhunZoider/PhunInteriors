@@ -129,6 +129,9 @@ end
 local function player(name, level)
     return {
         name = name,
+        getOnlineID = function()
+            return 1
+        end,
         getAccessLevel = function()
             return level
         end

@@ -31,7 +31,7 @@ local function openRooms()
         Client.notify({
             text = "IGUI_PhunInteriors_Rooms_NotAdmin",
             warning = true
-        })
+        }, player)
         return
     end
     Client.openRooms(player)
