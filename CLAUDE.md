@@ -4102,7 +4102,9 @@ cells are actually towns.
     the file is written. The likely fix is a `.txt` extension, since the doc
     already says to copy the numbers out rather than ship the file.
 
-29. **Split screen has never run in game since it was fixed.** Reported on
+29. **Split screen is reported working in single player and on a dedicated
+    server** (2026-11-07, JS1 to JS6 of Phase J7, the server run as ordinary
+    players rather than admins). Reported on
     2026-11-02, with no errors: player 1 walked out of a door and stayed in the
     room, Step Outside took both players out, entering dragged the other player
     to the same spot, and with player 1 seated in one RV, player 2 entering
@@ -4118,13 +4120,11 @@ cells are actually towns.
     own version, since every command arrived as the first player's.
     `splitscreen_spec.lua` covers the logic, with `getPlayer()` deliberately
     answering the wrong player, and each fix was confirmed to fail when removed.
-    What it cannot see: whether `getOnlineID()` agrees across the wire for a
-    second player, which is what `forPlayer` matches on and whose failure is a
-    `matches nobody on this client` log line and a command dropped; whether a
-    joining player's id does sit at -1 until the server answers, which is what
-    holds back their `playerSetup`; and P2's menus with a joypad. PhunTaxi's own
-    `Core.dispatch` is the same three argument shape and has not been changed.
-    Phase J7 of `Docs/testplan.md` is the in-game check.
+    The dedicated server run settles the questions the spec could not:
+    `getOnlineID()` agrees across the wire for a second player, so `forPlayer`
+    finds them; a joining player's `playerSetup` arrives; and P2's menus work
+    with a joypad. PhunTaxi's own `Core.dispatch` is the same three argument
+    shape and has not been changed.
 
 30. **The silent generator is reported working in game** (2026-11-07). Added
     the same day; see "The generator is silent" in Architecture. Nothing tests

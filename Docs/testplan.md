@@ -965,9 +965,9 @@ Each of these has a Known gap in CLAUDE.md saying what to watch for.
 
 ## Phase J7: split screen
 
-Never run since the fix. Reported broken on 2026-11-02. Run it twice if you can:
-in single player, and as a non-admin on a dedicated server. P1 is the first
-player, P2 the one who joined.
+Reported broken on 2026-11-02. JS1 to JS6 passed on a dedicated server on
+2026-11-07, as non-admins, and in single player the same day.
+P1 is the first player, P2 the one who joined.
 
 ### JS1. The door
 
