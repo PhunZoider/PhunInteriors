@@ -73,7 +73,7 @@ room editor ([remapping.md](remapping.md)), and a vehicle mod can bind its own
 | Step Van - SWAT | 3x4 | `85chevyStepVanSWAT`, `87fordF700swat`, `90fordF350SWAT`, `fr_ch_stepvan_80_police`, `pzkCadillacGageRangerPolice`, `pzkF350BoxSwat`, `pzkFranklinSwatTruckLouisvilleSWAT`, `pzkGMCTopkickSwat`, `pzkStepVanSwatLouisvilleSWAT`, `pzkVanBoxSwat`, `StepVan_LouisvilleSWAT` | Step Van |
 | Step Van - Tailoring | 3x4 | `85chevyStepVanSmartCut`, `StepVan_SmartKut` | Step Van |
 | Step Van - Whiskey | 3x4 | `85chevyStepVanScarletOak`, `StepVan_Scarlet` | Step Van |
-| Tent | 2x3 | `TentBlue`, `TentBrown`, `TentGreen`, `TentYellow` |  |
+| Tent | 2x3 | `ImprovisedTentKit`, `TentBlue`, `TentBrown`, `TentGreen`, `TentYellow` |  |
 | Trailer - Livestock | 3x4 | `pzkTrailerHorseBox`, `Trailer_Horsebox`, `Trailer_Livestock`, `TrailerKI5livestock` |  |
 | Trailer - Medium | 3x9 | `pzkTrailerBoxDual`, `pzkTrailerBoxPoliceDual`, `SemiTruckBox`, `SemiTruckBox_mil` |  |
 | Trailer - Military | 3x9 | `TrailerM128van`, `TrailerM129van` |  |

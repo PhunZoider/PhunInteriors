@@ -3292,7 +3292,7 @@ local function registerObjectHolders()
         id = "phun.objects.Tent",
         source = SOURCE,
         rooms = {"phun.room.Tent"},
-        items = {"Base.TentBlue", "Base.TentBrown", "Base.TentGreen", "Base.TentYellow"}
+        items = {"Base.ImprovisedTentKit", "Base.TentBlue", "Base.TentBrown", "Base.TentGreen", "Base.TentYellow"}
     })
 end
 

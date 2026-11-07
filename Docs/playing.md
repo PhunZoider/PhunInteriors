@@ -127,8 +127,9 @@ refuses the kit. Step by step: [Rain water in your room](rain-water.md).
 
 ## Tents
 
-The four coloured tents (blue, brown, green and yellow) open onto a small
-room of their own. Pitch one, right click it and **Go inside**.
+The four coloured tents (blue, brown, green and yellow) and the improvised
+tent open onto a small room of their own, and all five share the same kind of
+room. Pitch one, right click it and **Go inside**.
 
 You cannot pack a tent away while anybody is inside, or while anything is left
 in its room, including items dropped on the floor. Empty the room first. This
