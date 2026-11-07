@@ -412,6 +412,17 @@ generator sprite in the room, which the shipped map has at
 you confirm the `NoPowerOrWater` zone was painted. Without it the rooms sit on
 the mains for the first weeks of a save and the generator binding is invisible.
 
+### D1b. The generator is silent
+
+In a save that already had a powered room, enter it, then run
+`admin("power")`. Then stand outside the generator's box, 17 south of the room.
+
+**Pass:** the generator line ends `silent (phuninteriors_01_2)`, nothing hums
+near the box, and the room is still lit. Expect one vanilla stopping sound the
+first time an old generator is swapped. A generator placed anywhere else in the
+world still hums. **Fail:** `HUMS`, or `silent` with the hum still audible
+(the sound script did not load).
+
 ### D1a. A save missing a zone gets it back
 
 On a world created before cell 92,46 shipped (or any world, after editing its

@@ -1,0 +1,51 @@
+/*
+ * The interior generators' sounds, all silent.
+ *
+ * IsoGenerator plays getSoundPrefix() .. "Starting", "Loop" and "Stopping",
+ * and getSoundPrefix() is the GeneratorSound property on the generator's own
+ * sprite (vanilla's Old generator sets it to OldGenerator). So only a
+ * generator wearing our sprite plays these; every other generator in the
+ * world keeps its hum.
+ *
+ * All three must exist. With no Loop sound, isPlaying() is never true and
+ * update() asks for it again every tick.
+ *
+ * Module Base, as every vanilla sound script is: a sound is found by its bare
+ * name, and the prefix keeps ours from colliding.
+ */
+module Base
+{
+    sound PhunInteriorsSilentStarting
+    {
+        category = Object,
+        clip
+        {
+            file = media/sound/PhunInteriorsSilentStarting.ogg,
+            distanceMax = 1,
+            volume = 0,
+        }
+    }
+
+    sound PhunInteriorsSilentLoop
+    {
+        category = Object,
+        loop = true,
+        clip
+        {
+            file = media/sound/PhunInteriorsSilentLoop.ogg,
+            distanceMax = 1,
+            volume = 0,
+        }
+    }
+
+    sound PhunInteriorsSilentStopping
+    {
+        category = Object,
+        clip
+        {
+            file = media/sound/PhunInteriorsSilentStopping.ogg,
+            distanceMax = 1,
+            volume = 0,
+        }
+    }
+}

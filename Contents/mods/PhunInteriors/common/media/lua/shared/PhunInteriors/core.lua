@@ -27,6 +27,11 @@ PhunInteriors = {
         reservoirKey = "PhunInteriors_reservoir",
         -- the item consumed by installing one
         reservoirItem = "PhunInteriors.RainReservoirKit",
+        -- The silent interior generator: the item Power.ensureGenerator places,
+        -- and the sprite it wears. The silence is the sprite's GeneratorSound
+        -- tile property, so a generator on any other sprite still hums.
+        generatorItem = "PhunInteriors.InteriorGenerator",
+        generatorSprite = "phuninteriors_01_2",
         -- Where a tenant was standing when they went in, on the PLAYER.
         --
         -- The last resort of the three return positions, and the only one that

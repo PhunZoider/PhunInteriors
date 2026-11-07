@@ -20,6 +20,17 @@ tileset
         exterior = 
         solidfloor = 
     }
+    // phuninteriors_01_2
+    tile
+    {
+        xy = 2,0
+        BlocksPlacement = 
+        CustomItem = PhunInteriors.InteriorGenerator
+        CustomName = Generator
+        Facing = E
+        GeneratorSound = PhunInteriorsSilent
+        GroupName = Red
+    }
     // phuninteriors_01_8
     tile
     {

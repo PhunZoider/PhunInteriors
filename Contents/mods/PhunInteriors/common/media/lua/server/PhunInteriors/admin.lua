@@ -325,11 +325,15 @@ actions.power = function(args)
                 elseif not generatorSquare then
                     table.insert(lines, "  power square is not loaded")
                 elseif generator then
+                    local sprite = generator:getSprite()
+                    local spriteName = sprite and sprite:getName() or "none"
                     table.insert(lines, string.format(
-                        "  generator: activated %s, fuel %.1f/%.1f, condition %d, drawing %.2f",
+                        "  generator: activated %s, fuel %.1f/%.1f, condition %d, drawing %.2f, %s (%s)",
                         tostring(generator:isActivated()), generator:getFuel(),
                         generator:getMaxFuel(), generator:getCondition(),
-                        generator:getTotalPowerUsing()))
+                        generator:getTotalPowerUsing(),
+                        spriteName == Core.consts.generatorSprite and "silent" or "HUMS",
+                        spriteName))
                 else
                     table.insert(lines, "  no generator on the power square")
                 end

@@ -155,6 +155,12 @@ local function generatorOn(square)
     return nil
 end
 
+--- Whether a generator is wearing our silent sprite.
+local function isSilent(generator)
+    local sprite = generator:getSprite()
+    return sprite ~= nil and sprite:getName() == Core.consts.generatorSprite
+end
+
 --- Anything on this square that looks like a generator but is not one.
 --
 -- A scrub rebuilds a square from its blueprint, and a generator sprite
@@ -170,13 +176,67 @@ local function deadGeneratorOn(square)
         local object = objects:get(i)
         local sprite = object and object:getSprite()
         local name = sprite and sprite:getName()
-        -- The sprite set MOGenerator.lua keys off.
-        if name and string.find(name, "^appliances_misc_01_")
+        -- The sprite set MOGenerator.lua keys off, and our own.
+        if name and (string.find(name, "^appliances_misc_01_") or name == Core.consts.generatorSprite)
             and not instanceof(object, "IsoGenerator") then
             return object
         end
     end
     return nil
+end
+
+--- A fresh silent generator on a square, with this fuel and condition.
+--
+-- Vanilla's own recipe, from MOGenerator.lua, with our item in place of
+-- Base.Generator. The item's WorldObjectSprite is what the constructor gives
+-- the object, and that sprite's GeneratorSound is what keeps it quiet.
+local function silentItem()
+    local item = instanceItem(Core.consts.generatorItem)
+    if not item then
+        Core.logLn("could not create a " .. Core.consts.generatorItem .. " item")
+    end
+    return item
+end
+
+local function placeSilent(square, item, fuel, condition)
+    item:setCondition(condition)
+    item:getModData().fuel = fuel
+    local generator = IsoGenerator.new(item, getCell(), square)
+    -- The constructor adds it to the square itself; MOGenerator.lua has a
+    -- commented-out AddSpecialObject saying as much.
+    generator:transmitCompleteItemToClients()
+    return generator
+end
+
+--- Swap a humming generator for a silent one, carrying its fuel across.
+--
+-- Every save from before the silent generator holds Base.Generators, and so
+-- does any map stamp still painted with a vanilla sprite. The sound is a
+-- property of the sprite, so the object has to be replaced rather than told.
+--
+-- Switched off first. removeFromWorld stops its emitter but does not take its
+-- position off the chunk's generator list, which only setActivated(false)
+-- does -- and a stale entry there would keep the room lit on a tank nobody is
+-- filling. Vanilla never meets this, since ISTakeGenerator refuses a running
+-- generator. The cost is one vanilla "Stopping" sound per old generator, once.
+--
+-- The fuel is carried exactly, so the caller can report this as NOT created
+-- and the ledger's reading of the difference stays true.
+--
+-- The item is made before anything is touched: a nil here leaves the old one
+-- standing, and a humming generator still powers the room.
+local function replaceHumming(square, old)
+    local item = silentItem()
+    if not item then
+        return nil
+    end
+    local fuel = tonumber(old:getFuel()) or 0
+    local condition = tonumber(old:getCondition()) or 100
+    if old:isActivated() then
+        old:setActivated(false)
+    end
+    square:transmitRemoveItemFromSquare(old)
+    return placeSilent(square, item, fuel, condition)
 end
 
 --- The generator serving a slot, placing one if it has gone.
@@ -210,7 +270,18 @@ function Power.ensureGenerator(roomId, index)
     end
 
     local found = generatorOn(square)
+    if found and isSilent(found) then
+        return found, false
+    end
     if found then
+        local swapped = replaceHumming(square, found)
+        if swapped then
+            Core.debugLn(string.format("%s#%s swapped a humming generator for a silent one",
+                tostring(roomId), tostring(index)))
+            return swapped, false
+        end
+        -- Could not make ours, and the old one was left alone. A humming
+        -- generator still powers the room.
         return found, false
     end
 
@@ -221,23 +292,34 @@ function Power.ensureGenerator(roomId, index)
             tostring(roomId), tostring(index)))
     end
 
-    -- Vanilla's own recipe, from MOGenerator.lua.
-    local item = instanceItem("Base.Generator")
+    local item = silentItem()
     if not item then
-        Core.logLn("could not create a Base.Generator item")
         return nil, false
     end
-    item:setCondition(100)
-    item:getModData().fuel = 0
-
-    local generator = IsoGenerator.new(item, getCell(), square)
-    -- The constructor adds it to the square itself; MOGenerator.lua has a
-    -- commented-out AddSpecialObject saying as much.
-    generator:transmitCompleteItemToClients()
+    local generator = placeSilent(square, item, 0, 100)
 
     Core.logLn(string.format("%s#%s had no generator at %d,%d,%d; placed one",
         tostring(roomId), tostring(index), at.x, at.y, at.z))
     return generator, true
+end
+
+-- A map painted with our generator sprite loads it as a plain IsoObject, as it
+-- does every generator: vanilla turns its own sprites into real ones in
+-- MOGenerator.lua, one OnNewWithSprite per sprite, and ours is not in that
+-- list. Same recipe, same priority. ensureGenerator would replace the picture
+-- on the first visit anyway; this makes it a working generator from the start.
+-- The shipped map still paints appliances_misc_01_0, which MOGenerator turns
+-- into a Base.Generator and ensureGenerator then swaps.
+if MapObjects and MapObjects.OnNewWithSprite then
+    MapObjects.OnNewWithSprite(Core.consts.generatorSprite, function(object)
+        local square = object:getSquare()
+        local item = square and silentItem()
+        if not item then
+            return
+        end
+        square:transmitRemoveItemFromSquare(object)
+        placeSilent(square, item, 0, 100)
+    end, 5)
 end
 
 --- What the battery would read if the outstanding debt were settled now.

@@ -295,7 +295,10 @@ Contents/mods/PhunInteriors/common/
                                     VENDORED from PhunMart2
   media/lua/shared/Translate/EN/     ContextMenu.json, IG_UI.json, Sandbox.json,
                                     ItemName.json, Recipes.json
-  media/scripts/PhunInteriors.txt    the reservoir kit item and its recipe
+  media/scripts/PhunInteriors.txt    the reservoir kit item and its recipe,
+                                    and the silent interior generator
+  media/scripts/PhunInteriors_sounds.txt  its three silent sounds, over
+                                    media/sound/PhunInteriorsSilent*.ogg
   media/maps/phuninteriors/          the map: 20 cells of lotpack, lotheader
                                     and chunkdata, plus map.info, objects.lua
                                     (the NoPowerOrWater zones) and roomtones.lua.
@@ -1928,7 +1931,7 @@ how a reader ends up confidently wrong.
 What can change is whether the generator still *exists* — it caught fire, it
 blew up, a scrub rebuilt the square and left an inert copy. So
 `Power.ensureGenerator` places a fresh one when it has gone, following
-vanilla's own recipe from `MOGenerator.lua`: `instanceItem("Base.Generator")`,
+vanilla's own recipe from `MOGenerator.lua`: `instanceItem(...)`,
 `IsoGenerator.new(item, cell, square)`, `transmitCompleteItemToClients()`. It
 also clears any generator-*shaped* object that is not an `IsoGenerator` first —
 a sprite recreated by name comes back as a plain `IsoObject`, the same trap
@@ -1938,6 +1941,39 @@ reach it to fix it, which is a fault report rather than a mechanic.
 
 `setActivated(true)` does everything else itself: registers the position with
 the chunk, calls `setSurroundingElectricity`, syncs to clients.
+
+**The generator is silent, and only ours is.** The item is
+`PhunInteriors.InteriorGenerator`, not `Base.Generator`, and the difference is
+its sprite. `IsoGenerator` plays `getSoundPrefix() .. "Starting"`, `"Loop"` and
+`"Stopping"`, and `getSoundPrefix()` is the **`GeneratorSound` tile property
+on the generator's own sprite**, defaulting to `"Generator"`. Vanilla uses it
+itself: the Old generator's sprites say `OldGenerator`. So
+`phuninteriors_01_2` says `PhunInteriorsSilent`, and
+`media/scripts/PhunInteriors_sounds.txt` defines the three sounds over a
+second of silent ogg each. All three have to exist, because with no Loop sound
+`isPlaying` is never true and `update()` asks for it every tick. The zombie
+noise is the same shape: `update()` reads `SoundRadius` and `SoundVolume` off
+the item the sprite maps to, through `ScriptManager.getItemsTag(GENERATOR)`,
+so the item carries `base:generator` and `SoundRadius = 1`.
+
+Generator Tweaks (3565376571) silences generators by shipping a replacement
+`IsoGenerator.class` that players copy into the game folder. That is global
+and cannot ship in a mod; this is neither.
+
+`ensureGenerator` swaps a humming generator it finds for a silent one, fuel and
+condition carried across, so it reports the swap as not created and the ledger
+reads no false burn. That covers every save older than this and the shipped
+map, which still paints `appliances_misc_01_0` and so loads a `Base.Generator`
+through `MOGenerator.lua`. It is enough on its own because `syncRoom` is the
+only thing that ever switches a room generator on, and a map generator comes in
+empty and off. The old one is **switched off before it is removed**:
+`removeFromWorld` stops its emitter but leaves its position on the chunk's
+generator list, which only `setActivated(false)` clears, and a stale entry
+would light the room off a tank nobody fills. The price is one vanilla
+`GeneratorStopping` per old generator, once. A map repainted with our sprite is
+turned into a real generator by our own `MapObjects.OnNewWithSprite`, since
+`MOGenerator.lua` lists only vanilla's. `admin("power")` says `silent` or
+`HUMS` beside each generator.
 
 **Almost none of the arithmetic is ours.** `IsoGenerator.update()` burns
 `totalPowerUsing * generatorFuelConsumption` for every world hour since its
@@ -3298,9 +3334,9 @@ cells are actually towns.
      clears and re-accumulates `totalPowerUsing` per generator, so an appliance
      inside two circles is billed to **both** tanks.
    - The generator hum (`GeneratorLoop`) has `distanceMax = 100`, so it cannot
-     be separated from the power by distance. In practice it is reportedly
-     inaudible at range; `distanceMax` is the cutoff, not the audible radius,
-     and the rolloff curve is in the FMOD bank where it cannot be read.
+     be separated from the power by distance. That no longer matters: our
+     generators play silent sounds instead, see "The generator is silent" in
+     Architecture.
 2. **Icon and poster are done.** `icon.png` and `poster.png` both ship, and
    `Tests/root/PhunInteriors/common/` carries its own pair for the test id.
    GIMP sources are in `Docs/images/` and are deliberately untracked.
@@ -4089,6 +4125,24 @@ cells are actually towns.
     holds back their `playerSetup`; and P2's menus with a joypad. PhunTaxi's own
     `Core.dispatch` is the same three argument shape and has not been changed.
     Phase J7 of `Docs/testplan.md` is the in-game check.
+
+30. **The silent generator is reported working in game** (2026-11-07). Added
+    the same day; see "The generator is silent" in Architecture. Nothing tests
+    it, since every line needs a real `IsoGenerator`. The risks it was written
+    against, kept in case it regresses:
+    - **The tile property.** `GeneratorSound = PhunInteriorsSilent` was written
+      into `phuninteriors.tiles` by patching the binary, because TileZed only
+      offered `Generator` and `OldGenerator`. The enum in
+      `D:\pz-dev\PZ_Mapping_Tools\config\TileProperties.txt` now has the
+      value, so a later TileZed save should keep it; check that it does.
+    - **A file clip from a mod's `media/sound`.** Vanilla's generator sounds are
+      FMOD bank events; ours are `file =` clips. A hum that is still there means
+      the swap did not happen, and `admin("power")` saying `silent` while it
+      hums means the sounds did not load.
+    - **The swap on a running generator.** The `setActivated(false)` first, and
+      whether the room's power comes straight back on the replacement.
+    - **The zombie radius.** `SoundRadius = 1` only applies if the sprite maps
+      to our item, which needs `getItemsTag(GENERATOR)` to see it.
 
 ## v2, deliberately not in v1
 

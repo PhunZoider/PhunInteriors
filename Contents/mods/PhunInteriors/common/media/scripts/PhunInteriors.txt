@@ -21,6 +21,37 @@ module PhunInteriors
         WorldObjectSprite = phuninteriors_01_28,
     }    
 
+    /*
+     * The generator behind every interior. Base.Generator in all but two
+     * things: its world sprite is phuninteriors_01_2, whose GeneratorSound
+     * tile property makes it play the silent sounds in PhunInteriors_sounds.txt,
+     * and its SoundRadius is 1, which is what IsoGenerator.update() hands
+     * WorldSoundManager for zombie attraction. Both are read off this generator
+     * alone, so every other generator in the world is untouched.
+     *
+     * The base:generator tag is load bearing: IsoGenerator maps a sprite back
+     * to its item through ScriptManager.getItemsTag(GENERATOR), and an untagged
+     * item would fall back to Base.Generator's radius of 20.
+     *
+     * In no distribution. Power.ensureGenerator is the only thing that makes one.
+     */
+    item InteriorGenerator
+    {
+        DisplayCategory = Electronics,
+        ItemType = base:normal,
+        Weight = 40.0,
+        Icon = Generator,
+        ConditionMax = 100,
+        MetalValue = 500.0,
+        RequiresEquippedBothHands = true,
+        Tooltip = Tooltip_Generator,
+        Tags = base:heavyitem;base:generator;base:hasmetal;base:ignorezombiedensity;base:showcondition,
+        WorldObjectSprite = phuninteriors_01_2,
+        ConditionLowerChanceOneIn = 30,
+        SoundRadius = 1,
+        SoundVolume = 1,
+    }
+
     item RainReservoirKit
     {
         DisplayCategory = Material,
