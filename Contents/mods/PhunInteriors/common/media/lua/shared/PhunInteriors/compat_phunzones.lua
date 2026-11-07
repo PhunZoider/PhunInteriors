@@ -58,11 +58,7 @@ if phunZonesActive() then
             -- PhunZones' rects are inclusive at both ends, unlike the half
             -- open NoPowerOrWater zones in objects.lua, so each ends on
             -- x255/y255.
-            points = {
-                {22272, 11776, 23807, 12287},
-                {22272, 12288, 23551, 12543},
-                {22784, 12544, 23551, 12799}
-            }
+            points = {{22272, 11776, 23807, 12287}, {22272, 12288, 23551, 12543}, {22784, 12544, 23551, 12799}}
         }
         state.active = true
     else
